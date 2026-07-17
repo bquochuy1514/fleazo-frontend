@@ -33,9 +33,11 @@ Same three goals as the backend — real product, revenue-generating, graduation
 
 ## Design System
 
-Brand direction: **đáng tin nhưng có hồn** — not corporate-cold, not gen-Z-loud. Grounded in the physical world of a thrift market (paper tags, worn materials) rather than generic "eco startup" green.
+Brand direction: **đáng tin nhưng có hồn** — not corporate-cold, not gen-Z-loud.
 
-### Color tokens
+### Color tokens (v2 — navy + teal)
+
+⚠️ Superseded the original moss-green + amber palette entirely (v1). Colors below were sampled pixel-exact from a reference mockup the user provided, not designed from scratch. If moss green (`#2F5233`) or amber (`#E0A73B`) shows up anywhere, it's stale — replace it.
 
 Define as CSS variables in `globals.css`, consume via Tailwind — never hardcode hex in components.
 
@@ -43,20 +45,21 @@ Define as CSS variables in `globals.css`, consume via Tailwind — never hardcod
 | ---------------------- | --------- | -------------------------------- |
 | `--color-ink`          | `#1C2620` | Primary text                     |
 | `--color-base`         | `#F6F5F0` | Page background                  |
-| `--color-primary`      | `#2F5233` | Brand — logo, links, icons       |
-| `--color-primary-soft` | `#DDE7DA` | Light fill — placeholders, hover |
-| `--color-accent`       | `#E0A73B` | CTA — buttons, price tags        |
+| `--color-primary`      | `#03AA5C` | Brand — logo, links, icons       |
+| `--color-primary-soft` | `#D7F3E8` | Light fill — placeholders, hover |
+| `--color-accent`       | `#00B380` | CTA — buttons, price tags        |
 | `--color-danger`       | `#B5533C` | Errors, `REJECTED`/`BANNED` only |
+| `--color-header-bg`    | `#111828` | Header surface ONLY — see below  |
 
 Notes:
 
-- `--color-ink`: near-black, green-tinted — not pure black.
-- `--color-base`: warm off-white — not stark white.
-- `--color-primary`: also used for secondary-button outline.
-- `--color-accent`: reserve for actions/price only, never decorative.
+- `--color-ink` / `--color-base`: unaffected by the v2 change.
+- `--color-primary` and `--color-accent` are now both teal — much closer in hue than the old green/amber pair. **Don't eyeball-swap them** — always copy the exact hex/token, never approximate one from memory of the other.
+- ⚠️ Contrast checked: white text on either teal fails WCAG AA for normal text (~2.7–3:1). `--primary-foreground` and `--secondary-foreground` in `globals.css` use `--color-ink`, not white — don't "fix" this back to white, it was a deliberate correction.
+- `--color-header-bg`: exclusive to the `Header` background bar — not a general-purpose token, don't reuse for cards/badges/other surfaces.
 - `--color-danger`: never reused for `SOLD` — that's neutral-good, use `--color-ink` at low opacity overlay instead.
 
-Rule: primary (green) = brand/identity, accent (yellow) = action/money. Don't let one color do both jobs — that's how CTAs stop standing out.
+Rule: primary (darker teal, `#03AA5C`) = brand/identity, accent (brighter teal, `#00B380`) = action/money. They read as nearly the same color at a glance now — the separation lives in the exact hex, not in a big visual hue gap like v1.
 
 ### Typography
 
@@ -69,9 +72,17 @@ Rule: primary (green) = brand/identity, accent (yellow) = action/money. Don't le
 
 Recurring visual motif referencing a physical price tag: small rounded-rect badge, used consistently for:
 
-- Product condition badge (`NEW`/`LIKE_NEW`/`GOOD`/`FAIR`/`POOR`) — color scales from `--color-primary-soft` (new) toward warm neutral/amber-light (poor), never random per-condition colors
+- Product condition badge (`NEW`/`LIKE_NEW`/`GOOD`/`FAIR`/`POOR`) — color scales from `--color-primary-soft` (new) toward a neutral gray (poor), never random per-condition colors. (v2 note: the old scale ended on amber-light, which no longer exists as a token — reworked to a neutral gray endpoint instead.)
 - Price tag overlay on product images
 - Status badge (`SOLD` etc.)
+
+### Header surface
+
+The `Header` component uses `--color-header-bg` (dark navy, `#111828`) as a solid background bar, not `--background` — a deliberate exception, because the real logo uses a white wordmark. This token is exclusive to the Header; don't reuse it elsewhere. All header children (nav buttons, icons, search input) are styled explicitly for a dark surface (white text/icons, white search pill) — don't default them to shadcn's `text-foreground`, which assumes a light page background.
+
+The logo asset works directly on this navy bar — contrast measured ~7.3:1 (green wordmark vs `#111828`), passes WCAG AAA. The earlier note about needing a white-wordmark variant was based on the old dark-green (v1) header and is stale; the real logo (`Logo` component, `src/components/logo.tsx`) is already in use here.
+
+Tagline decided: **"The student swap marketplace"** (not yet placed anywhere in code — use when a hero/marketing copy slot is built).
 
 ### Component conventions
 
@@ -79,6 +90,7 @@ Recurring visual motif referencing a physical price tag: small rounded-rect badg
 - Product card is one shared component reused across home, category, search, saved, seller-profile — no per-page duplicates
 - Spacing between page sections uses a shared token/util (e.g. `--section-gap`), not repeated raw Tailwind spacing classes copy-pasted per page
 - Radius: reuse shadcn's `--radius` scale for controls; cards get `12px` explicitly
+- **Button gradients:** `default` variant uses `--color-accent-deep → --color-accent-bright`; `secondary` uses `--color-primary → --color-primary-soft`. Both pairs are contrast-checked against `--color-ink` at both gradient ends (all ≥4.5:1, see `globals.css` comments) — if either endpoint hex ever changes, recheck contrast before shipping, don't eyeball it.
 
 - **Response format:** controllers return service results directly — no `{ statusCode, message, data }` wrapper. Type API responses as the plain data shape.
 - **Auth:** JWT access (short-lived) + refresh token rotation + Google OAuth. Axios layer must handle 401 → refresh → retry.
@@ -122,8 +134,12 @@ src/
 │
 ├── components/
 │   ├── ui/                       # shadcn-generated components (button.tsx, ...) —
-│   │                             #   owned, freely modifiable
-│   └── layout/                   # App shell components: header.tsx, footer.tsx (planned)
+│   │                             #   owned, freely modifiable, but CLI-managed —
+│   │                             #   don't hand-add non-shadcn components here
+│   ├── logo.tsx                  # Shared across Header, Footer, AND (auth) pages —
+│   │                             #   top-level, not nested under layout/, because
+│   │                             #   it isn't exclusive to the app shell
+│   └── layout/                   # App shell components: header.tsx, footer.tsx
 │
 ├── lib/                          # Shared non-UI code (see Common Utilities table)
 │   ├── api.ts                    # Shared axios instance
@@ -161,6 +177,7 @@ Rules:
 - **HTTP calls:** all requests go through the shared axios instance in `src/lib/api.ts` — never import `axios` directly in components/pages.
 - **Env vars:** `NEXT_PUBLIC_` prefix required for any variable read on the client. Grouped into named sections with `# ===========================` dividers (same as backend). Every new var must also be added to `.env.example`.
 - Date manipulation: `dayjs` (same as backend)
+- **Rendering:** default to Server Components (no `"use client"`). Only add `"use client"` to the specific component that needs interactivity (state, event handlers, browser APIs, TanStack Query hooks) — not to whole pages or layouts. `(public)` pages especially should stay server-rendered for SEO; push client-only logic into small leaf components.
 - ⚠️ Whenever a new shared util/component/hook pattern is established, document it in this file immediately.
 
 ## Common Utilities
@@ -186,7 +203,12 @@ Note on `api.ts`: auth interceptors (attach access token, 401 → refresh → re
 - Everything else: not started
 - Decisions locked this round: shadcn/ui + lucide-react (moved to Confirmed), route group structure (see Project Structure)
 - shadcn init: ✅ Done — Maia preset on Base UI; cleanup applied: `iconLibrary` → `lucide` in `components.json`, hugeicons packages removed, `shadcn` CLI moved to devDependencies, template fonts (Figtree/Geist — no Vietnamese support) replaced with a `vietnamese`-subset font, `lang="vi"` + Fleazo metadata in root layout
-- Next: build the route group skeleton, `(main)` layout (Header with category-dropdown placeholder + Footer), `(auth)` layout, home page skeleton
+- Design System: ✅ Done — color tokens, typography (Manrope + Be Vietnam Pro), signature "tag treo" element documented above
+- `globals.css`: ✅ Done — Fleazo brand tokens wired into shadcn semantic vars
+- `Header` component (`src/components/layout/header.tsx`): ✅ Done — logo, category dropdown (placeholder, not wired), search bar (placeholder), guest-state actions (placeholder, not wired to real auth)
+- `Footer` component (`src/components/layout/footer.tsx`): ✅ Done — minimal placeholder (logo, tagline, copyright), needs real columns later
+- `(main)/layout.tsx`: ✅ Done — assembles Header + main + Footer
+- Next: `(auth)` layout, home page skeleton
 
 ## Agent Behavior
 
