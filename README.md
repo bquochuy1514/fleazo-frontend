@@ -1,36 +1,92 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Fleazo Frontend
+
+Web app for **Fleazo** — a secondhand marketplace platform for Vietnamese university students, featuring an AI-powered recommendation engine and shopping chatbot.
+
+> Backend: `fleazo-backend` · AI Service: `fleazo-ai`
+
+## Tech Stack
+
+| Layer      | Technology                         |
+| ---------- | ---------------------------------- |
+| Framework  | Next.js 16 (App Router, Turbopack) |
+| Language   | TypeScript                         |
+| UI Library | React 19                           |
+| Styling    | Tailwind CSS v4                    |
+| HTTP       | axios                              |
+| Realtime   | socket.io-client                   |
+
+> Additional libraries (state management, forms, UI components...) are adopted incrementally as features are built — see `AGENTS.md` → Tech Stack for the current confirmed/undecided list.
+
+## Core Features
+
+- **Marketplace UI** — browse, search, and filter secondhand listings; product detail with image gallery; save/favorite listings
+- **Listing management** — create/edit listings with multi-image upload, drafts, location picker (Tỉnh/Thành phố → Phường/Xã)
+- **Auth flows** — register with email OTP, login, Google OAuth, forgot password, refresh token rotation
+- **Realtime chat** — 1-to-1 messaging with read receipts, message recall, online status, and inbox notifications while browsing
+- **Seller reputation** — review sellers after chatting about a listing, seller reply
+- **Monetization** — membership tiers (Free/Basic/Premium), boost, and extend listing via PayOS checkout
+- **AI shopping assistant** — chatbot that finds listings from natural language (powered by `fleazo-ai`)
+- **Admin UI** — listing approval/rejection, user and category management
+
+## Prerequisites
+
+- Node.js >= 20
+- `fleazo-backend` running locally (default: `http://localhost:8080`)
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
+# 1. Clone the repo
+git clone https://github.com/bquochuy1514/fleazo-frontend.git
+cd fleazo-frontend
+
+# 2. Install dependencies
+npm install
+
+# 3. Copy env file and fill in values
+cp .env.example .env
+
+# 4. Start dev server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+App runs at `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+src/
+└── app/                  # App Router pages & layouts
+    ├── layout.tsx
+    ├── page.tsx
+    └── globals.css
+public/                   # Static assets
+```
 
-## Learn More
+> Structure will grow as features are built (`components/`, `lib/`, `hooks/`, `types/`...) — kept in sync in `AGENTS.md`.
 
-To learn more about Next.js, take a look at the following resources:
+## Environment Variables
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8080/api
+NEXT_PUBLIC_SOCKET_URL=http://localhost:8080
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Development Status
 
-## Deploy on Vercel
+| Area          | Status  |
+| ------------- | ------- |
+| Project setup | Done    |
+| Auth          | Planned |
+| Products      | Planned |
+| Categories    | Planned |
+| Profile       | Planned |
+| Chat          | Planned |
+| Reviews       | Planned |
+| Payments      | Planned |
+| Chatbot       | Planned |
+| Admin         | Planned |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## License
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT
