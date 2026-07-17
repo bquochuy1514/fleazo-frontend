@@ -1,130 +1,184 @@
-@import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+	--color-background: var(--background);
+	--color-foreground: var(--foreground);
+	--font-sans: var(--font-sans);
+	--font-mono: var(--font-geist-mono);
+	--font-heading: var(--font-heading);
+	--color-sidebar-ring: var(--sidebar-ring);
+	--color-sidebar-border: var(--sidebar-border);
+	--color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+	--color-sidebar-accent: var(--sidebar-accent);
+	--color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+	--color-sidebar-primary: var(--sidebar-primary);
+	--color-sidebar-foreground: var(--sidebar-foreground);
+	--color-sidebar: var(--sidebar);
+	--color-chart-5: var(--chart-5);
+	--color-chart-4: var(--chart-4);
+	--color-chart-3: var(--chart-3);
+	--color-chart-2: var(--chart-2);
+	--color-chart-1: var(--chart-1);
+	--color-ring: var(--ring);
+	--color-input: var(--input);
+	--color-border: var(--border);
+	--color-destructive: var(--destructive);
+	--color-accent-foreground: var(--accent-foreground);
+	--color-accent: var(--accent);
+	--color-muted-foreground: var(--muted-foreground);
+	--color-muted: var(--muted);
+	--color-secondary-foreground: var(--secondary-foreground);
+	--color-secondary: var(--secondary);
+	--color-primary-foreground: var(--primary-foreground);
+	--color-primary: var(--primary);
+	--color-popover-foreground: var(--popover-foreground);
+	--color-popover: var(--popover);
+	--color-card-foreground: var(--card-foreground);
+	--color-card: var(--card);
+	--radius-sm: calc(var(--radius) * 0.6);
+	--radius-md: calc(var(--radius) * 0.8);
+	--radius-lg: var(--radius);
+	--radius-xl: calc(var(--radius) * 1.4);
+	--radius-2xl: calc(var(--radius) * 1.8);
+	--radius-3xl: calc(var(--radius) * 2.2);
+	--radius-4xl: calc(var(--radius) * 2.6);
+
+	/* Fleazo brand tokens — exposed as utilities too (bg-fz-primary, text-fz-accent, ...) */
+	--color-fz-ink: var(--color-ink);
+	--color-fz-base: var(--color-base);
+	--color-fz-primary: var(--color-primary);
+	--color-fz-primary-soft: var(--color-primary-soft);
+	--color-fz-accent: var(--color-accent);
+	--color-fz-danger: var(--color-danger);
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+	/* ============================= */
+	/* Fleazo brand tokens — single source of truth. See AGENTS.md → Design System.
+     Never hardcode these hex values anywhere else; reference the tokens below
+     or the shadcn semantic vars they feed into further down. */
+	/* ============================= */
+	--color-ink: #1c2620;
+	--color-base: #f6f5f0;
+	--color-primary: #2f5233;
+	--color-primary-soft: #dde7da;
+	--color-accent: #e0a73b;
+	--color-danger: #b5533c;
+
+	/* ============================= */
+	/* shadcn semantic tokens — wired to the brand tokens above.
+     NOTE: shadcn's own "primary" = the default/main-action button color.
+     Per AGENTS.md, action buttons are yellow (fz-accent), so shadcn --primary
+     points at --color-accent, NOT --color-primary. shadcn --secondary (used for
+     outline/secondary buttons) points at --color-primary (green) instead.
+     Don't "fix" this pairing without re-reading the Design System rule. */
+	/* ============================= */
+	--background: var(--color-base);
+	--foreground: var(--color-ink);
+
+	--card: #ffffff;
+	--card-foreground: var(--color-ink);
+	--popover: #ffffff;
+	--popover-foreground: var(--color-ink);
+
+	--primary: var(--color-accent);
+	--primary-foreground: #412402;
+
+	--secondary: var(--color-primary);
+	--secondary-foreground: #ffffff;
+
+	--muted: #ece9e0;
+	--muted-foreground: #6b6f68;
+
+	--accent: var(--color-primary-soft);
+	--accent-foreground: var(--color-primary);
+
+	--destructive: var(--color-danger);
+
+	--border: color-mix(in srgb, var(--color-ink) 15%, transparent);
+	--input: color-mix(in srgb, var(--color-ink) 20%, transparent);
+	--ring: var(--color-primary);
+
+	--chart-1: var(--color-primary);
+	--chart-2: var(--color-accent);
+	--chart-3: var(--color-primary-soft);
+	--chart-4: #6b6f68;
+	--chart-5: var(--color-danger);
+
+	--radius: 0.625rem;
+
+	--sidebar: #ffffff;
+	--sidebar-foreground: var(--color-ink);
+	--sidebar-primary: var(--color-primary);
+	--sidebar-primary-foreground: #ffffff;
+	--sidebar-accent: var(--color-primary-soft);
+	--sidebar-accent-foreground: var(--color-primary);
+	--sidebar-border: color-mix(in srgb, var(--color-ink) 15%, transparent);
+	--sidebar-ring: var(--color-primary);
 }
 
+/* Dark mode — first pass only, derived from the same brand hues.
+   Not yet reviewed against the Design System doc (dark mode wasn't part of
+   that discussion) — revisit before shipping a theme toggle. */
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+	--background: #14231a;
+	--foreground: #f0efe8;
+
+	--card: #1c2620;
+	--card-foreground: #f0efe8;
+	--popover: #1c2620;
+	--popover-foreground: #f0efe8;
+
+	--primary: var(--color-accent);
+	--primary-foreground: #2b1a01;
+
+	--secondary: #3f6a45;
+	--secondary-foreground: #f0efe8;
+
+	--muted: #26332a;
+	--muted-foreground: #a9ada4;
+
+	--accent: #2a3b2e;
+	--accent-foreground: #dde7da;
+
+	--destructive: #c96a51;
+
+	--border: color-mix(in srgb, #f0efe8 15%, transparent);
+	--input: color-mix(in srgb, #f0efe8 20%, transparent);
+	--ring: #6b9a71;
+
+	--chart-1: #6b9a71;
+	--chart-2: var(--color-accent);
+	--chart-3: #3f6a45;
+	--chart-4: #a9ada4;
+	--chart-5: #c96a51;
+
+	--sidebar: #1c2620;
+	--sidebar-foreground: #f0efe8;
+	--sidebar-primary: #6b9a71;
+	--sidebar-primary-foreground: #14231a;
+	--sidebar-accent: #2a3b2e;
+	--sidebar-accent-foreground: #dde7da;
+	--sidebar-border: color-mix(in srgb, #f0efe8 15%, transparent);
+	--sidebar-ring: #6b9a71;
 }
 
 @layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
-  html {
-    @apply font-sans;
-  }
+	* {
+		@apply border-border outline-ring/50;
+	}
+	body {
+		@apply bg-background text-foreground;
+	}
+	html {
+		@apply font-sans;
+	}
+	/* Prices and any tabular numbers — see Design System → Typography */
+	.tabular-nums {
+		font-variant-numeric: tabular-nums;
+	}
 }

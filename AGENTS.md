@@ -60,9 +60,9 @@ Rule: primary (green) = brand/identity, accent (yellow) = action/money. Don't le
 
 ### Typography
 
-- Display (headings, price display): **Sen**
-- Body: **Plus Jakarta Sans**
-- Both must be loaded with the `vietnamese` subset (see Tech Stack → Font)
+- Display (headings, price display): **Manrope** — variable weight, geometric, distinct from body without clashing
+- Body: **Be Vietnam Pro**
+- Both must be loaded with the `vietnamese` subset (see Tech Stack → Font). ⚠️ Sen (originally proposed) was rejected — it has no `vietnamese` subset on Google Fonts, only `latin`/`latin-ext`. Don't reintroduce it.
 - Prices and any tabular numbers: `font-variant-numeric: tabular-nums`
 
 ### Signature element — "tag treo"
