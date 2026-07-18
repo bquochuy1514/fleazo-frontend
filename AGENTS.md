@@ -86,6 +86,20 @@ The logo asset works directly on this navy bar — contrast measured ~7.3:1 (gre
 
 Tagline decided: **"The student swap marketplace"** (not yet placed anywhere in code — use when a hero/marketing copy slot is built).
 
+### Frontend design philosophy
+
+> Merged in from the old `frontend-design` skill folder — apply this mindset whenever building or reshaping any UI, not just once at project start.
+
+Approach every new UI piece like a design lead who gives each brief a distinct identity — never settle for the generic Tailwind/shadcn-default look. Concretely:
+
+- **Ground it in the subject.** Design choices (color, type, layout, motion) should come from Fleazo's actual world — secondhand student marketplace, Vietnamese campus life — not generic e-commerce tropes.
+- **Avoid the 3 AI-design clichés** unless the brief specifically calls for one: (1) warm cream bg + high-contrast serif + terracotta accent, (2) near-black bg + one neon/vermilion accent, (3) broadsheet newspaper style with hairline rules and zero border-radius.
+- **One signature element per surface**, kept restrained everywhere else — Fleazo's is the "tag treo" (price-tag) motif (see above). Don't add a second competing signature.
+- **Structure must encode meaning** — don't add numbered steps (01/02/03), dividers, or eyebrows unless the content is genuinely sequential/categorized.
+- **Motion is deliberate, not decorative** — plain Tailwind hover/active only (see Interactive feedback below); no animation library. Prefer one well-chosen motion cue per element over stacking several (e.g. don't combine scale + translate + shadow all at once).
+- **Copy is design material** — user-facing text (Vietnamese) should be active-voice, specific, and consistent (a button labeled "Đăng tin" always results in a toast that says "Đã đăng tin", never a different verb).
+- **Self-critique before shipping:** does this look like the default answer to any similar brief? If yes, revise. Check responsive behavior down to mobile and visible focus states every time.
+
 ### Component conventions
 
 - `<StatusBadge status="..." />` — single shared component mapping every `ProductStatus`/`ProductCondition` enum value to its color; never write ad-hoc badge markup or hardcoded status colors per page
@@ -176,7 +190,7 @@ Rules:
 
 - **Import alias:** use `@/` absolute imports (Next.js default) — a deliberate departure from the backend's relative-imports rule. Frontend trees nest deeper and the Next ecosystem assumes `@/`.
 - **User-facing text:** Vietnamese. Form validation messages mirror the backend DTO messages (Vietnamese) where the same field exists.
-- **Code comments:** English, same as backend.
+- **Code comments:** English, same as backend. Keep them **short, tag-style**, placed directly above the element/line they describe — `// Logo: only works on dark surfaces for now` above `<Logo />`, not a multi-line paragraph block. One line per note; if a decision genuinely needs more context, put the detail here in AGENTS.md and leave just a pointer comment in code (`// see AGENTS.md → Header surface`).
 - **HTTP calls:** all requests go through the shared axios instance in `src/lib/api.ts` — never import `axios` directly in components/pages.
 - **Env vars:** `NEXT_PUBLIC_` prefix required for any variable read on the client. Grouped into named sections with `# ===========================` dividers (same as backend). Every new var must also be added to `.env.example`.
 - Date manipulation: `dayjs` (same as backend)
@@ -200,18 +214,17 @@ Note on `api.ts`: auth interceptors (attach access token, 401 → refresh → re
 
 ## Current Status
 
-- Project scaffolded with `create-next-app` (TypeScript, Tailwind, ESLint, App Router, `src/`, `@/` alias, Turbopack): ✅ Done — `app/` moved into `src/`, `CLAUDE.md` redirects to this file
-- Foundation setup: ✅ Done — `.env.local`/`.env.example` (`NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_SOCKET_URL`), axios instance (`src/lib/api.ts`), `formatPrice` util, Cloudinary + Google avatar whitelist in `next.config.ts`
-- Docs: ✅ README.md
-- Everything else: not started
-- Decisions locked this round: shadcn/ui + lucide-react (moved to Confirmed), route group structure (see Project Structure)
-- shadcn init: ✅ Done — Maia preset on Base UI; cleanup applied: `iconLibrary` → `lucide` in `components.json`, hugeicons packages removed, `shadcn` CLI moved to devDependencies, template fonts (Figtree/Geist — no Vietnamese support) replaced with a `vietnamese`-subset font, `lang="vi"` + Fleazo metadata in root layout
-- Design System: ✅ Done — color tokens, typography (Manrope + Be Vietnam Pro), signature "tag treo" element documented above
-- `globals.css`: ✅ Done — Fleazo brand tokens wired into shadcn semantic vars
-- `Header` component (`src/components/layout/header.tsx`): ✅ Done — logo, search bar (placeholder, own full-width row on mobile so it isn't squeezed), guest-state actions (placeholder, not wired to real auth). Category browsing deliberately not in the header (a chip rail was tried and reverted — doesn't scale past a handful of categories) — will live on the home page instead. Ambient background (drifting blurred blobs + a repeating "tag treo" pattern, both via CSS/SVG, no image asset) and a shrink-on-scroll effect (padding + logo height step down) — this makes Header a Client Component, an intentional exception to the default-Server-Component rule (see Key Conventions → Rendering)
-- `Footer` component (`src/components/layout/footer.tsx`): ✅ Done — minimal placeholder (logo, tagline, copyright), needs real columns later
-- `(main)/layout.tsx`: ✅ Done — assembles Header + main + Footer
-- Next: `(auth)` layout, home page skeleton
+> Rule: only the item(s) actively being worked on get a detailed line. Once something is finished, collapse it to one line — `✅ Done — <shortest possible summary>`. Don't let finished work accumulate long descriptions here; if a decision still matters going forward, its detail belongs in the relevant section above (Tech Stack, Design System, Project Structure), not here.
+
+- ✅ Done — project scaffold (`create-next-app`, `src/`, `@/` alias, Turbopack)
+- ✅ Done — foundation (`.env` files, axios instance, `formatPrice`, Cloudinary/Google whitelist)
+- ✅ Done — shadcn/ui init (Maia + Base UI, lucide icons, vietnamese-subset fonts)
+- ✅ Done — design system (color tokens, typography, "tag treo" signature)
+- ✅ Done — `globals.css` brand tokens
+- ✅ Done — `Header`, `Footer`, `(main)/layout.tsx` (placeholder content, not wired to real data/auth yet; category browsing moved out of header, will live on home page instead)
+- ✅ Done — README
+
+**Next:** `(auth)` layout, home page skeleton
 
 ## Agent Behavior
 
