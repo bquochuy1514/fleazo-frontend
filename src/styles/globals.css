@@ -57,6 +57,8 @@
 	--color-fz-header: var(--color-header-bg);
 	--color-fz-accent-deep: var(--color-accent-deep);
 	--color-fz-accent-bright: var(--color-accent-bright);
+	--color-fz-accent-deep-hover: var(--color-accent-deep-hover);
+	--color-fz-accent-bright-hover: var(--color-accent-bright-hover);
 }
 
 :root {
@@ -75,15 +77,22 @@
 	--color-primary-soft: #d7f3e8;
 	--color-accent: #00b380;
 	--color-danger: #b5533c;
-	/* Gradient CTA stops — used by Button's default/secondary variants (see
+	/* Gradient CTA stops — used by Button's default variant (see
      src/components/ui/button.tsx). Deep = gradient start, bright = gradient
-     end. Not general-purpose tokens; only for the button gradient treatment.
-     ⚠️ Contrast-checked against --color-ink (the button text color): deep
-     measures 4.95:1, bright measures 9.23:1 — both pass WCAG AA (4.5:1) for
-     small text. Don't darken --color-accent-deep further without rechecking —
-     anything much darker than this drops below the AA line. */
-	--color-accent-deep: #10a668;
-	--color-accent-bright: #3ee0a8;
+     end; *-hover = darker versions used on :hover. Not general-purpose
+     tokens; only for the button gradient treatment.
+     These are Tailwind's emerald-500/teal-600 (hover: emerald-600/teal-700)
+     hex values, requested explicitly by the user to match a reference
+     design — kept as named tokens instead of hardcoded Tailwind color
+     classes so the "never hardcode hex in components" rule still holds.
+     ⚠️ White button text on these measures ~2.5–3.7:1 — below WCAG AA
+     (4.5:1). Known and accepted deliberately; don't "fix" this back to a
+     lighter pair without checking with the user first, it was a conscious
+     aesthetic choice over strict AA compliance. */
+	--color-accent-deep: #10b981;
+	--color-accent-bright: #0d9488;
+	--color-accent-deep-hover: #059669;
+	--color-accent-bright-hover: #0f766e;
 	/* Header-only surface — a solid dark navy bar, sampled from the reference
      mockup gradient (#111828 → #1e2939). Not a general-purpose token; only
      the Header background uses this. Everything else stays on --color-base. */
@@ -200,5 +209,38 @@
 	/* Prices and any tabular numbers — see Design System → Typography */
 	.tabular-nums {
 		font-variant-numeric: tabular-nums;
+	}
+}
+
+/* Header ambient blobs — see src/components/layout/header.tsx. Two large,
+   heavily-blurred teal circles that drift slowly behind the header content.
+   Kept out of Tailwind's arbitrary-value syntax since @keyframes need a real
+   CSS block; the animation-name is wired per-blob via inline style. */
+@keyframes fz-header-drift-1 {
+	0%,
+	100% {
+		transform: translate(-8%, -15%) scale(1);
+	}
+	50% {
+		transform: translate(8%, 10%) scale(1.15);
+	}
+}
+@keyframes fz-header-drift-2 {
+	0%,
+	100% {
+		transform: translate(10%, 10%) scale(1.05);
+	}
+	50% {
+		transform: translate(-10%, -10%) scale(0.9);
+	}
+}
+.fz-header-blob {
+	animation-duration: 20s;
+	animation-timing-function: ease-in-out;
+	animation-iteration-count: infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+	.fz-header-blob {
+		animation: none;
 	}
 }

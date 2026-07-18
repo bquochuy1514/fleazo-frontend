@@ -31,6 +31,8 @@ Same three goals as the backend — real product, revenue-generating, graduation
 - Token storage strategy (localStorage vs httpOnly cookie) — decide when building auth
 - Toast/notification library
 
+⚠️ Framer Motion considered and rejected for now (see Design System → Interactive feedback) — plain Tailwind hover/active scale covers current needs. Revisit only if a genuinely complex animation need comes up.
+
 ## Design System
 
 Brand direction: **đáng tin nhưng có hồn** — not corporate-cold, not gen-Z-loud.
@@ -90,7 +92,8 @@ Tagline decided: **"The student swap marketplace"** (not yet placed anywhere in 
 - Product card is one shared component reused across home, category, search, saved, seller-profile — no per-page duplicates
 - Spacing between page sections uses a shared token/util (e.g. `--section-gap`), not repeated raw Tailwind spacing classes copy-pasted per page
 - Radius: reuse shadcn's `--radius` scale for controls; cards get `12px` explicitly
-- **Button gradients:** `default` variant uses `--color-accent-deep → --color-accent-bright`; `secondary` uses `--color-primary → --color-primary-soft`. Both pairs are contrast-checked against `--color-ink` at both gradient ends (all ≥4.5:1, see `globals.css` comments) — if either endpoint hex ever changes, recheck contrast before shipping, don't eyeball it.
+- **Button gradients:** `default` variant uses `--color-accent-deep → --color-accent-bright` (= Tailwind's `emerald-500`/`teal-600` hex, kept as tokens rather than hardcoded Tailwind color classes), darkening to `*-hover` tokens (`emerald-600`/`teal-700`) on hover, plus `shadow-fz-accent-deep/20` and `hover:scale-[1.02]`. ⚠️ White text on this pair measures ~2.5–3.7:1 — below WCAG AA (4.5:1). This was flagged and explicitly accepted by the user (aesthetic match to a reference design over strict AA) — don't silently "fix" it back to a higher-contrast pair. `secondary` variant is unchanged — lighter `--color-primary → --color-primary-soft` pair with ink text.
+- **Interactive feedback:** every clickable element gets a `hover`/`active` cue — no exceptions, no silent opt-outs. Buttons: `default` variant has its own `hover:scale-[1.02]`; all icon-sized buttons (`icon`/`icon-xs`/`icon-sm`/`icon-lg`) get `hover:scale-110 active:scale-95` via a `compoundVariant` in `button.tsx` (keyed to size, not color variant, so it's automatic for any new icon button regardless of variant). `Logo` is an intentional exception — `hover:opacity-80`, no scale — because scaling a wide horizontal wordmark+icon lockup distorts it and risks overlapping neighboring header elements; opacity is the standard hover cue for logos generally. Plain CSS/Tailwind, not Framer Motion — no animation library is in the stack, and none is needed for scale/opacity-level feedback like this. Only reconsider Framer Motion if a genuinely complex interaction comes up (e.g. the mega menu's open/close transition, exit animations, drag gestures).
 
 - **Response format:** controllers return service results directly — no `{ statusCode, message, data }` wrapper. Type API responses as the plain data shape.
 - **Auth:** JWT access (short-lived) + refresh token rotation + Google OAuth. Axios layer must handle 401 → refresh → retry.
@@ -177,7 +180,7 @@ Rules:
 - **HTTP calls:** all requests go through the shared axios instance in `src/lib/api.ts` — never import `axios` directly in components/pages.
 - **Env vars:** `NEXT_PUBLIC_` prefix required for any variable read on the client. Grouped into named sections with `# ===========================` dividers (same as backend). Every new var must also be added to `.env.example`.
 - Date manipulation: `dayjs` (same as backend)
-- **Rendering:** default to Server Components (no `"use client"`). Only add `"use client"` to the specific component that needs interactivity (state, event handlers, browser APIs, TanStack Query hooks) — not to whole pages or layouts. `(public)` pages especially should stay server-rendered for SEO; push client-only logic into small leaf components.
+- **Rendering:** default to Server Components (no `"use client"`). Only add `"use client"` to the specific component that needs interactivity (state, event handlers, browser APIs, TanStack Query hooks) — not to whole pages or layouts. `(public)` pages especially should stay server-rendered for SEO; push client-only logic into small leaf components. Exception: `Header` (`src/components/layout/header.tsx`) is itself a Client Component because its shrink-on-scroll effect needs `window.scrollY` — the interactivity belongs to the whole component, not a nested leaf, so it's the component that's client, not its callers. `(main)/layout.tsx` and every page importing it stay Server Components.
 - ⚠️ Whenever a new shared util/component/hook pattern is established, document it in this file immediately.
 
 ## Common Utilities
@@ -205,7 +208,7 @@ Note on `api.ts`: auth interceptors (attach access token, 401 → refresh → re
 - shadcn init: ✅ Done — Maia preset on Base UI; cleanup applied: `iconLibrary` → `lucide` in `components.json`, hugeicons packages removed, `shadcn` CLI moved to devDependencies, template fonts (Figtree/Geist — no Vietnamese support) replaced with a `vietnamese`-subset font, `lang="vi"` + Fleazo metadata in root layout
 - Design System: ✅ Done — color tokens, typography (Manrope + Be Vietnam Pro), signature "tag treo" element documented above
 - `globals.css`: ✅ Done — Fleazo brand tokens wired into shadcn semantic vars
-- `Header` component (`src/components/layout/header.tsx`): ✅ Done — logo, category dropdown (placeholder, not wired), search bar (placeholder), guest-state actions (placeholder, not wired to real auth)
+- `Header` component (`src/components/layout/header.tsx`): ✅ Done — logo, search bar (placeholder, own full-width row on mobile so it isn't squeezed), guest-state actions (placeholder, not wired to real auth). Category browsing deliberately not in the header (a chip rail was tried and reverted — doesn't scale past a handful of categories) — will live on the home page instead. Ambient background (drifting blurred blobs + a repeating "tag treo" pattern, both via CSS/SVG, no image asset) and a shrink-on-scroll effect (padding + logo height step down) — this makes Header a Client Component, an intentional exception to the default-Server-Component rule (see Key Conventions → Rendering)
 - `Footer` component (`src/components/layout/footer.tsx`): ✅ Done — minimal placeholder (logo, tagline, copyright), needs real columns later
 - `(main)/layout.tsx`: ✅ Done — assembles Header + main + Footer
 - Next: `(auth)` layout, home page skeleton

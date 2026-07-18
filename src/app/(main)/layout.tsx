@@ -12,7 +12,10 @@ export default function MainLayout({
 	return (
 		<>
 			<Header />
-			<main className="flex-1">{children}</main>
+			<main className="flex-1">
+				{children}
+				<div className="min-h-[2000px]">Nội dung test scroll...</div>
+			</main>
 			<Footer />
 		</>
 	);
