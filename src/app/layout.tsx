@@ -17,9 +17,12 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
-	title: 'Fleazo — Chợ đồ cũ sinh viên',
+	title: 'Fleazo - Chợ đồ cũ sinh viên',
 	description:
 		'Nền tảng mua bán đồ cũ dành cho sinh viên các trường đại học Việt Nam',
+	icons: {
+		icon: '/fleazo-mark.png',
+	},
 };
 
 export default function RootLayout({

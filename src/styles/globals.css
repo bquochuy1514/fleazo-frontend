@@ -54,7 +54,7 @@
 	--color-fz-primary-soft: var(--color-primary-soft);
 	--color-fz-accent: var(--color-accent);
 	--color-fz-danger: var(--color-danger);
-	--color-fz-header: var(--color-header-bg);
+	--color-fz-dark-surface: var(--color-dark-surface);
 	--color-fz-accent-deep: var(--color-accent-deep);
 	--color-fz-accent-bright: var(--color-accent-bright);
 	--color-fz-accent-deep-hover: var(--color-accent-deep-hover);
@@ -71,8 +71,14 @@
      logo mark #03AA5C, CTA button #00B380. Primary and accent are now close
      in hue (both teal) — mind the exact hex, don't eyeball-swap them. */
 	/* ============================= */
+	/* ⚠️ Base background note: was #f6f5f0 (warm cream) — replaced because it
+     matched one of the known "AI-default" looks (warm cream + high-contrast
+     serif) flagged in Design System → Frontend design philosophy. New value
+     is a cool, faintly sage-tinted near-white instead — ties to the brand's
+     teal identity rather than a generic warm paper tone. --muted shifted to
+     match (was a warm beige, now a cool neutral). */
 	--color-ink: #1c2620;
-	--color-base: #f6f5f0;
+	--color-base: #f3f6f4;
 	--color-primary: #03aa5c;
 	--color-primary-soft: #d7f3e8;
 	--color-accent: #00b380;
@@ -93,10 +99,11 @@
 	--color-accent-bright: #0d9488;
 	--color-accent-deep-hover: #059669;
 	--color-accent-bright-hover: #0f766e;
-	/* Header-only surface — a solid dark navy bar, sampled from the reference
-     mockup gradient (#111828 → #1e2939). Not a general-purpose token; only
-     the Header background uses this. Everything else stays on --color-base. */
-	--color-header-bg: #111828;
+	/* Dark surface — shared by Header and Footer as a solid dark navy bar,
+     sampled from the reference mockup gradient (#111828 → #1e2939). Not a
+     general-purpose token; only these two components use this. Everything
+     else stays on --color-base. */
+	--color-dark-surface: #111828;
 
 	/* ============================= */
 	/* shadcn semantic tokens — wired to the brand tokens above.
@@ -120,7 +127,7 @@
 	--secondary: var(--color-primary);
 	--secondary-foreground: var(--color-ink);
 
-	--muted: #ece9e0;
+	--muted: #e7ece9;
 	--muted-foreground: #6b6f68;
 
 	--accent: var(--color-primary-soft);
@@ -210,13 +217,36 @@
 	.tabular-nums {
 		font-variant-numeric: tabular-nums;
 	}
+
+	/* Custom scrollbar — slim, brand teal thumb (--color-primary, see Design
+     System → Color tokens). Firefox uses scrollbar-width/-color; WebKit
+     browsers (Chrome/Safari/Edge) need the ::-webkit-scrollbar-* rules. */
+	* {
+		scrollbar-width: thin;
+		scrollbar-color: var(--color-primary) var(--color-dark-surface);
+	}
+	::-webkit-scrollbar {
+		width: 6px;
+		height: 6px;
+	}
+	::-webkit-scrollbar-track {
+		background: var(--color-dark-surface);
+	}
+	::-webkit-scrollbar-thumb {
+		background-color: var(--color-primary);
+		border-radius: 9999px;
+	}
+	::-webkit-scrollbar-thumb:hover {
+		background-color: var(--color-accent);
+	}
 }
 
-/* Header ambient blobs — see src/components/layout/header.tsx. Two large,
-   heavily-blurred teal circles that drift slowly behind the header content.
-   Kept out of Tailwind's arbitrary-value syntax since @keyframes need a real
-   CSS block; the animation-name is wired per-blob via inline style. */
-@keyframes fz-header-drift-1 {
+/* Dark-surface ambient blobs — see src/components/layout/dark-surface-ambient.tsx,
+   shared by Header and Footer. Two large, heavily-blurred teal circles that
+   drift slowly behind the content. Kept out of Tailwind's arbitrary-value
+   syntax since @keyframes need a real CSS block; the animation-name is
+   wired per-blob via inline style. */
+@keyframes fz-ambient-drift-1 {
 	0%,
 	100% {
 		transform: translate(-8%, -15%) scale(1);
@@ -225,7 +255,7 @@
 		transform: translate(8%, 10%) scale(1.15);
 	}
 }
-@keyframes fz-header-drift-2 {
+@keyframes fz-ambient-drift-2 {
 	0%,
 	100% {
 		transform: translate(10%, 10%) scale(1.05);
@@ -234,13 +264,13 @@
 		transform: translate(-10%, -10%) scale(0.9);
 	}
 }
-.fz-header-blob {
+.fz-ambient-blob {
 	animation-duration: 20s;
 	animation-timing-function: ease-in-out;
 	animation-iteration-count: infinite;
 }
 @media (prefers-reduced-motion: reduce) {
-	.fz-header-blob {
+	.fz-ambient-blob {
 		animation: none;
 	}
 }

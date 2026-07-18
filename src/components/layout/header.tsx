@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Heart, MessageCircle, User, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SearchInput } from '@/components/layout/search-input';
+import { DarkSurfaceAmbient } from '@/components/layout/dark-surface-ambient';
 import { cn } from '@/lib/utils';
 import { Logo } from '../logo';
 
@@ -18,62 +19,21 @@ export function Header() {
 	}, []);
 
 	return (
-		<header className="sticky top-0 z-50 overflow-hidden bg-fz-header">
-			{/* Ambient background: drifting blurred blobs + a repeating "tag treo"
-			    silhouette (see Design System → Signature element). Decorative
-			    only, motion disabled under prefers-reduced-motion (globals.css). */}
-			<div
-				aria-hidden="true"
-				className="pointer-events-none absolute inset-0"
-			>
-				<div
-					className="fz-header-blob absolute -top-24 -left-16 size-72 rounded-full bg-fz-accent/20 blur-3xl"
-					style={{ animationName: 'fz-header-drift-1' }}
-				/>
-				<div
-					className="fz-header-blob absolute -right-10 -bottom-28 size-64 rounded-full bg-fz-primary/15 blur-3xl"
-					style={{
-						animationName: 'fz-header-drift-2',
-						animationDelay: '-7s',
-					}}
-				/>
-				<svg className="absolute inset-0 h-full w-full opacity-[0.07]">
-					<defs>
-						<pattern
-							id="fz-tag-pattern"
-							width="72"
-							height="72"
-							patternUnits="userSpaceOnUse"
-							patternTransform="rotate(-12)"
-						>
-							<path
-								d="M4 14 L20 14 L30 24 L20 34 L4 34 Z"
-								fill="none"
-								stroke="white"
-								strokeWidth="1.5"
-							/>
-							<circle cx="9" cy="19" r="1.6" fill="white" />
-						</pattern>
-					</defs>
-					<rect
-						width="100%"
-						height="100%"
-						fill="url(#fz-tag-pattern)"
-					/>
-				</svg>
-			</div>
+		<header className="sticky top-0 z-50 overflow-hidden bg-fz-dark-surface">
+			{/* Ambient background — shared with Footer, see dark-surface-ambient.tsx */}
+			<DarkSurfaceAmbient />
 
 			<div
 				className={cn(
 					'relative mx-auto max-w-6xl px-4 transition-[padding] duration-300',
-					scrolled ? 'py-2' : 'py-6',
+					scrolled ? 'py-4' : 'py-6',
 				)}
 			>
 				<div className="flex items-center gap-3">
 					<Logo
 						className={cn(
 							'transition-[height] duration-300',
-							scrolled ? 'h-8' : 'h-10',
+							scrolled ? 'h-10' : 'h-11',
 						)}
 					/>
 

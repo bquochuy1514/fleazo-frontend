@@ -1,25 +1,122 @@
 import Link from 'next/link';
+import { Mail, Phone } from 'lucide-react';
+import { DarkSurfaceAmbient } from '@/components/layout/dark-surface-ambient';
+import { Logo } from '../logo';
 
-// Minimal placeholder — flesh out with real columns (about, categories, support,
-// social) later. Enough for now so (main)/layout.tsx has a real Footer, not a stub.
+// Column links are placeholders — routes don't exist yet (see AGENTS.md →
+// Project Structure). Update hrefs once each page lands.
+const CATEGORY_LINKS = [
+	{ href: '/danh-muc/giao-trinh-sach', label: 'Giáo trình & Sách' },
+	{ href: '/danh-muc/do-dien-tu', label: 'Đồ điện tử' },
+	{ href: '/danh-muc/xe-co', label: 'Xe cộ' },
+	{ href: '/danh-muc/do-gia-dung', label: 'Đồ gia dụng' },
+];
+
+const SUPPORT_LINKS = [
+	{ href: '/gioi-thieu', label: 'Về Fleazo' },
+	{ href: '/huong-dan', label: 'Hướng dẫn mua bán' },
+	{ href: '/dieu-khoan', label: 'Điều khoản dịch vụ' },
+	{ href: '/bao-mat', label: 'Chính sách bảo mật' },
+];
+
+// Footer: shares --color-dark-surface with Header for a matching navy
+// bookend top/bottom (see AGENTS.md → Design System → Dark surface). All
+// children styled explicitly for a dark background, same rule as Header.
 export function Footer() {
 	return (
-		<footer className="border-t border-border bg-background">
-			<div className="mx-auto max-w-6xl px-4 py-8 text-sm text-muted-foreground">
-				<p className="font-heading text-base font-semibold text-fz-primary">
-					Fleazo
-				</p>
-				<p className="mt-1">
-					Nền tảng mua bán đồ cũ dành cho sinh viên các trường đại học
-					Việt Nam.
-				</p>
-				<p className="mt-4">
+		<footer className="relative overflow-hidden bg-fz-dark-surface text-white/70">
+			{/* Ambient background — shared with Header, see dark-surface-ambient.tsx */}
+			<DarkSurfaceAmbient />
+
+			<div className="relative mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:grid-cols-2 lg:grid-cols-4">
+				{/* Brand column */}
+				<div className="lg:col-span-1">
+					<Logo className="h-12" />
+					<p className="mt-3 text-sm leading-relaxed">
+						Nền tảng mua bán đồ cũ dành cho sinh viên các trường đại
+						học Việt Nam.
+					</p>
+				</div>
+
+				{/* Danh mục nổi bật */}
+				<nav aria-label="Danh mục">
+					<h3 className="font-heading text-sm font-semibold text-white">
+						Danh mục
+					</h3>
+					<ul className="mt-3 space-y-2 text-sm">
+						{CATEGORY_LINKS.map((item) => (
+							<li key={item.href}>
+								<Link
+									href={item.href}
+									className="hover:text-white"
+								>
+									{item.label}
+								</Link>
+							</li>
+						))}
+					</ul>
+				</nav>
+
+				{/* Hỗ trợ */}
+				<nav aria-label="Hỗ trợ">
+					<h3 className="font-heading text-sm font-semibold text-white">
+						Hỗ trợ
+					</h3>
+					<ul className="mt-3 space-y-2 text-sm">
+						{SUPPORT_LINKS.map((item) => (
+							<li key={item.href}>
+								<Link
+									href={item.href}
+									className="hover:text-white"
+								>
+									{item.label}
+								</Link>
+							</li>
+						))}
+					</ul>
+				</nav>
+
+				{/* Liên hệ — no brand icons here on purpose: lucide-react has
+				    no Facebook/Instagram marks and AGENTS.md forbids adding a
+				    second icon library just for social logos. */}
+				<div>
+					<h3 className="font-heading text-sm font-semibold text-white">
+						Liên hệ
+					</h3>
+					<ul className="mt-3 space-y-2 text-sm">
+						<li>
+							<a
+								href="mailto:support@fleazo.vn"
+								className="flex items-center gap-2 hover:text-white"
+							>
+								<Mail className="size-4" />
+								support@fleazo.vn
+							</a>
+						</li>
+						<li>
+							<a
+								href="tel:+84000000000"
+								className="flex items-center gap-2 hover:text-white"
+							>
+								<Phone className="size-4" />
+								1900 0000
+							</a>
+						</li>
+					</ul>
+				</div>
+			</div>
+
+			{/* Bottom bar: copyright, separated with a hairline so it reads
+			    distinct from the column grid above without a second signature
+			    element competing with Header's ambient pattern. */}
+			<div className="relative border-t border-white/10">
+				<div className="mx-auto max-w-6xl px-4 py-5 text-xs">
 					© {new Date().getFullYear()}{' '}
-					<Link href="/" className="hover:text-foreground">
+					<Link href="/" className="hover:text-white">
 						Fleazo
 					</Link>
 					. Đồ án tốt nghiệp UIT.
-				</p>
+				</div>
 			</div>
 		</footer>
 	);

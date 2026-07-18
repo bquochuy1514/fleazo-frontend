@@ -17,9 +17,8 @@ Same three goals as the backend — real product, revenue-generating, graduation
 - Framework: Next.js (App Router, `src/` directory, Turbopack)
 - Language: TypeScript
 - Styling: Tailwind CSS v4
-- UI components: **shadcn/ui** — components are copied into the repo (`src/components/ui/`), owned and freely modifiable, not a dependency. Initialized with the **Maia** preset (soft, rounded, consumer-facing) on **Base UI** primitives (`@base-ui/react` — NOT Radix; imports in generated components come from `@base-ui/react/*`). CLI config lives in `components.json` — `iconLibrary` was manually switched from Maia's default `hugeicons` to `lucide`.
+- UI components: **shadcn/ui** — components are copied into the repo (`src/components/ui/`), owned and freely modifiable, not a dependency. Initialized with the **Maia** preset (soft, rounded, consumer-facing) on **Base UI** primitives (`@base-ui/react` — NOT Radix; imports in generated components come from `@base-ui/react/*`). CLI config lives in `components.json`.
 - Icons: **lucide-react** — sole icon library (do not add react-icons, hugeicons, or any second icon set)
-- Font: single Google font with the `vietnamese` subset, wired to `--font-sans` in the root layout. ⚠️ Figtree and Geist (defaults from create-next-app / Maia preset) do NOT support Vietnamese and were removed — never reintroduce a font without the `vietnamese` subset.
 - HTTP client: axios
 - Realtime: `socket.io-client` — **required**, backend uses Socket.IO, protocol is not compatible with raw WebSocket
 
@@ -37,52 +36,52 @@ Same three goals as the backend — real product, revenue-generating, graduation
 
 Brand direction: **đáng tin nhưng có hồn** — not corporate-cold, not gen-Z-loud.
 
-### Color tokens (v2 — navy + teal)
+### Color tokens
 
-⚠️ Superseded the original moss-green + amber palette entirely (v1). Colors below were sampled pixel-exact from a reference mockup the user provided, not designed from scratch. If moss green (`#2F5233`) or amber (`#E0A73B`) shows up anywhere, it's stale — replace it.
+Colors sampled pixel-exact from a reference mockup the user provided, not designed from scratch.
 
 Define as CSS variables in `globals.css`, consume via Tailwind — never hardcode hex in components.
 
-| Token                  | Hex       | Role                             |
-| ---------------------- | --------- | -------------------------------- |
-| `--color-ink`          | `#1C2620` | Primary text                     |
-| `--color-base`         | `#F6F5F0` | Page background                  |
-| `--color-primary`      | `#03AA5C` | Brand — logo, links, icons       |
-| `--color-primary-soft` | `#D7F3E8` | Light fill — placeholders, hover |
-| `--color-accent`       | `#00B380` | CTA — buttons, price tags        |
-| `--color-danger`       | `#B5533C` | Errors, `REJECTED`/`BANNED` only |
-| `--color-header-bg`    | `#111828` | Header surface ONLY — see below  |
+| Token                  | Hex       | Role                                     |
+| ---------------------- | --------- | ---------------------------------------- |
+| `--color-ink`          | `#1C2620` | Primary text                             |
+| `--color-base`         | `#F3F6F4` | Page background                          |
+| `--color-primary`      | `#03AA5C` | Brand — logo, links, icons               |
+| `--color-primary-soft` | `#D7F3E8` | Light fill — placeholders, hover         |
+| `--color-accent`       | `#00B380` | CTA — buttons, price tags                |
+| `--color-danger`       | `#B5533C` | Errors, `REJECTED`/`BANNED` only         |
+| `--color-dark-surface` | `#111828` | Dark navy surface — Header + Footer only |
 
 Notes:
 
-- `--color-ink` / `--color-base`: unaffected by the v2 change.
-- `--color-primary` and `--color-accent` are now both teal — much closer in hue than the old green/amber pair. **Don't eyeball-swap them** — always copy the exact hex/token, never approximate one from memory of the other.
+- `--color-base`: currently `#F3F6F4` — a cool, faintly sage-tinted near-white. Chosen deliberately over a warm cream tone (which reads as a generic "AI-default" background, see Frontend design philosophy below) — ties to the brand's teal identity instead.
+- `--color-primary` and `--color-accent` are both teal, close in hue. **Don't eyeball-swap them** — always copy the exact hex/token, never approximate one from memory of the other.
 - ⚠️ Contrast checked: white text on either teal fails WCAG AA for normal text (~2.7–3:1). `--primary-foreground` and `--secondary-foreground` in `globals.css` use `--color-ink`, not white — don't "fix" this back to white, it was a deliberate correction.
-- `--color-header-bg`: exclusive to the `Header` background bar — not a general-purpose token, don't reuse for cards/badges/other surfaces.
+- `--color-dark-surface`: shared by `Header` and `Footer` background bars only — not a general-purpose token, don't reuse for cards/badges/or other surfaces. (Renamed from `--color-header-bg` once Footer adopted the same navy for visual bookend consistency.)
 - `--color-danger`: never reused for `SOLD` — that's neutral-good, use `--color-ink` at low opacity overlay instead.
 
-Rule: primary (darker teal, `#03AA5C`) = brand/identity, accent (brighter teal, `#00B380`) = action/money. They read as nearly the same color at a glance now — the separation lives in the exact hex, not in a big visual hue gap like v1.
+Rule: primary (darker teal, `#03AA5C`) = brand/identity, accent (brighter teal, `#00B380`) = action/money. They read as nearly the same color at a glance — the separation lives in the exact hex, not a visual hue gap.
 
 ### Typography
 
 - Display (headings, price display): **Manrope** — variable weight, geometric, distinct from body without clashing
 - Body: **Be Vietnam Pro**
-- Both must be loaded with the `vietnamese` subset (see Tech Stack → Font). ⚠️ Sen (originally proposed) was rejected — it has no `vietnamese` subset on Google Fonts, only `latin`/`latin-ext`. Don't reintroduce it.
+- Both loaded with the `vietnamese` subset (see `src/app/layout.tsx`) — never reintroduce a font without it.
 - Prices and any tabular numbers: `font-variant-numeric: tabular-nums`
 
 ### Signature element — "tag treo"
 
 Recurring visual motif referencing a physical price tag: small rounded-rect badge, used consistently for:
 
-- Product condition badge (`NEW`/`LIKE_NEW`/`GOOD`/`FAIR`/`POOR`) — color scales from `--color-primary-soft` (new) toward a neutral gray (poor), never random per-condition colors. (v2 note: the old scale ended on amber-light, which no longer exists as a token — reworked to a neutral gray endpoint instead.)
+- Product condition badge (`NEW`/`LIKE_NEW`/`GOOD`/`FAIR`/`POOR`) — color scales from `--color-primary-soft` (new) toward a neutral gray (poor), never random per-condition colors.
 - Price tag overlay on product images
 - Status badge (`SOLD` etc.)
 
-### Header surface
+### Dark surface (Header + Footer)
 
-The `Header` component uses `--color-header-bg` (dark navy, `#111828`) as a solid background bar, not `--background` — a deliberate exception, because the real logo uses a white wordmark. This token is exclusive to the Header; don't reuse it elsewhere. All header children (nav buttons, icons, search input) are styled explicitly for a dark surface (white text/icons, white search pill) — don't default them to shadcn's `text-foreground`, which assumes a light page background.
+`Header` and `Footer` both use `--color-dark-surface` (dark navy, `#111828`) as a solid background bar, not `--background` — a deliberate exception, giving the page a matching navy "bookend" top and bottom. This token is exclusive to these two components; don't reuse it for cards/badges/other surfaces. All children of either component are styled explicitly for a dark surface (white/light text and icons) — don't default them to shadcn's `text-foreground`, which assumes a light page background.
 
-The logo asset works directly on this navy bar — contrast measured ~7.3:1 (green wordmark vs `#111828`), passes WCAG AAA. The earlier note about needing a white-wordmark variant was based on the old dark-green (v1) header and is stale; the real logo (`Logo` component, `src/components/logo.tsx`) is already in use here.
+The logo asset works directly on this navy bar — contrast measured ~7.3:1 (green wordmark vs `#111828`), passes WCAG AAA. The real logo (`Logo` component, `src/components/logo.tsx`) is used in both Header and Footer on this surface.
 
 Tagline decided: **"The student swap marketplace"** (not yet placed anywhere in code — use when a hero/marketing copy slot is built).
 
@@ -107,7 +106,7 @@ Approach every new UI piece like a design lead who gives each brief a distinct i
 - Spacing between page sections uses a shared token/util (e.g. `--section-gap`), not repeated raw Tailwind spacing classes copy-pasted per page
 - Radius: reuse shadcn's `--radius` scale for controls; cards get `12px` explicitly
 - **Button gradients:** `default` variant uses `--color-accent-deep → --color-accent-bright` (= Tailwind's `emerald-500`/`teal-600` hex, kept as tokens rather than hardcoded Tailwind color classes), darkening to `*-hover` tokens (`emerald-600`/`teal-700`) on hover, plus `shadow-fz-accent-deep/20` and `hover:scale-[1.02]`. ⚠️ White text on this pair measures ~2.5–3.7:1 — below WCAG AA (4.5:1). This was flagged and explicitly accepted by the user (aesthetic match to a reference design over strict AA) — don't silently "fix" it back to a higher-contrast pair. `secondary` variant is unchanged — lighter `--color-primary → --color-primary-soft` pair with ink text.
-- **Interactive feedback:** every clickable element gets a `hover`/`active` cue — no exceptions, no silent opt-outs. Buttons: `default` variant has its own `hover:scale-[1.02]`; all icon-sized buttons (`icon`/`icon-xs`/`icon-sm`/`icon-lg`) get `hover:scale-110 active:scale-95` via a `compoundVariant` in `button.tsx` (keyed to size, not color variant, so it's automatic for any new icon button regardless of variant). `Logo` is an intentional exception — `hover:opacity-80`, no scale — because scaling a wide horizontal wordmark+icon lockup distorts it and risks overlapping neighboring header elements; opacity is the standard hover cue for logos generally. Plain CSS/Tailwind, not Framer Motion — no animation library is in the stack, and none is needed for scale/opacity-level feedback like this. Only reconsider Framer Motion if a genuinely complex interaction comes up (e.g. the mega menu's open/close transition, exit animations, drag gestures).
+- **Interactive feedback:** every clickable element gets a `hover`/`active` cue — no exceptions, no silent opt-outs. Buttons: hover is color/shadow-only per variant (see `button.tsx`); `active:scale-95` is on the shared base class, so every button — any variant, any size — gets the same uniform press feedback. `Logo` is an intentional exception — `hover:opacity-80`, no scale — because scaling a wide horizontal wordmark+icon lockup distorts it and risks overlapping neighboring header elements; opacity is the standard hover cue for logos generally. Plain CSS/Tailwind, not Framer Motion — no animation library is in the stack, and none is needed for scale/opacity-level feedback like this. Only reconsider Framer Motion if a genuinely complex interaction comes up (e.g. the mega menu's open/close transition, exit animations, drag gestures).
 
 - **Response format:** controllers return service results directly — no `{ statusCode, message, data }` wrapper. Type API responses as the plain data shape.
 - **Auth:** JWT access (short-lived) + refresh token rotation + Google OAuth. Axios layer must handle 401 → refresh → retry.
@@ -156,7 +155,7 @@ src/
 │   ├── logo.tsx                  # Shared across Header, Footer, AND (auth) pages —
 │   │                             #   top-level, not nested under layout/, because
 │   │                             #   it isn't exclusive to the app shell
-│   └── layout/                   # App shell components: header.tsx, footer.tsx
+│   └── layout/                   # App shell components: header.tsx, footer.tsx, search-input.tsx, bottom-nav.tsx
 │
 ├── lib/                          # Shared non-UI code (see Common Utilities table)
 │   ├── api.ts                    # Shared axios instance
