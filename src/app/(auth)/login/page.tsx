@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { GoogleAuthButton } from '@/components/auth/google-auth-button';
 import { api } from '@/lib/api';
+import { Eye, EyeOff } from 'lucide-react';
 
 export default function LoginPage() {
 	const router = useRouter();
@@ -17,6 +18,7 @@ export default function LoginPage() {
 		general?: string;
 	}>({});
 	const [rememberMe, setRememberMe] = useState(true);
+	const [showPassword, setShowPassword] = useState(false);
 	const [loading, setLoading] = useState(false);
 
 	const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -29,11 +31,6 @@ export default function LoginPage() {
 		try {
 			const { data } = await api.post('/auth/login', values);
 
-			// Remember me: with it, refresh_token persists in localStorage so
-			// the (future) 401 -> refresh -> retry interceptor can keep the
-			// session alive silently. Without it, only the access token goes
-			// into sessionStorage (gone once the tab closes) and no refresh
-			// token is stored at all — session just ends when it expires.
 			if (rememberMe) {
 				localStorage.setItem('access_token', data.access_token);
 				localStorage.setItem('refresh_token', data.refresh_token);
@@ -93,7 +90,7 @@ export default function LoginPage() {
 						id="email"
 						name="email"
 						type="email"
-						placeholder="ban@student.edu.vn"
+						placeholder="example@gmail.com"
 						className="mt-2 h-12 text-base"
 					/>
 					{errors.email && (
@@ -110,13 +107,29 @@ export default function LoginPage() {
 					>
 						Mật khẩu
 					</label>
-					<Input
-						id="password"
-						name="password"
-						type="password"
-						placeholder="••••••••"
-						className="mt-2 h-12 text-base"
-					/>
+					<div className="relative mt-2">
+						<Input
+							id="password"
+							name="password"
+							type={showPassword ? 'text' : 'password'}
+							placeholder="••••••••"
+							className="h-12 pr-12 text-base"
+						/>
+						<button
+							type="button"
+							onClick={() => setShowPassword((prev) => !prev)}
+							className="absolute cursor-pointer top-1/2 right-4 -translate-y-1/2 text-muted-foreground transition-colors hover:text-fz-ink"
+							aria-label={
+								showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'
+							}
+						>
+							{showPassword ? (
+								<EyeOff className="size-5" />
+							) : (
+								<Eye className="size-5" />
+							)}
+						</button>
+					</div>
 					{errors.password && (
 						<p className="mt-1.5 text-sm text-destructive">
 							{errors.password}

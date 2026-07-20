@@ -16,7 +16,7 @@ export default function MainLayout({
 			<BottomNav />
 			<main className="flex-1">
 				{children}
-				<div className="min-h-[2000px]">Nội dung test scroll...</div>
+				<div className="min-h-[1000px]">Nội dung test scroll...</div>
 			</main>
 			<Footer />
 		</>

@@ -1,9 +1,5 @@
 import { Button } from '@/components/ui/button';
 
-// Official Google "G" mark — a one-off inline SVG is intentional here, not
-// a violation of "lucide-react is the sole icon library" (that rule covers
-// general-purpose icon sets; this is the single required third-party brand
-// asset for a Google Sign-In button, per Google's own brand guidelines).
 function GoogleIcon({ className }: { className?: string }) {
 	return (
 		<svg viewBox="0 0 20 20" className={className} aria-hidden="true">
@@ -35,7 +31,7 @@ export function GoogleAuthButton() {
 		<Button
 			type="button"
 			variant="outline"
-			className="h-12 w-full gap-2 bg-white text-base hover:bg-white/90"
+			className="h-12 w-full gap-2 bg-white text-base shadow-sm hover:bg-fz-primary-soft hover:shadow-md"
 		>
 			<GoogleIcon className="size-5" />
 			Đăng nhập với Google
