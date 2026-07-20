@@ -43,10 +43,6 @@ export default function AuthLayout({
 				<div className="relative w-full max-w-md md:mx-auto">
 					<Logo className="h-14" clickable={false} />
 
-					<p className="hidden md:block font-heading font-semibold leading-snug text-white md:mt-10 md:text-2xl">
-						TRAO ĐỔI - MUA BÁN ĐỒ CŨ SINH VIÊN
-					</p>
-
 					{/* Value props — desktop only, no room once the card overlaps on mobile. */}
 					<div className="mt-12 hidden space-y-9 md:block">
 						{VALUE_PROPS.map(({ icon: Icon, title, desc }) => (

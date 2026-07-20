@@ -21,13 +21,13 @@ Same three goals as the backend — real product, revenue-generating, graduation
 - Icons: **lucide-react** — sole icon library (do not add react-icons, hugeicons, or any second icon set)
 - HTTP client: axios
 - Realtime: `socket.io-client` — **required**, backend uses Socket.IO, protocol is not compatible with raw WebSocket
-- Form handling: **no library** — reconsidered after building the login UI. `react-hook-form + zod` was tried first, then removed: client-side validation only catches "obviously wrong" input before a network call (empty field, malformed email) — it never replaces backend validation, which must re-check everything regardless. For a simple form (login: 2 fields), that benefit is minor next to the real cost of a second place to keep validation rules in sync with `fleazo-backend`'s DTOs. Current approach: native HTML5 validation (`required`, `type="email"`) + surfacing whatever error the backend returns on submit. Revisit per-form if one gets complex enough (many fields, cross-field rules like confirm-password) that hand-rolled validation gets messy — react-hook-form + zod remain the fallback choice if/when that happens, not ruled out permanently.
+- Form handling: **no library** — reconsidered after building the login UI. `react-hook-form + zod` was tried first, then removed: client-side validation only catches "obviously wrong" input before a network call (empty field, malformed email) — it never replaces backend validation, which must re-check everything regardless. Current approach: uncontrolled inputs + native HTML5 types, backend errors surfaced per-field on submit — see **Form Conventions** section for the full pattern and shared building blocks. react-hook-form + zod remain the fallback choice if a form gets genuinely complex (multi-step, many cross-field rules), not ruled out permanently.
+- Token storage: **localStorage vs sessionStorage, decided by the user's "remember me" choice** — checked → both `access_token` and `refresh_token` in `localStorage` (survives browser close, enables silent refresh); unchecked → only `access_token` in `sessionStorage`, no `refresh_token` stored at all (session just ends when the access token expires or the tab closes). Not an httpOnly-cookie approach — plain client storage either way.
 
 ### Undecided — decide incrementally as each area is built, then move to Confirmed
 
 - Server-state management (TanStack Query?) — decide when building the first data-fetching page
 - Client-state management (Zustand?) — decide when building auth state
-- Token storage strategy (localStorage vs httpOnly cookie) — decide when building auth
 - Toast/notification library
 
 ⚠️ Framer Motion considered and rejected for now (see Design System → Interactive feedback) — plain Tailwind hover/active scale covers current needs. Revisit only if a genuinely complex animation need comes up.
@@ -159,7 +159,9 @@ src/
 │   ├── layout/                   # App shell components: header.tsx, footer.tsx,
 │   │                             #   search-input.tsx, bottom-nav.tsx,
 │   │                             #   dark-surface-ambient.tsx
-│   └── auth/                     # Shared by (auth) pages: google-auth-button.tsx
+│   ├── auth/                     # Shared by (auth) pages: google-auth-button.tsx
+│   └── form/                     # Shared form building blocks (see Form Conventions):
+│                                 #   field-error.tsx, password-input.tsx
 │
 ├── lib/                          # Shared non-UI code (see Common Utilities table)
 │   ├── api.ts                    # Shared axios instance
@@ -172,7 +174,9 @@ src/
 │                                 #   here (src/styles/globals.css) or shadcn add breaks
 │
 ├── hooks/                        # (planned) shared hooks (useAuth, useSocket...)
-├── types/                        # (planned) TS types mirroring backend API shapes
+├── types/
+│   └── api.types.ts              # ApiErrorResponse<TFields> — shared axios error-response
+│                                 #   shape for any form, see Form Conventions
 └── providers/                    # (planned) app-wide providers (socket, state, query client)
 
 components.json                   # shadcn CLI config — read by the CLI, not by app code
@@ -189,6 +193,18 @@ Rules:
 
 > ⚠️ Keep this tree in sync whenever a folder is added or moved under `src/`.
 
+## Form Conventions
+
+> Decided after building the login form — see Tech Stack → Form handling for why no form library.
+
+- **Form values (email, password, etc.): uncontrolled inputs**, read once on submit via `Object.fromEntries(new FormData(e.currentTarget))` — no `useState` per field. The resulting plain object is still sent as a normal JSON body (axios serializes plain objects automatically); `FormData` here is only a DOM-reading convenience, never the wire format, never multipart.
+- **UI-only state is a different category — always `useState`, regardless of the rule above**: loading flags, modal open/close, password show/hide, and anything else that isn't a value submitted to the backend.
+- **A field that isn't sent to the backend but changes client behavior (e.g. `rememberMe`) is also `useState`, kept out of the `FormData` read entirely** — don't let it ride along in `values` just because it's inside the same `<form>`; it's not a DTO field and a strict backend DTO (`forbidNonWhitelisted`) would reject it if submitted as-is.
+- **Error shape**: `ApiErrorResponse<TFields>` in `src/types/api.types.ts` — `{ message?: string; errors?: Partial<Record<TFields, string>> }`. Type the axios catch with `isAxiosError<ApiErrorResponse<'email' | 'password'>>(err)` instead of declaring a one-off error type per page.
+- **Field-level error display**: `<FieldError message={...} />` from `src/components/form/field-error.tsx` — shared across every form, don't hand-roll the `{error && <p className="...">}` pattern per page.
+- **Password fields with a show/hide toggle**: `<PasswordInput />` from `src/components/form/password-input.tsx` — owns its own toggle state internally, used exactly like `Input` (accepts a separate `wrapperClassName` for margin on the outer wrapper, since it renders two elements — the input and the toggle button — not one).
+- Escalate to react-hook-form + zod only when a form is genuinely complex (multi-step, many cross-field rules) — not needed anywhere yet.
+
 ## Key Conventions
 
 - **Import alias:** use `@/` absolute imports (Next.js default) — a deliberate departure from the backend's relative-imports rule. Frontend trees nest deeper and the Next ecosystem assumes `@/`.
@@ -200,20 +216,23 @@ Rules:
 - **Rendering:** default to Server Components (no `"use client"`). Only add `"use client"` to the specific component that needs interactivity (state, event handlers, browser APIs, TanStack Query hooks) — not to whole pages or layouts. `(public)` pages especially should stay server-rendered for SEO; push client-only logic into small leaf components. Exception: `Header` (`src/components/layout/header.tsx`) is itself a Client Component because its shrink-on-scroll effect needs `window.scrollY` — the interactivity belongs to the whole component, not a nested leaf, so it's the component that's client, not its callers. `(main)/layout.tsx` and every page importing it stay Server Components.
 - ⚠️ Whenever a new shared util/component/hook pattern is established, document it in this file immediately.
 
-## Common Utilities
+## Common Utilities & Shared Components
 
 Always check for existing utilities before writing new code:
 
-| Path                | Export        | Use when                                                 |
-| ------------------- | ------------- | -------------------------------------------------------- |
-| `src/lib/api.ts`    | `api`         | making any HTTP call to the backend                      |
-| `src/lib/format.ts` | `formatPrice` | displaying a VNĐ price value                             |
-| `src/lib/utils.ts`  | `cn`          | merging Tailwind classes in a component with `className` |
+| Path                                     | Export                      | Use when                                                 |
+| ---------------------------------------- | --------------------------- | -------------------------------------------------------- |
+| `src/lib/api.ts`                         | `api`, `isAxiosError`       | making any HTTP call, or narrowing a caught error's type |
+| `src/lib/format.ts`                      | `formatPrice`               | displaying a VNĐ price value                             |
+| `src/lib/utils.ts`                       | `cn`                        | merging Tailwind classes in a component with `className` |
+| `src/types/api.types.ts`                 | `ApiErrorResponse<TFields>` | typing an axios error response body for any form         |
+| `src/components/form/field-error.tsx`    | `FieldError`                | rendering a field-level error message under an input     |
+| `src/components/form/password-input.tsx` | `PasswordInput`             | a password field that needs a show/hide toggle           |
 
-> ⚠️ Whenever a new file is added to `src/lib/`, update this table immediately.
+> ⚠️ Whenever a new file is added to `src/lib/`, `src/types/`, or `src/components/form/`, update this table immediately.
 > ⚠️ Keep **Use when** to one short line — a few words of context is fine, but push edge cases, caveats, or "not implemented yet" notes into a note below the table instead of into the cell.
 
-Note on `api.ts`: auth interceptors (attach access token, 401 → refresh → retry) are deliberately NOT implemented yet — blocked on the token storage decision (see Tech Stack → Undecided). Add them when building the auth module.
+Note on `api.ts`: auth interceptors (attach access token, 401 → refresh → retry) are deliberately NOT implemented yet — the token storage side of this is now decided (see Tech Stack → Token storage), interceptor logic itself still isn't built. Add it when building out the rest of the auth module.
 
 ## Current Status
 
@@ -225,7 +244,7 @@ Note on `api.ts`: auth interceptors (attach access token, 401 → refresh → re
 - ✅ Done — design system (color tokens, typography, "tag treo" signature)
 - ✅ Done — `globals.css` brand tokens
 - ✅ Done — `Header`, `Footer`, `BottomNav`, `(main)/layout.tsx` (placeholder content, not wired to real data/auth yet; category browsing moved out of header, will live on home page instead)
-- ✅ Done — `(auth)` layout (split brand/form panels) + `login` page (native HTML5 validation, no form library — see Tech Stack → Form handling; Google button placeholder, submit handler stubbed)
+- ✅ Done — `(auth)` layout (split brand/form panels, bottom-sheet card on mobile) + `login` page (uncontrolled form + `FieldError`/`PasswordInput` shared components — see Form Conventions; remember-me, Google button placeholder)
 
 **Next:** `register`/`forgot-password`/`reset-password`/`verify-account` pages, home page skeleton
 

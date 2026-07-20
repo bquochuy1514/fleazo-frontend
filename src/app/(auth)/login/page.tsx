@@ -6,24 +6,22 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
+import { PasswordInput } from '@/components/form/password-input';
+import { FieldError } from '@/components/form/field-error';
 import { GoogleAuthButton } from '@/components/auth/google-auth-button';
-import { api } from '@/lib/api';
-import { Eye, EyeOff } from 'lucide-react';
+import { api, isAxiosError } from '@/lib/api';
+import type { ApiErrorResponse } from '@/types/api.types';
+
+type LoginFields = 'email' | 'password';
 
 export default function LoginPage() {
 	const router = useRouter();
-	const [errors, setErrors] = useState<{
-		email?: string;
-		password?: string;
-		general?: string;
-	}>({});
+	const [errors, setErrors] = useState<ApiErrorResponse<LoginFields>>({});
 	const [rememberMe, setRememberMe] = useState(true);
-	const [showPassword, setShowPassword] = useState(false);
 	const [loading, setLoading] = useState(false);
 
-	const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+	const onSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
 		e.preventDefault();
-		setErrors({});
 		setLoading(true);
 
 		const values = Object.fromEntries(new FormData(e.currentTarget));
@@ -31,6 +29,10 @@ export default function LoginPage() {
 		try {
 			const { data } = await api.post('/auth/login', values);
 
+			// Remember me: with it, refresh_token persists in localStorage so
+			// the (future) 401 -> refresh -> retry interceptor can keep the
+			// session alive silently. Without it, only the access token goes
+			// into sessionStorage and no refresh token is stored at all.
 			if (rememberMe) {
 				localStorage.setItem('access_token', data.access_token);
 				localStorage.setItem('refresh_token', data.refresh_token);
@@ -39,19 +41,20 @@ export default function LoginPage() {
 			}
 
 			router.push('/');
-		} catch (err: any) {
-			const res = err.response?.data;
-			const fieldErrors = res?.errors ?? {};
+		} catch (err) {
+			const res = isAxiosError<ApiErrorResponse<LoginFields>>(err)
+				? err.response?.data
+				: undefined;
 
-			setErrors({
-				email: fieldErrors.email,
-				password: fieldErrors.password,
-				general:
-					!fieldErrors.email && !fieldErrors.password
-						? (res?.message ??
-							'Đã có lỗi xảy ra, vui lòng thử lại.')
-						: undefined,
-			});
+			setErrors(
+				res?.errors && Object.keys(res.errors).length > 0
+					? { errors: res.errors }
+					: {
+							message:
+								res?.message ??
+								'Đã có lỗi xảy ra, vui lòng thử lại.',
+						},
+			);
 		} finally {
 			setLoading(false);
 		}
@@ -78,7 +81,7 @@ export default function LoginPage() {
 				<span className="h-px flex-1 bg-border" aria-hidden="true" />
 			</div>
 
-			<form onSubmit={onSubmit} className="space-y-5">
+			<form onSubmit={onSubmit} className="space-y-4">
 				<div>
 					<label
 						htmlFor="email"
@@ -93,11 +96,7 @@ export default function LoginPage() {
 						placeholder="example@gmail.com"
 						className="mt-2 h-12 text-base"
 					/>
-					{errors.email && (
-						<p className="mt-1.5 text-sm text-destructive">
-							{errors.email}
-						</p>
-					)}
+					<FieldError message={errors.errors?.email} />
 				</div>
 
 				<div>
@@ -107,34 +106,14 @@ export default function LoginPage() {
 					>
 						Mật khẩu
 					</label>
-					<div className="relative mt-2">
-						<Input
-							id="password"
-							name="password"
-							type={showPassword ? 'text' : 'password'}
-							placeholder="••••••••"
-							className="h-12 pr-12 text-base"
-						/>
-						<button
-							type="button"
-							onClick={() => setShowPassword((prev) => !prev)}
-							className="absolute cursor-pointer top-1/2 right-4 -translate-y-1/2 text-muted-foreground transition-colors hover:text-fz-ink"
-							aria-label={
-								showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'
-							}
-						>
-							{showPassword ? (
-								<EyeOff className="size-5" />
-							) : (
-								<Eye className="size-5" />
-							)}
-						</button>
-					</div>
-					{errors.password && (
-						<p className="mt-1.5 text-sm text-destructive">
-							{errors.password}
-						</p>
-					)}
+					<PasswordInput
+						id="password"
+						name="password"
+						placeholder="••••••••"
+						wrapperClassName="mt-2"
+						className="h-12 text-base"
+					/>
+					<FieldError message={errors.errors?.password} />
 
 					<div className="mt-3 flex items-center justify-between">
 						<label className="flex items-center gap-2 text-sm text-fz-ink">
@@ -156,9 +135,7 @@ export default function LoginPage() {
 					</div>
 				</div>
 
-				{errors.general && (
-					<p className="text-sm text-destructive">{errors.general}</p>
-				)}
+				<FieldError message={errors.message} />
 
 				<Button
 					type="submit"
@@ -170,7 +147,7 @@ export default function LoginPage() {
 				</Button>
 			</form>
 
-			<p className="mt-8 text-center text-base text-muted-foreground">
+			<p className="mt-4 text-center text-base text-muted-foreground">
 				Chưa có tài khoản?{' '}
 				<Link
 					href="/register"
