@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Mail, Phone } from 'lucide-react';
 import { DarkSurfaceAmbient } from '@/components/layout/dark-surface-ambient';
+import { cn } from '@/lib/utils';
 import { Logo } from '../logo';
 
 // Column links are placeholders — routes don't exist yet (see AGENTS.md →
@@ -24,14 +25,24 @@ const SUPPORT_LINKS = [
 // children styled explicitly for a dark background, same rule as Header.
 export function Footer() {
 	return (
-		<footer className="relative overflow-hidden bg-fz-dark-surface text-white/70">
+		<footer
+			className={cn(
+				'relative overflow-hidden bg-fz-dark-surface text-white/70',
+				// BottomNav is `fixed`, so it overlays whatever's at the very
+				// bottom of the page — without this, it covers the copyright
+				// line below once scrolled all the way down. Height must match
+				// BottomNav's own h-16 + safe-area padding exactly. sm+ doesn't
+				// need it: BottomNav is mobile-only (sm:hidden).
+				'pb-[calc(4rem+env(safe-area-inset-bottom))] sm:pb-0',
+			)}
+		>
 			{/* Ambient background — shared with Header, see dark-surface-ambient.tsx */}
 			<DarkSurfaceAmbient />
 
 			<div className="relative mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:grid-cols-2 lg:grid-cols-4">
 				{/* Brand column */}
 				<div className="lg:col-span-1">
-					<Logo className="h-12" />
+					<Logo className="h-10" />
 					<p className="mt-3 text-sm leading-relaxed">
 						Nền tảng mua bán đồ cũ dành cho sinh viên các trường đại
 						học Việt Nam.
@@ -86,20 +97,20 @@ export function Footer() {
 					<ul className="mt-3 space-y-2 text-sm">
 						<li>
 							<a
-								href="mailto:support@fleazo.vn"
+								href="mailto:bquochuy260405@gmail.com"
 								className="flex items-center gap-2 hover:text-white"
 							>
 								<Mail className="size-4" />
-								support@fleazo.vn
+								bquochuy260405@gmail.com
 							</a>
 						</li>
 						<li>
 							<a
-								href="tel:+84000000000"
+								href="tel:+0342637682"
 								className="flex items-center gap-2 hover:text-white"
 							>
 								<Phone className="size-4" />
-								1900 0000
+								0342637682
 							</a>
 						</li>
 					</ul>

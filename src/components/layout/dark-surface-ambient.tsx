@@ -1,8 +1,10 @@
 // Ambient background for --color-dark-surface panels: drifting blurred blobs
 // + a repeating "tag treo" silhouette (see AGENTS.md → Design System →
 // Signature element). Decorative only, motion disabled under
-// prefers-reduced-motion (globals.css). Shared by Header and Footer — both
-// sit on the same dark surface, so they get the same ambient treatment.
+// prefers-reduced-motion (globals.css). Shared by Header, Footer, and the
+// (auth) dark panel — surfaces vary a lot in height, so blob size/offset
+// is responsive: full desktop size assumes a full-height panel, mobile
+// size is scaled down so blobs don't get clipped by a short container.
 export function DarkSurfaceAmbient() {
 	return (
 		<div
@@ -10,11 +12,11 @@ export function DarkSurfaceAmbient() {
 			className="pointer-events-none absolute inset-0"
 		>
 			<div
-				className="fz-ambient-blob absolute -top-24 -left-16 size-72 rounded-full bg-fz-accent/20 blur-3xl"
+				className="fz-ambient-blob absolute -top-12 -left-8 size-40 rounded-full bg-fz-accent/20 blur-3xl md:-top-24 md:-left-16 md:size-72"
 				style={{ animationName: 'fz-ambient-drift-1' }}
 			/>
 			<div
-				className="fz-ambient-blob absolute -right-10 -bottom-28 size-64 rounded-full bg-fz-primary/15 blur-3xl"
+				className="fz-ambient-blob absolute -right-6 -bottom-14 size-36 rounded-full bg-fz-primary/15 blur-3xl md:-right-10 md:-bottom-28 md:size-64"
 				style={{
 					animationName: 'fz-ambient-drift-2',
 					animationDelay: '-7s',

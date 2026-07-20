@@ -21,12 +21,12 @@ Same three goals as the backend — real product, revenue-generating, graduation
 - Icons: **lucide-react** — sole icon library (do not add react-icons, hugeicons, or any second icon set)
 - HTTP client: axios
 - Realtime: `socket.io-client` — **required**, backend uses Socket.IO, protocol is not compatible with raw WebSocket
+- Form handling: **no library** — reconsidered after building the login UI. `react-hook-form + zod` was tried first, then removed: client-side validation only catches "obviously wrong" input before a network call (empty field, malformed email) — it never replaces backend validation, which must re-check everything regardless. For a simple form (login: 2 fields), that benefit is minor next to the real cost of a second place to keep validation rules in sync with `fleazo-backend`'s DTOs. Current approach: native HTML5 validation (`required`, `type="email"`) + surfacing whatever error the backend returns on submit. Revisit per-form if one gets complex enough (many fields, cross-field rules like confirm-password) that hand-rolled validation gets messy — react-hook-form + zod remain the fallback choice if/when that happens, not ruled out permanently.
 
 ### Undecided — decide incrementally as each area is built, then move to Confirmed
 
 - Server-state management (TanStack Query?) — decide when building the first data-fetching page
 - Client-state management (Zustand?) — decide when building auth state
-- Form handling (react-hook-form + zod?) — decide when building auth forms
 - Token storage strategy (localStorage vs httpOnly cookie) — decide when building auth
 - Toast/notification library
 
@@ -105,7 +105,8 @@ Approach every new UI piece like a design lead who gives each brief a distinct i
 - Product card is one shared component reused across home, category, search, saved, seller-profile — no per-page duplicates
 - Spacing between page sections uses a shared token/util (e.g. `--section-gap`), not repeated raw Tailwind spacing classes copy-pasted per page
 - Radius: reuse shadcn's `--radius` scale for controls; cards get `12px` explicitly
-- **Button gradients:** `default` variant uses `--color-accent-deep → --color-accent-bright` (= Tailwind's `emerald-500`/`teal-600` hex, kept as tokens rather than hardcoded Tailwind color classes), darkening to `*-hover` tokens (`emerald-600`/`teal-700`) on hover, plus `shadow-fz-accent-deep/20` and `hover:scale-[1.02]`. ⚠️ White text on this pair measures ~2.5–3.7:1 — below WCAG AA (4.5:1). This was flagged and explicitly accepted by the user (aesthetic match to a reference design over strict AA) — don't silently "fix" it back to a higher-contrast pair. `secondary` variant is unchanged — lighter `--color-primary → --color-primary-soft` pair with ink text.
+- `(auth)` pages use a split layout — dark brand panel (Logo + value props) on the left, form on the right; collapses to a compact top strip on mobile. See `(auth)/layout.tsx` comments. Content added deliberately (real value props, not decorative filler) per Frontend design philosophy.
+- **Button gradients:** `default` variant uses `--color-accent-deep → --color-accent-bright` (= Tailwind's `emerald-500`/`teal-600` hex, kept as tokens rather than hardcoded Tailwind color classes), darkening to `*-hover` tokens (`emerald-600`/`teal-700`) plus a stronger shadow (`shadow-md` → `shadow-lg`, both `shadow-fz-accent-deep/*`) on hover — no scale transform (see Interactive feedback below). ⚠️ White text on this pair measures ~2.5–3.7:1 — below WCAG AA (4.5:1). This was flagged and explicitly accepted by the user (aesthetic match to a reference design over strict AA) — don't silently "fix" it back to a higher-contrast pair. `secondary` variant is unchanged — lighter `--color-primary → --color-primary-soft` pair with ink text.
 - **Interactive feedback:** every clickable element gets a `hover`/`active` cue — no exceptions, no silent opt-outs. Buttons: hover is color/shadow-only per variant (see `button.tsx`); `active:scale-95` is on the shared base class, so every button — any variant, any size — gets the same uniform press feedback. `Logo` is an intentional exception — `hover:opacity-80`, no scale — because scaling a wide horizontal wordmark+icon lockup distorts it and risks overlapping neighboring header elements; opacity is the standard hover cue for logos generally. Plain CSS/Tailwind, not Framer Motion — no animation library is in the stack, and none is needed for scale/opacity-level feedback like this. Only reconsider Framer Motion if a genuinely complex interaction comes up (e.g. the mega menu's open/close transition, exit animations, drag gestures).
 
 - **Response format:** controllers return service results directly — no `{ statusCode, message, data }` wrapper. Type API responses as the plain data shape.
@@ -155,7 +156,10 @@ src/
 │   ├── logo.tsx                  # Shared across Header, Footer, AND (auth) pages —
 │   │                             #   top-level, not nested under layout/, because
 │   │                             #   it isn't exclusive to the app shell
-│   └── layout/                   # App shell components: header.tsx, footer.tsx, search-input.tsx, bottom-nav.tsx
+│   ├── layout/                   # App shell components: header.tsx, footer.tsx,
+│   │                             #   search-input.tsx, bottom-nav.tsx,
+│   │                             #   dark-surface-ambient.tsx
+│   └── auth/                     # Shared by (auth) pages: google-auth-button.tsx
 │
 ├── lib/                          # Shared non-UI code (see Common Utilities table)
 │   ├── api.ts                    # Shared axios instance
@@ -220,10 +224,10 @@ Note on `api.ts`: auth interceptors (attach access token, 401 → refresh → re
 - ✅ Done — shadcn/ui init (Maia + Base UI, lucide icons, vietnamese-subset fonts)
 - ✅ Done — design system (color tokens, typography, "tag treo" signature)
 - ✅ Done — `globals.css` brand tokens
-- ✅ Done — `Header`, `Footer`, `(main)/layout.tsx` (placeholder content, not wired to real data/auth yet; category browsing moved out of header, will live on home page instead)
-- ✅ Done — README
+- ✅ Done — `Header`, `Footer`, `BottomNav`, `(main)/layout.tsx` (placeholder content, not wired to real data/auth yet; category browsing moved out of header, will live on home page instead)
+- ✅ Done — `(auth)` layout (split brand/form panels) + `login` page (native HTML5 validation, no form library — see Tech Stack → Form handling; Google button placeholder, submit handler stubbed)
 
-**Next:** `(auth)` layout, home page skeleton
+**Next:** `register`/`forgot-password`/`reset-password`/`verify-account` pages, home page skeleton
 
 ## Agent Behavior
 

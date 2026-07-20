@@ -2,29 +2,54 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
-// Contrast checked: this asset's green (#00BF63-ish) against the header's
-// navy background (#111828) measures ~7.3:1 — passes WCAG AAA. Works directly
-// on the Header now; the earlier "needs a white-wordmark variant" caution was
-// based on the old dark-green (v1) header and is no longer accurate.
-//
-// hover uses opacity, not scale, unlike Button/icon buttons — scaling a wide
-// horizontal wordmark+icon lockup looks distorted and risks overlapping the
-// "Danh mục" button next to it in the Header. See AGENTS.md → Design System
-// → Interactive feedback for why Logo is an intentional exception.
-export function Logo({ className }: { className?: string }) {
-	return (
-		<Link
-			href="/"
-			className="inline-block transition-opacity hover:opacity-80"
-		>
+export function Logo({
+	className,
+	mark = false,
+	clickable = true,
+}: {
+	className?: string;
+	mark?: boolean;
+	clickable?: boolean;
+}) {
+	const image = (
+		<>
 			<Image
 				src="/fleazo-logo.png"
 				alt="Fleazo"
 				width={284}
 				height={95}
 				priority
-				className={cn('h-12 w-auto', className)}
+				className={cn(
+					'h-12 w-auto',
+					mark && 'hidden sm:block',
+					className,
+				)}
 			/>
+			{mark && (
+				<Image
+					src="/fleazo-mark.png"
+					alt="Fleazo"
+					width={40}
+					height={40}
+					priority
+					className="size-12 sm:hidden"
+				/>
+			)}
+		</>
+	);
+
+	// clickable=false: purely decorative display, no link to "/" — used on
+	// (auth) pages where the goal is just showing the mark, not navigation.
+	if (!clickable) {
+		return <span className="inline-block shrink-0">{image}</span>;
+	}
+
+	return (
+		<Link
+			href="/"
+			className="inline-block shrink-0 transition-opacity hover:opacity-80"
+		>
+			{image}
 		</Link>
 	);
 }
