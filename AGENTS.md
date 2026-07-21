@@ -177,7 +177,7 @@ src/
 ├── hooks/                        # (planned) shared hooks (useAuth, useSocket...)
 ├── types/
 │   └── api.types.ts              # ApiErrorResponse<TFields> — shared axios error-response
-│                                 #   shape for any form, see Form Conventions
+│                                 #   shape (message/errorCode/errors), see Form Conventions
 └── providers/                    # (planned) app-wide providers (socket, state, query client)
 
 components.json                   # shadcn CLI config — read by the CLI, not by app code
@@ -201,7 +201,7 @@ Rules:
 - **Form values (email, password, etc.): uncontrolled inputs**, read once on submit via `Object.fromEntries(new FormData(e.currentTarget))` — no `useState` per field. The resulting plain object is still sent as a normal JSON body (axios serializes plain objects automatically); `FormData` here is only a DOM-reading convenience, never the wire format, never multipart.
 - **UI-only state is a different category — always `useState`, regardless of the rule above**: loading flags, modal open/close, password show/hide, and anything else that isn't a value submitted to the backend.
 - **A field that isn't sent to the backend but changes client behavior (e.g. `rememberMe`) is also `useState`, kept out of the `FormData` read entirely** — don't let it ride along in `values` just because it's inside the same `<form>`; it's not a DTO field and a strict backend DTO (`forbidNonWhitelisted`) would reject it if submitted as-is.
-- **Error shape**: `ApiErrorResponse<TFields>` in `src/types/api.types.ts` — `{ message?: string; errors?: Partial<Record<TFields, string>> }`. Type the axios catch with `isAxiosError<ApiErrorResponse<'email' | 'password'>>(err)` instead of declaring a one-off error type per page.
+- **Error shape**: `ApiErrorResponse<TFields>` in `src/types/api.types.ts` — `{ message?: string; errorCode?: string; errors?: Partial<Record<TFields, string>> }`. Parse a caught axios error with `parseApiError<TFields>(err)` from `src/lib/api.ts` — never call `isAxiosError` by hand per page, and never declare a one-off error type. `parseApiError` returns the full shape (including `errorCode`) so callers can branch on it directly from the return value, not by reading state right back — `setErrors` isn't synchronous.
 - **Field-level error display**: `<FieldError message={...} />` from `src/components/form/field-error.tsx` — shared across every form, don't hand-roll the `{error && <p className="...">}` pattern per page.
 - **Password fields with a show/hide toggle**: `<PasswordInput />` from `src/components/form/password-input.tsx` — owns its own toggle state internally, used exactly like `Input` (accepts a separate `wrapperClassName` for margin on the outer wrapper, since it renders two elements — the input and the toggle button — not one).
 - **A backend message paired with a suggested next step** (verify now, log in now, ...): `<ActionBanner message={...} actionHref={...} actionLabel={...} />` from `src/components/form/action-banner.tsx` — `actionHref`/`actionLabel` are optional for a plain message banner with no link. Always pass the backend's real `message`, never a hardcoded string, even though the action itself is branched via `errorCode`.
@@ -224,10 +224,10 @@ Always check for existing utilities before writing new code:
 
 | Path                                     | Export                      | Use when                                                    |
 | ---------------------------------------- | --------------------------- | ----------------------------------------------------------- |
-| `src/lib/api.ts`                         | `api`, `isAxiosError`       | making any HTTP call, or narrowing a caught error's type    |
+| `src/lib/api.ts`                         | `api`, `parseApiError`      | HTTP calls; parsing a caught error                          |
 | `src/lib/format.ts`                      | `formatPrice`               | displaying a VNĐ price value                                |
 | `src/lib/utils.ts`                       | `cn`                        | merging Tailwind classes in a component with `className`    |
-| `src/types/api.types.ts`                 | `ApiErrorResponse<TFields>` | typing an axios error response body for any form            |
+| `src/types/api.types.ts`                 | `ApiErrorResponse<TFields>` | typing an axios error response for any form                 |
 | `src/components/form/field-error.tsx`    | `FieldError`                | rendering a field-level error message under an input        |
 | `src/components/form/password-input.tsx` | `PasswordInput`             | a password field that needs a show/hide toggle              |
 | `src/components/form/action-banner.tsx`  | `ActionBanner`              | showing a backend message with an optional suggested action |

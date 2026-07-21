@@ -7,10 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/form/password-input';
 import { FieldError } from '@/components/form/field-error';
-import { GoogleAuthButton } from '@/components/auth/google-auth-button';
-import { api, isAxiosError } from '@/lib/api';
-import type { ApiErrorResponse } from '@/types/api.types';
 import { ActionBanner } from '@/components/form/action-banner';
+import { GoogleAuthButton } from '@/components/auth/google-auth-button';
+import { api, parseApiError } from '@/lib/api';
+import type { ApiErrorResponse } from '@/types/api.types';
 
 // Field names must match RegisterDto exactly (fleazo-backend/register.dto.ts).
 type RegisterFields = 'fullName' | 'email' | 'password' | 'confirmPassword';
@@ -37,25 +37,9 @@ export default function RegisterPage() {
 				`/verify-account?email=${encodeURIComponent(String(values.email))}`,
 			);
 		} catch (err) {
-			const res = isAxiosError<ApiErrorResponse<RegisterFields>>(err)
-				? err.response?.data
-				: undefined;
-			const hasFieldErrors =
-				res?.errors && Object.keys(res.errors).length > 0;
-
-			setErrors(
-				hasFieldErrors
-					? { errors: res.errors }
-					: {
-							message:
-								res?.message ??
-								'Đã có lỗi xảy ra, vui lòng thử lại.',
-						},
-			);
-
-			// errorCode matches src/common/constants/error-code.constant.ts
-			// on the backend — branch on this, never on message text.
-			setEmailAlreadyExists(res?.errorCode === 'EMAIL_ALREADY_EXISTS');
+			const parsed = parseApiError<RegisterFields>(err);
+			setErrors(parsed);
+			setEmailAlreadyExists(parsed.errorCode === 'EMAIL_ALREADY_EXISTS');
 		} finally {
 			setLoading(false);
 		}

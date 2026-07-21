@@ -8,10 +8,10 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { PasswordInput } from '@/components/form/password-input';
 import { FieldError } from '@/components/form/field-error';
-import { GoogleAuthButton } from '@/components/auth/google-auth-button';
-import { api, isAxiosError } from '@/lib/api';
-import type { ApiErrorResponse } from '@/types/api.types';
 import { ActionBanner } from '@/components/form/action-banner';
+import { GoogleAuthButton } from '@/components/auth/google-auth-button';
+import { api, parseApiError } from '@/lib/api';
+import type { ApiErrorResponse } from '@/types/api.types';
 
 type LoginFields = 'email' | 'password';
 
@@ -56,25 +56,10 @@ function LoginForm() {
 
 			router.push('/');
 		} catch (err) {
-			const res = isAxiosError<ApiErrorResponse<LoginFields>>(err)
-				? err.response?.data
-				: undefined;
-			const hasFieldErrors =
-				res?.errors && Object.keys(res.errors).length > 0;
-
-			setErrors(
-				hasFieldErrors
-					? { errors: res.errors }
-					: {
-							message:
-								res?.message ??
-								'Đã có lỗi xảy ra, vui lòng thử lại.',
-						},
-			);
-
-			// see AGENTS.md → error-code.constant.ts
+			const parsed = parseApiError<LoginFields>(err);
+			setErrors(parsed);
 			setUnverifiedEmail(
-				res?.errorCode === 'ACCOUNT_NOT_VERIFIED'
+				parsed.errorCode === 'ACCOUNT_NOT_VERIFIED'
 					? String(values.email)
 					: null,
 			);
@@ -93,9 +78,10 @@ function LoginForm() {
 			</p>
 
 			{justVerified && (
-				<div className="mt-4 rounded-2xl bg-fz-primary-soft px-4 py-3 text-sm text-fz-ink">
-					Xác thực tài khoản thành công! Đăng nhập để tiếp tục.
-				</div>
+				<ActionBanner
+					message="Xác thực tài khoản thành công! Đăng nhập để tiếp tục."
+					className="mt-4"
+				/>
 			)}
 
 			<div className="mt-4">

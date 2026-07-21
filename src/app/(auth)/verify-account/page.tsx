@@ -6,9 +6,9 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { FieldError } from '@/components/form/field-error';
-import { api, isAxiosError } from '@/lib/api';
-import type { ApiErrorResponse } from '@/types/api.types';
 import { ActionBanner } from '@/components/form/action-banner';
+import { api, parseApiError } from '@/lib/api';
+import type { ApiErrorResponse } from '@/types/api.types';
 
 type VerifyFields = 'email' | 'codeOtp';
 
@@ -53,26 +53,11 @@ function VerifyAccountForm() {
 			// no tokens returned — still needs a normal login after
 			router.push('/login?verified=true');
 		} catch (err) {
-			const res = isAxiosError<ApiErrorResponse<VerifyFields>>(err)
-				? err.response?.data
-				: undefined;
-			const hasFieldErrors =
-				res?.errors && Object.keys(res.errors).length > 0;
-
-			setErrors(
-				hasFieldErrors
-					? { errors: res.errors }
-					: {
-							message:
-								res?.message ??
-								'Đã có lỗi xảy ra, vui lòng thử lại.',
-						},
-			);
-
-			// see AGENTS.md → error-code.constant.ts
+			const parsed = parseApiError<VerifyFields>(err);
+			setErrors(parsed);
 			setAlreadyActiveMessage(
-				res?.errorCode === 'ACCOUNT_ALREADY_ACTIVE'
-					? (res?.message ?? null)
+				parsed.errorCode === 'ACCOUNT_ALREADY_ACTIVE'
+					? (parsed.message ?? null)
 					: null,
 			);
 		} finally {
@@ -90,17 +75,16 @@ function VerifyAccountForm() {
 			setResendMessage({ type: 'success', text: data.message });
 			setCooldown(60);
 		} catch (err) {
-			const res = isAxiosError<ApiErrorResponse>(err)
-				? err.response?.data
-				: undefined;
+			const parsed = parseApiError(err);
 
-			if (res?.errorCode === 'ACCOUNT_ALREADY_ACTIVE') {
-				setAlreadyActiveMessage(res.message ?? null);
+			if (parsed.errorCode === 'ACCOUNT_ALREADY_ACTIVE') {
+				setAlreadyActiveMessage(parsed.message ?? null);
 			} else {
 				setAlreadyActiveMessage(null);
 				setResendMessage({
 					type: 'error',
-					text: res?.message ?? 'Đã có lỗi xảy ra, vui lòng thử lại.',
+					text:
+						parsed.message ?? 'Đã có lỗi xảy ra, vui lòng thử lại.',
 				});
 			}
 		} finally {
