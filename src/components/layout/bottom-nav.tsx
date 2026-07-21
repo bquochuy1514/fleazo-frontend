@@ -1,17 +1,19 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { Home, FileText, Heart, User, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/use-auth';
 
 // Routes are placeholders — (protected) pages for these don't exist yet
 // (see AGENTS.md → Project Structure). Update hrefs once each page lands.
+// "Cá nhân" isn't in this array — it's special-cased below (avatar vs icon).
 const NAV_ITEMS = [
 	{ href: '/', label: 'Trang chủ', icon: Home },
 	{ href: '/quan-ly-tin', label: 'Quản lý tin', icon: FileText },
 	{ href: '/tin-luu', label: 'Tin đã lưu', icon: Heart },
-	{ href: '/ca-nhan', label: 'Cá nhân', icon: User },
 ] as const;
 
 type NavItem = (typeof NAV_ITEMS)[number];
@@ -21,6 +23,8 @@ type NavItem = (typeof NAV_ITEMS)[number];
 // the bar as a raised circular action, matching the reference mockup.
 export function BottomNav() {
 	const pathname = usePathname();
+	const { user } = useAuth();
+	const profileActive = pathname === '/ca-nhan';
 
 	return (
 		<nav
@@ -60,6 +64,34 @@ export function BottomNav() {
 						active={pathname === item.href}
 					/>
 				))}
+
+				<Link
+					href="/ca-nhan"
+					className={cn(
+						'flex flex-col items-center justify-self-center gap-1 px-1 text-[11px] whitespace-nowrap transition-colors',
+						profileActive
+							? 'text-fz-primary'
+							: 'text-muted-foreground hover:text-fz-ink',
+					)}
+				>
+					<span className="flex h-7 items-center justify-center">
+						{user ? (
+							<Image
+								src={user.avatar}
+								alt={user.fullName}
+								width={28}
+								height={28}
+								className={cn(
+									'size-7 rounded-full object-cover',
+									profileActive && 'ring-2 ring-fz-primary',
+								)}
+							/>
+						) : (
+							<User className="size-5" />
+						)}
+					</span>
+					Cá nhân
+				</Link>
 			</div>
 		</nav>
 	);
@@ -77,7 +109,12 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
 					: 'text-muted-foreground hover:text-fz-ink',
 			)}
 		>
-			<Icon className="size-5" />
+			{/* Fixed-height slot — keeps every label at the same vertical
+			    offset regardless of what's rendered inside (icon vs avatar,
+			    see the Cá nhân link below which reuses this same h-7). */}
+			<span className="flex h-7 items-center justify-center">
+				<Icon className="size-5" />
+			</span>
 			{item.label}
 		</Link>
 	);

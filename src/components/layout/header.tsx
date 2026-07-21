@@ -2,14 +2,17 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Plus } from 'lucide-react';
 import { buttonVariants } from '@/components/ui/button';
 import { SearchInput } from '@/components/layout/search-input';
 import { DarkSurfaceAmbient } from '@/components/layout/dark-surface-ambient';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/use-auth';
 import { Logo } from '../logo';
 
 export function Header() {
+	const { user, isLoading } = useAuth();
 	const [scrolled, setScrolled] = useState(false);
 
 	useEffect(() => {
@@ -53,34 +56,52 @@ export function Header() {
 
 					<div className="ml-auto hidden shrink-0 items-center gap-2 sm:flex">
 						<Link
-							href="/login"
-							className={cn(
-								buttonVariants({ variant: 'ghost' }),
-								'text-white hover:bg-white/10 hover:text-white',
-							)}
-						>
-							Đăng nhập
-						</Link>
-						<Link
-							href="/register"
-							className={cn(
-								buttonVariants({ variant: 'ghost' }),
-								'text-white hover:bg-white/10 hover:text-white',
-							)}
-						>
-							Đăng ký
-						</Link>
-						<span
-							className="mx-1 h-6 w-px shrink-0 bg-white/15"
-							aria-hidden="true"
-						/>
-						<Link
 							href="/dang-tin"
 							className={buttonVariants({ variant: 'default' })}
 						>
 							<Plus className="size-4" />
 							Đăng tin
 						</Link>
+						<span
+							className="mx-1 h-6 w-px shrink-0 bg-white/15"
+							aria-hidden="true"
+						/>
+						{isLoading ? (
+							// Fixed-size placeholder — avoids a layout jump
+							// once the real state (guest vs avatar) resolves.
+							<div className="size-9 shrink-0 animate-pulse rounded-full bg-white/10" />
+						) : user ? (
+							<Link href="/profile" className="shrink-0">
+								<Image
+									src={user.avatar}
+									alt={user.fullName}
+									width={36}
+									height={36}
+									className="size-9 rounded-full object-cover"
+								/>
+							</Link>
+						) : (
+							<>
+								<Link
+									href="/login"
+									className={cn(
+										buttonVariants({ variant: 'ghost' }),
+										'text-white hover:bg-white/10 hover:text-white',
+									)}
+								>
+									Đăng nhập
+								</Link>
+								<Link
+									href="/register"
+									className={cn(
+										buttonVariants({ variant: 'ghost' }),
+										'text-white hover:bg-white/10 hover:text-white',
+									)}
+								>
+									Đăng ký
+								</Link>
+							</>
+						)}
 					</div>
 				</div>
 
