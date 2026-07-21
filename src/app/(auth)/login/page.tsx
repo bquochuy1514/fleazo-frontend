@@ -3,6 +3,7 @@
 import { Suspense, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -62,6 +63,8 @@ function LoginForm() {
 			}
 
 			await auth.login(data.access_token);
+
+			toast.success(data.message);
 			router.push('/');
 		} catch (err) {
 			const parsed = parseApiError<LoginFields>(err);

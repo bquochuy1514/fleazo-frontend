@@ -238,11 +238,6 @@
 		margin: 0;
 	}
 
-	html,
-	body {
-		scrollbar-gutter: stable;
-	}
-
 	/* Prices and any tabular numbers — see Design System → Typography */
 	.tabular-nums {
 		font-variant-numeric: tabular-nums;

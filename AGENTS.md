@@ -24,14 +24,14 @@ Same three goals as the backend — real product, revenue-generating, graduation
 - Icons: **lucide-react** — sole icon library (do not add react-icons, hugeicons, or any second icon set)
 - HTTP client: axios
 - Realtime: `socket.io-client` — **required**, backend uses Socket.IO, protocol is not compatible with raw WebSocket
-- Form handling: **no library** — reconsidered after building the login UI. `react-hook-form + zod` was tried first, then removed: client-side validation only catches "obviously wrong" input before a network call (empty field, malformed email) — it never replaces backend validation, which must re-check everything regardless. Current approach: uncontrolled inputs + native HTML5 types, backend errors surfaced per-field on submit — see **Form Conventions** section for the full pattern and shared building blocks. react-hook-form + zod remain the fallback choice if a form gets genuinely complex (multi-step, many cross-field rules), not ruled out permanently.
+- Form handling: **no library** — uncontrolled inputs + native HTML5 types, backend errors surfaced per-field on submit (client-side validation only catches "obviously wrong" input before a network call; it never replaces backend validation, which must re-check everything regardless) — see **Form Conventions** section for the full pattern and shared building blocks. Escalate to react-hook-form + zod only if a form gets genuinely complex (multi-step, many cross-field rules).
 - Token storage: **localStorage vs sessionStorage, decided by the user's "remember me" choice** — checked → both `access_token` and `refresh_token` in `localStorage` (survives browser close, enables silent refresh); unchecked → only `access_token` in `sessionStorage`, no `refresh_token` stored at all (session just ends when the access token expires or the tab closes). Not an httpOnly-cookie approach — plain client storage either way.
 - Client-state management: **React Context, not Zustand** — for auth state specifically. Auth is a single object that changes rarely (login/logout); Zustand's value (multiple stores, selectors to avoid re-renders, middleware) doesn't pay off for that. Not a blanket rejection of Zustand — reconsider per area if something with genuinely complex, frequently-changing state shows up (cart, filters) later.
+- Toast notifications: **Sonner** — shadcn's own `toast` component is deprecated in favor of it, and Sonner doesn't depend on Radix or Base UI primitives itself, so it's unaffected by the Base UI preset choice. `<Toaster richColors position="top-center" />` lives in the root layout; `toast.success(...)` fires on login (`login/page.tsx`, right before `router.push`) and logout (inside `AuthProvider.logout()` — single call site covers both `AccountMenu` and `MobileAccountSheet`). Always pass the backend's own `message` field, never a hardcoded string — same rule as `ActionBanner` (see Form Conventions). Logout keeps one hardcoded fallback string only for the one case with no backend message available (the best-effort API call itself failed).
 
 ### Undecided — decide incrementally as each area is built, then move to Confirmed
 
 - Server-state management (TanStack Query?) — decide when building the first data-fetching page
-- Toast/notification library
 
 ⚠️ Framer Motion considered and rejected for now (see Design System → Interactive feedback) — plain Tailwind hover/active scale covers current needs. Revisit only if a genuinely complex animation need comes up.
 
@@ -60,7 +60,7 @@ Notes:
 - `--color-base`: currently `#F3F6F4` — a cool, faintly sage-tinted near-white. Chosen deliberately over a warm cream tone (which reads as a generic "AI-default" background, see Frontend design philosophy below) — ties to the brand's teal identity instead.
 - `--color-primary` and `--color-accent` are both teal, close in hue. **Don't eyeball-swap them** — always copy the exact hex/token, never approximate one from memory of the other.
 - ⚠️ Contrast checked: white text on either teal fails WCAG AA for normal text (~2.7–3:1). `--primary-foreground` and `--secondary-foreground` in `globals.css` use `--color-ink`, not white — don't "fix" this back to white, it was a deliberate correction.
-- `--color-dark-surface`: shared by `Header` and `Footer` background bars only — not a general-purpose token, don't reuse for cards/badges/or other surfaces. (Renamed from `--color-header-bg` once Footer adopted the same navy for visual bookend consistency.)
+- `--color-dark-surface`: shared by `Header` and `Footer` background bars only — not a general-purpose token, don't reuse for cards/badges/or other surfaces.
 - `--color-danger`: never reused for `SOLD` — that's neutral-good, use `--color-ink` at low opacity overlay instead.
 
 Rule: primary (darker teal, `#03AA5C`) = brand/identity, accent (brighter teal, `#00B380`) = action/money. They read as nearly the same color at a glance — the separation lives in the exact hex, not a visual hue gap.
@@ -90,7 +90,7 @@ Tagline decided: **"The student swap marketplace"** — placed in the `(auth)` l
 
 ### Frontend design philosophy
 
-> Merged in from the old `frontend-design` skill folder — apply this mindset whenever building or reshaping any UI, not just once at project start.
+> Apply this mindset whenever building or reshaping any UI, not just once at project start.
 
 Approach every new UI piece like a design lead who gives each brief a distinct identity — never settle for the generic Tailwind/shadcn-default look. Concretely:
 
@@ -109,7 +109,7 @@ Approach every new UI piece like a design lead who gives each brief a distinct i
 - Spacing between page sections uses a shared token/util (e.g. `--section-gap`), not repeated raw Tailwind spacing classes copy-pasted per page
 - Radius: reuse shadcn's `--radius` scale for controls; cards get `12px` explicitly
 - `(auth)` pages use a split layout — dark brand panel (Logo + value props) on the left, form on the right; collapses to a compact top strip on mobile. See `(auth)/layout.tsx` comments. Content added deliberately (real value props, not decorative filler) per Frontend design philosophy.
-- **Header account menu (desktop only):** clicking the avatar opens a `DropdownMenu` (profile name/email, "Trang cá nhân", "Đăng xuất") — `modal={false}`, `positionMethod="fixed"` + `sticky` (see Tech Stack note on the patched `dropdown-menu.tsx`), logout item uses `variant="destructive"` overridden to `--color-danger` via `!` important-modified classes (needed to override the component's own default destructive red consistently on both text and icon). **Mobile does not replicate this as a dropdown** — no mobile UI pattern pops a floating menu like this. Instead `BottomNav`'s "Cá nhân" tab links straight to the `/ca-nhan` profile page, which will hold its own "Đăng xuất" action inline on the page — see Project Structure → `(protected)` for the planned route.
+- **Account menu, desktop vs mobile:** Header's avatar opens a `DropdownMenu` (profile info, "Trang cá nhân", "Đăng xuất") — desktop only, deliberately not replicated on mobile since no mobile UI pattern pops a floating menu like this. `BottomNav`'s "Cá nhân" tab instead links straight to the `/ca-nhan` profile page, which holds its own "Đăng xuất" action inline — see Project Structure → `(protected)`.
 - **Button gradients:** `default` variant uses `--color-accent-deep → --color-accent-bright` (= Tailwind's `emerald-500`/`teal-600` hex, kept as tokens rather than hardcoded Tailwind color classes), darkening to `*-hover` tokens (`emerald-600`/`teal-700`) plus a stronger shadow (`shadow-md` → `shadow-lg`, both `shadow-fz-accent-deep/*`) on hover — no scale transform (see Interactive feedback below). ⚠️ White text on this pair measures ~2.5–3.7:1 — below WCAG AA (4.5:1). This was flagged and explicitly accepted by the user (aesthetic match to a reference design over strict AA) — don't silently "fix" it back to a higher-contrast pair. `secondary` variant is unchanged — lighter `--color-primary → --color-primary-soft` pair with ink text.
 - **Interactive feedback:** every clickable element gets a `hover`/`active` cue — no exceptions, no silent opt-outs. Buttons: hover is color/shadow-only per variant (see `button.tsx`); `active:scale-95` is on the shared base class, so every button — any variant, any size — gets the same uniform press feedback. `Logo` is an intentional exception — `hover:opacity-80`, no scale — because scaling a wide horizontal wordmark+icon lockup distorts it and risks overlapping neighboring header elements; opacity is the standard hover cue for logos generally. Avatar-type images follow the same opacity-hover exception (see Header account menu trigger). Plain CSS/Tailwind, not Framer Motion — no animation library is in the stack, and none is needed for scale/opacity-level feedback like this. Only reconsider Framer Motion if a genuinely complex interaction comes up (e.g. the mega menu's open/close transition, exit animations, drag gestures).
 
@@ -153,7 +153,7 @@ src/
 │           ├── layout.tsx        # (planned) auth guard: redirect to /login if not
 │           │                     #   authenticated — written ONCE here, never per page
 │           └── ...               # (planned) post listing, saved, my profile (`/ca-nhan`,
-│                                 #   next up — see Component conventions → Header account menu), chat, settings
+│                                 #   see Component conventions → Account menu), chat, settings
 │
 ├── components/
 │   ├── ui/                       #   shadcn-generated components (button.tsx, ...) —
@@ -163,10 +163,11 @@ src/
 │   ├── logo.tsx                  #   Shared across Header, Footer, AND (auth) pages —
 │   │                             #   top-level, not nested under layout/, because
 │   │                             #   it isn't exclusive to the app shell
-│   ├── layout/                   #   App shell components: header.tsx (Client, useAuth),
-│   │                             #   footer.tsx (async Server Component, fetches
-│   │                             #   GET /categories), search-input.tsx, bottom-nav.tsx
-│   │                             #   (Client, useAuth), dark-surface-ambient.tsx
+│   ├── layout/                   #   App shell components: header.tsx (Client), footer.tsx
+│   │                             #   (async Server Component, fetches GET /categories),
+│   │                             #   search-input.tsx, bottom-nav.tsx (Client, useAuth),
+│   │                             #   account-menu.tsx (Client, useAuth — Header's avatar
+│   │                             #   dropdown/guest-link/loading states), dark-surface-ambient.tsx
 │   ├── auth/                     #   Shared by (auth) pages: google-auth-button.tsx
 │   └── form/                     #   Shared form building blocks (see Form Conventions):
 │                                 #   field-error.tsx, password-input.tsx,
@@ -208,7 +209,7 @@ Rules:
 
 ## Form Conventions
 
-> Decided after building the login form — see Tech Stack → Form handling for why no form library.
+> See Tech Stack → Form handling for why no form library.
 
 - **Form values (email, password, etc.): uncontrolled inputs**, read once on submit via `Object.fromEntries(new FormData(e.currentTarget))` — no `useState` per field. The resulting plain object is still sent as a normal JSON body (axios serializes plain objects automatically); `FormData` here is only a DOM-reading convenience, never the wire format, never multipart.
 - **UI-only state is a different category — always `useState`, regardless of the rule above**: loading flags, modal open/close, password show/hide, and anything else that isn't a value submitted to the backend.
@@ -248,13 +249,11 @@ Always check for existing utilities before writing new code:
 | `src/lib/format.ts`                      | `formatPrice`               | displaying a VNĐ price value                                |
 | `src/lib/utils.ts`                       | `cn`                        | merging Tailwind classes in a component with `className`    |
 | `src/types/api.types.ts`                 | `ApiErrorResponse<TFields>` | typing an axios error response for any form                 |
-| `src/types/user.types.ts`                | `User`                      | typing a user entity anywhere it's displayed                |
-| `src/types/category.types.ts`            | `Category`                  | typing a category entity anywhere it's displayed            |
 | `src/components/form/field-error.tsx`    | `FieldError`                | rendering a field-level error message under an input        |
 | `src/components/form/password-input.tsx` | `PasswordInput`             | a password field that needs a show/hide toggle              |
 | `src/components/form/action-banner.tsx`  | `ActionBanner`              | showing a backend message with an optional suggested action |
 
-> ⚠️ Whenever a new file is added to `src/lib/`, `src/types/`, or `src/components/form/`, update this table immediately.
+> ⚠️ Whenever a new file is added to `src/lib/` or `src/components/form/`, update this table immediately.
 > ⚠️ Keep **Use when** to one short line — a few words of context is fine, but push edge cases, caveats, or "not implemented yet" notes into a note below the table instead of into the cell.
 
 Note on `api.ts`: auth interceptors (attach access token, 401 → refresh → retry) are deliberately NOT implemented yet — the token storage side of this is now decided (see Tech Stack → Token storage), interceptor logic itself still isn't built. Add it when building out the rest of the auth module.
