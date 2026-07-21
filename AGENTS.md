@@ -18,6 +18,9 @@ Same three goals as the backend — real product, revenue-generating, graduation
 - Language: TypeScript
 - Styling: Tailwind CSS v4
 - UI components: **shadcn/ui** — components are copied into the repo (`src/components/ui/`), owned and freely modifiable, not a dependency. Initialized with the **Maia** preset (soft, rounded, consumer-facing) on **Base UI** primitives (`@base-ui/react` — NOT Radix; imports in generated components come from `@base-ui/react/*`). CLI config lives in `components.json`.
+    - ⚠️ `src/components/ui/dropdown-menu.tsx` has been **hand-patched**: `DropdownMenuContent` additionally accepts `positionMethod` / `sticky` and forwards them to `Menu.Positioner` (not part of the CLI-generated file). Needed because a trigger living inside a `sticky` container (e.g. Header's avatar) jitters under Base UI's default `positionMethod="absolute"` — see Header's account menu for the usage (`positionMethod="fixed"` + `sticky`). If `npx shadcn add dropdown-menu` is ever re-run, this patch gets overwritten and must be re-applied.
+    - Base UI uses a `render` prop for polymorphism, not Radix's `asChild` — e.g. `<DropdownMenuItem render={<Link href="..." />}>`. Using `asChild` is a type error on this preset.
+    - Base UI `Menu.Root` has a `modal` prop (default `true`) that locks page scroll while the menu is open — pass `modal={false}` on menus that shouldn't block scrolling behind them (e.g. Header's account menu, since it isn't a true dialog).
 - Icons: **lucide-react** — sole icon library (do not add react-icons, hugeicons, or any second icon set)
 - HTTP client: axios
 - Realtime: `socket.io-client` — **required**, backend uses Socket.IO, protocol is not compatible with raw WebSocket
@@ -106,8 +109,9 @@ Approach every new UI piece like a design lead who gives each brief a distinct i
 - Spacing between page sections uses a shared token/util (e.g. `--section-gap`), not repeated raw Tailwind spacing classes copy-pasted per page
 - Radius: reuse shadcn's `--radius` scale for controls; cards get `12px` explicitly
 - `(auth)` pages use a split layout — dark brand panel (Logo + value props) on the left, form on the right; collapses to a compact top strip on mobile. See `(auth)/layout.tsx` comments. Content added deliberately (real value props, not decorative filler) per Frontend design philosophy.
+- **Header account menu (desktop only):** clicking the avatar opens a `DropdownMenu` (profile name/email, "Trang cá nhân", "Đăng xuất") — `modal={false}`, `positionMethod="fixed"` + `sticky` (see Tech Stack note on the patched `dropdown-menu.tsx`), logout item uses `variant="destructive"` overridden to `--color-danger` via `!` important-modified classes (needed to override the component's own default destructive red consistently on both text and icon). **Mobile does not replicate this as a dropdown** — no mobile UI pattern pops a floating menu like this. Instead `BottomNav`'s "Cá nhân" tab links straight to the `/ca-nhan` profile page, which will hold its own "Đăng xuất" action inline on the page — see Project Structure → `(protected)` for the planned route.
 - **Button gradients:** `default` variant uses `--color-accent-deep → --color-accent-bright` (= Tailwind's `emerald-500`/`teal-600` hex, kept as tokens rather than hardcoded Tailwind color classes), darkening to `*-hover` tokens (`emerald-600`/`teal-700`) plus a stronger shadow (`shadow-md` → `shadow-lg`, both `shadow-fz-accent-deep/*`) on hover — no scale transform (see Interactive feedback below). ⚠️ White text on this pair measures ~2.5–3.7:1 — below WCAG AA (4.5:1). This was flagged and explicitly accepted by the user (aesthetic match to a reference design over strict AA) — don't silently "fix" it back to a higher-contrast pair. `secondary` variant is unchanged — lighter `--color-primary → --color-primary-soft` pair with ink text.
-- **Interactive feedback:** every clickable element gets a `hover`/`active` cue — no exceptions, no silent opt-outs. Buttons: hover is color/shadow-only per variant (see `button.tsx`); `active:scale-95` is on the shared base class, so every button — any variant, any size — gets the same uniform press feedback. `Logo` is an intentional exception — `hover:opacity-80`, no scale — because scaling a wide horizontal wordmark+icon lockup distorts it and risks overlapping neighboring header elements; opacity is the standard hover cue for logos generally. Plain CSS/Tailwind, not Framer Motion — no animation library is in the stack, and none is needed for scale/opacity-level feedback like this. Only reconsider Framer Motion if a genuinely complex interaction comes up (e.g. the mega menu's open/close transition, exit animations, drag gestures).
+- **Interactive feedback:** every clickable element gets a `hover`/`active` cue — no exceptions, no silent opt-outs. Buttons: hover is color/shadow-only per variant (see `button.tsx`); `active:scale-95` is on the shared base class, so every button — any variant, any size — gets the same uniform press feedback. `Logo` is an intentional exception — `hover:opacity-80`, no scale — because scaling a wide horizontal wordmark+icon lockup distorts it and risks overlapping neighboring header elements; opacity is the standard hover cue for logos generally. Avatar-type images follow the same opacity-hover exception (see Header account menu trigger). Plain CSS/Tailwind, not Framer Motion — no animation library is in the stack, and none is needed for scale/opacity-level feedback like this. Only reconsider Framer Motion if a genuinely complex interaction comes up (e.g. the mega menu's open/close transition, exit animations, drag gestures).
 
 - **Response format:** controllers return service results directly — no `{ statusCode, message, data }` wrapper. Type API responses as the plain data shape.
 - **Auth:** JWT access (short-lived) + refresh token rotation + Google OAuth. Axios layer must handle 401 → refresh → retry.
@@ -135,7 +139,8 @@ src/
 │   │   ├── register/
 │   │   ├── verify-account/       #   email OTP after register
 │   │   ├── forgot-password/
-│   │   └── reset-password/
+│   │   ├── reset-password/
+│   │   └── google-callback/      #   reads tokens from query, calls auth.login()
 │   │
 │   └── (main)/                   # Marketplace shell
 │       ├── layout.tsx            # <Header /> + <main> + <Footer /> — MUST live here, not
@@ -147,20 +152,23 @@ src/
 │       └── (protected)/          # Requires login — exists, no pages yet
 │           ├── layout.tsx        # (planned) auth guard: redirect to /login if not
 │           │                     #   authenticated — written ONCE here, never per page
-│           └── ...               # (planned) post listing, saved, my profile, chat, settings
+│           └── ...               # (planned) post listing, saved, my profile (`/ca-nhan`,
+│                                 #   next up — see Component conventions → Header account menu), chat, settings
 │
 ├── components/
-│   ├── ui/                       # shadcn-generated components (button.tsx, ...) —
+│   ├── ui/                       #   shadcn-generated components (button.tsx, ...) —
 │   │                             #   owned, freely modifiable, but CLI-managed —
-│   │                             #   don't hand-add non-shadcn components here
-│   ├── logo.tsx                  # Shared across Header, Footer, AND (auth) pages —
+│   │                             #   don't hand-add non-shadcn components here.
+│   │                             #   dropdown-menu.tsx is hand-patched, see Tech Stack.
+│   ├── logo.tsx                  #   Shared across Header, Footer, AND (auth) pages —
 │   │                             #   top-level, not nested under layout/, because
 │   │                             #   it isn't exclusive to the app shell
-│   ├── layout/                   # App shell components: header.tsx, footer.tsx,
-│   │                             #   search-input.tsx, bottom-nav.tsx,
-│   │                             #   dark-surface-ambient.tsx
-│   ├── auth/                     # Shared by (auth) pages: google-auth-button.tsx
-│   └── form/                     # Shared form building blocks (see Form Conventions):
+│   ├── layout/                   #   App shell components: header.tsx (Client, useAuth),
+│   │                             #   footer.tsx (async Server Component, fetches
+│   │                             #   GET /categories), search-input.tsx, bottom-nav.tsx
+│   │                             #   (Client, useAuth), dark-surface-ambient.tsx
+│   ├── auth/                     #   Shared by (auth) pages: google-auth-button.tsx
+│   └── form/                     #   Shared form building blocks (see Form Conventions):
 │                                 #   field-error.tsx, password-input.tsx,
 │                                 #   action-banner.tsx
 │
@@ -174,12 +182,13 @@ src/
 │                                 #   layout. ⚠️ components.json "tailwind.css" must point
 │                                 #   here (src/styles/globals.css) or shadcn add breaks
 │
-├── hooks/                        # (planned) shared hooks (useAuth still pending, useSocket...)
+├── hooks/                        # use-auth.ts done, useSocket still (planned)
 ├── types/
 │   ├── api.types.ts              # ApiErrorResponse<TFields> — shared axios error-response
 │   │                             #   shape (message/errorCode/errors), see Form Conventions
-│   └── user.types.ts             # User — full GET /users/profile shape, reused anywhere
-│                                 #   a user entity is shown (not auth-specific)
+│   ├── user.types.ts             # User — full GET /users/profile shape, reused anywhere
+│   │                             #   a user entity is shown (not auth-specific)
+│   └── category.types.ts         # Category — full GET /categories shape (with children)
 └── providers/
     └── auth-provider.tsx         # AuthContext + AuthProvider — see Auth Flow → Client auth state
 
@@ -240,6 +249,7 @@ Always check for existing utilities before writing new code:
 | `src/lib/utils.ts`                       | `cn`                        | merging Tailwind classes in a component with `className`    |
 | `src/types/api.types.ts`                 | `ApiErrorResponse<TFields>` | typing an axios error response for any form                 |
 | `src/types/user.types.ts`                | `User`                      | typing a user entity anywhere it's displayed                |
+| `src/types/category.types.ts`            | `Category`                  | typing a category entity anywhere it's displayed            |
 | `src/components/form/field-error.tsx`    | `FieldError`                | rendering a field-level error message under an input        |
 | `src/components/form/password-input.tsx` | `PasswordInput`             | a password field that needs a show/hide toggle              |
 | `src/components/form/action-banner.tsx`  | `ActionBanner`              | showing a backend message with an optional suggested action |
@@ -258,10 +268,10 @@ Note on `api.ts`: auth interceptors (attach access token, 401 → refresh → re
 - ✅ Done — shadcn/ui init (Maia + Base UI, lucide icons, vietnamese-subset fonts)
 - ✅ Done — design system (color tokens, typography, "tag treo" signature)
 - ✅ Done — `globals.css` brand tokens
-- ✅ Done — `Header`, `Footer`, `BottomNav`, `(main)/layout.tsx` (placeholder content, not wired to real data/auth yet; category browsing moved out of header, will live on home page instead)
-- ✅ Done — `(auth)` layout (split brand/form panels, bottom-sheet card on mobile) + `login` page (uncontrolled form + `FieldError`/`PasswordInput` shared components — see Form Conventions; remember-me, Google button placeholder)
-
-**Next:** `register`/`forgot-password`/`reset-password`/`verify-account` pages, home page skeleton
+- ✅ Done — full `(auth)` flow: layout + `login`/`register`/`verify-account`/`forgot-password`/`verify-forgot-otp`/`reset-password`/`google-callback` pages (uncontrolled forms, shared `FieldError`/`PasswordInput`/`ActionBanner`, `errorCode`-based branching — see Form Conventions)
+- ✅ Done — `AuthProvider`/`useAuth` (login/logout, `/users/profile` fetch) wired into root layout
+- ✅ Done — `Header`, `BottomNav` wired to real auth state (avatar vs guest nav);
+- ✅ Done — global 404 page (dark-surface treatment, reuses tag-treo motif)
 
 ## Agent Behavior
 

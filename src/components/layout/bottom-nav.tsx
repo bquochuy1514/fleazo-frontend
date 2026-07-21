@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { Home, FileText, Heart, User, Plus } from 'lucide-react';
+import { Home, ClipboardList, MessageCircle, User, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 
@@ -12,8 +12,8 @@ import { useAuth } from '@/hooks/use-auth';
 // "Cá nhân" isn't in this array — it's special-cased below (avatar vs icon).
 const NAV_ITEMS = [
 	{ href: '/', label: 'Trang chủ', icon: Home },
-	{ href: '/quan-ly-tin', label: 'Quản lý tin', icon: FileText },
-	{ href: '/tin-luu', label: 'Tin đã lưu', icon: Heart },
+	{ href: '/quan-ly-tin', label: 'Quản lý tin', icon: ClipboardList },
+	{ href: '/tin-nhan', label: 'Tin nhắn', icon: MessageCircle },
 ] as const;
 
 type NavItem = (typeof NAV_ITEMS)[number];

@@ -45,8 +45,19 @@ function GoogleCallbackHandler() {
 	}, []);
 
 	return (
-		<p className="text-center text-sm text-muted-foreground">
-			Đang đăng nhập...
-		</p>
+		<div className="flex flex-col items-center gap-4 py-6 text-center">
+			<div
+				className="size-10 animate-spin rounded-full border-4 border-fz-primary-soft border-t-fz-primary"
+				aria-hidden="true"
+			/>
+			<div>
+				<h1 className="font-heading text-xl font-semibold text-fz-ink sm:text-2xl">
+					Đang đăng nhập với Google
+				</h1>
+				<p className="mt-1.5 text-sm text-muted-foreground">
+					Vui lòng đợi trong giây lát...
+				</p>
+			</div>
+		</div>
 	);
 }

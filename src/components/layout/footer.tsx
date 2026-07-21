@@ -1,17 +1,22 @@
 import Link from 'next/link';
 import { Mail, Phone } from 'lucide-react';
 import { DarkSurfaceAmbient } from '@/components/layout/dark-surface-ambient';
+import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
+import type { Category } from '@/types/category.types';
 import { Logo } from '../logo';
 
-// Column links are placeholders — routes don't exist yet (see AGENTS.md →
-// Project Structure). Update hrefs once each page lands.
-const CATEGORY_LINKS = [
-	{ href: '/danh-muc/giao-trinh-sach', label: 'Giáo trình & Sách' },
-	{ href: '/danh-muc/do-dien-tu', label: 'Đồ điện tử' },
-	{ href: '/danh-muc/xe-co', label: 'Xe cộ' },
-	{ href: '/danh-muc/do-gia-dung', label: 'Đồ gia dụng' },
-];
+// Backend trả cây danh mục (cha kèm children) — Footer chỉ hiển thị cấp cha,
+// nên lọc parentId === null thay vì render cả children.
+async function getParentCategories(): Promise<Category[]> {
+	try {
+		const res = await api.get<Category[]>('/categories');
+		return res.data.filter((category) => category.parentId === null);
+	} catch {
+		// Lỗi mạng/API không nên làm sập cả footer — ẩn cột Danh mục là đủ.
+		return [];
+	}
+}
 
 const SUPPORT_LINKS = [
 	{ href: '/gioi-thieu', label: 'Về Fleazo' },
@@ -23,7 +28,9 @@ const SUPPORT_LINKS = [
 // Footer: shares --color-dark-surface with Header for a matching navy
 // bookend top/bottom (see AGENTS.md → Design System → Dark surface). All
 // children styled explicitly for a dark background, same rule as Header.
-export function Footer() {
+export async function Footer() {
+	const categories = await getParentCategories();
+
 	return (
 		<footer
 			className={cn(
@@ -55,13 +62,13 @@ export function Footer() {
 						Danh mục
 					</h3>
 					<ul className="mt-3 space-y-2 text-sm">
-						{CATEGORY_LINKS.map((item) => (
-							<li key={item.href}>
+						{categories.map((item) => (
+							<li key={item.id}>
 								<Link
-									href={item.href}
+									href={`/danh-muc/${item.slug}`}
 									className="hover:text-white"
 								>
-									{item.label}
+									{item.name}
 								</Link>
 							</li>
 						))}
@@ -97,11 +104,11 @@ export function Footer() {
 					<ul className="mt-3 space-y-2 text-sm">
 						<li>
 							<a
-								href="mailto:bquochuy260405@gmail.com"
+								href="mailto:fleazocompany@gmail.com"
 								className="flex items-center gap-2 hover:text-white"
 							>
-								<Mail className="size-4" />
-								bquochuy260405@gmail.com
+								<Mail className="size-4 shrink-0" />
+								fleazocompany@gmail.com
 							</a>
 						</li>
 						<li>
@@ -126,7 +133,7 @@ export function Footer() {
 					<Link href="/" className="hover:text-white">
 						Fleazo
 					</Link>
-					. Đồ án tốt nghiệp UIT.
+					. Dự án cá nhân phục vụ mục đích học tập và phát triển.
 				</div>
 			</div>
 		</footer>
