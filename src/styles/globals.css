@@ -213,6 +213,30 @@
 	html {
 		@apply font-sans;
 	}
+
+	/* Explicit margin reset — Preflight should already zero these, but in
+     practice something in the cascade (likely @import order with
+     shadcn/tailwind.css loading after tailwindcss) lets browser-default
+     margins leak through on some elements (see the FieldError <p>
+     margin-bottom bug). Don't rely on Preflight alone; this is now the
+     single source of truth. Spacing between elements should always come
+     from an explicit Tailwind class (mt-*, space-y-*, gap-*), never a
+     browser default. */
+	h1,
+	h2,
+	h3,
+	h4,
+	h5,
+	h6,
+	p,
+	blockquote,
+	figure,
+	dl,
+	dd,
+	hr {
+		margin: 0;
+	}
+
 	/* Prices and any tabular numbers — see Design System → Typography */
 	.tabular-nums {
 		font-variant-numeric: tabular-nums;

@@ -161,7 +161,8 @@ src/
 │   │                             #   dark-surface-ambient.tsx
 │   ├── auth/                     # Shared by (auth) pages: google-auth-button.tsx
 │   └── form/                     # Shared form building blocks (see Form Conventions):
-│                                 #   field-error.tsx, password-input.tsx
+│                                 #   field-error.tsx, password-input.tsx,
+│                                 #   action-banner.tsx
 │
 ├── lib/                          # Shared non-UI code (see Common Utilities table)
 │   ├── api.ts                    # Shared axios instance
@@ -203,6 +204,7 @@ Rules:
 - **Error shape**: `ApiErrorResponse<TFields>` in `src/types/api.types.ts` — `{ message?: string; errors?: Partial<Record<TFields, string>> }`. Type the axios catch with `isAxiosError<ApiErrorResponse<'email' | 'password'>>(err)` instead of declaring a one-off error type per page.
 - **Field-level error display**: `<FieldError message={...} />` from `src/components/form/field-error.tsx` — shared across every form, don't hand-roll the `{error && <p className="...">}` pattern per page.
 - **Password fields with a show/hide toggle**: `<PasswordInput />` from `src/components/form/password-input.tsx` — owns its own toggle state internally, used exactly like `Input` (accepts a separate `wrapperClassName` for margin on the outer wrapper, since it renders two elements — the input and the toggle button — not one).
+- **A backend message paired with a suggested next step** (verify now, log in now, ...): `<ActionBanner message={...} actionHref={...} actionLabel={...} />` from `src/components/form/action-banner.tsx` — `actionHref`/`actionLabel` are optional for a plain message banner with no link. Always pass the backend's real `message`, never a hardcoded string, even though the action itself is branched via `errorCode`.
 - Escalate to react-hook-form + zod only when a form is genuinely complex (multi-step, many cross-field rules) — not needed anywhere yet.
 
 ## Key Conventions
@@ -220,14 +222,15 @@ Rules:
 
 Always check for existing utilities before writing new code:
 
-| Path                                     | Export                      | Use when                                                 |
-| ---------------------------------------- | --------------------------- | -------------------------------------------------------- |
-| `src/lib/api.ts`                         | `api`, `isAxiosError`       | making any HTTP call, or narrowing a caught error's type |
-| `src/lib/format.ts`                      | `formatPrice`               | displaying a VNĐ price value                             |
-| `src/lib/utils.ts`                       | `cn`                        | merging Tailwind classes in a component with `className` |
-| `src/types/api.types.ts`                 | `ApiErrorResponse<TFields>` | typing an axios error response body for any form         |
-| `src/components/form/field-error.tsx`    | `FieldError`                | rendering a field-level error message under an input     |
-| `src/components/form/password-input.tsx` | `PasswordInput`             | a password field that needs a show/hide toggle           |
+| Path                                     | Export                      | Use when                                                    |
+| ---------------------------------------- | --------------------------- | ----------------------------------------------------------- |
+| `src/lib/api.ts`                         | `api`, `isAxiosError`       | making any HTTP call, or narrowing a caught error's type    |
+| `src/lib/format.ts`                      | `formatPrice`               | displaying a VNĐ price value                                |
+| `src/lib/utils.ts`                       | `cn`                        | merging Tailwind classes in a component with `className`    |
+| `src/types/api.types.ts`                 | `ApiErrorResponse<TFields>` | typing an axios error response body for any form            |
+| `src/components/form/field-error.tsx`    | `FieldError`                | rendering a field-level error message under an input        |
+| `src/components/form/password-input.tsx` | `PasswordInput`             | a password field that needs a show/hide toggle              |
+| `src/components/form/action-banner.tsx`  | `ActionBanner`              | showing a backend message with an optional suggested action |
 
 > ⚠️ Whenever a new file is added to `src/lib/`, `src/types/`, or `src/components/form/`, update this table immediately.
 > ⚠️ Keep **Use when** to one short line — a few words of context is fine, but push edge cases, caveats, or "not implemented yet" notes into a note below the table instead of into the cell.

@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -11,11 +11,24 @@ import { FieldError } from '@/components/form/field-error';
 import { GoogleAuthButton } from '@/components/auth/google-auth-button';
 import { api, isAxiosError } from '@/lib/api';
 import type { ApiErrorResponse } from '@/types/api.types';
+import { ActionBanner } from '@/components/form/action-banner';
 
 type LoginFields = 'email' | 'password';
 
+// useSearchParams needs a Suspense boundary (Next.js build requirement)
 export default function LoginPage() {
+	return (
+		<Suspense fallback={null}>
+			<LoginForm />
+		</Suspense>
+	);
+}
+
+function LoginForm() {
 	const router = useRouter();
+	const searchParams = useSearchParams();
+	const justVerified = searchParams.get('verified') === 'true';
+
 	const [errors, setErrors] = useState<ApiErrorResponse<LoginFields>>({});
 	const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
 	const [rememberMe, setRememberMe] = useState(true);
@@ -59,8 +72,7 @@ export default function LoginPage() {
 						},
 			);
 
-			// errorCode matches src/common/constants/error-code.constant.ts
-			// on the backend — branch on this, never on message text.
+			// see AGENTS.md → error-code.constant.ts
 			setUnverifiedEmail(
 				res?.errorCode === 'ACCOUNT_NOT_VERIFIED'
 					? String(values.email)
@@ -79,6 +91,12 @@ export default function LoginPage() {
 			<p className="mt-1.5 text-sm text-muted-foreground">
 				Chào mừng quay lại Fleazo
 			</p>
+
+			{justVerified && (
+				<div className="mt-4 rounded-2xl bg-fz-primary-soft px-4 py-3 text-sm text-fz-ink">
+					Xác thực tài khoản thành công! Đăng nhập để tiếp tục.
+				</div>
+			)}
 
 			<div className="mt-4">
 				<GoogleAuthButton />
@@ -147,15 +165,12 @@ export default function LoginPage() {
 				</div>
 
 				{unverifiedEmail ? (
-					<div className="my-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-2xl bg-fz-primary-soft px-4 py-3 text-sm text-fz-ink">
-						<span>{errors.message}</span>
-						<Link
-							href={`/verify-account?email=${encodeURIComponent(unverifiedEmail)}`}
-							className="font-medium text-fz-primary hover:underline"
-						>
-							Xác thực ngay
-						</Link>
-					</div>
+					<ActionBanner
+						message={errors.message ?? ''}
+						actionHref={`/verify-account?email=${encodeURIComponent(unverifiedEmail)}&autoResend=true`}
+						actionLabel="Xác thực ngay"
+						className="my-3"
+					/>
 				) : (
 					<FieldError message={errors.message} />
 				)}

@@ -10,6 +10,7 @@ import { FieldError } from '@/components/form/field-error';
 import { GoogleAuthButton } from '@/components/auth/google-auth-button';
 import { api, isAxiosError } from '@/lib/api';
 import type { ApiErrorResponse } from '@/types/api.types';
+import { ActionBanner } from '@/components/form/action-banner';
 
 // Field names must match RegisterDto exactly (fleazo-backend/register.dto.ts).
 type RegisterFields = 'fullName' | 'email' | 'password' | 'confirmPassword';
@@ -153,15 +154,12 @@ export default function RegisterPage() {
 				</div>
 
 				{emailAlreadyExists ? (
-					<div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-2xl bg-fz-primary-soft px-4 py-3 text-sm text-fz-ink">
-						<span>{errors.message}</span>
-						<Link
-							href="/login"
-							className="font-medium text-fz-primary hover:underline"
-						>
-							Đăng nhập ngay
-						</Link>
-					</div>
+					<ActionBanner
+						message={errors.message ?? ''}
+						actionHref="/login"
+						actionLabel="Đăng nhập ngay"
+						className="my-3"
+					/>
 				) : (
 					<FieldError message={errors.message} />
 				)}
