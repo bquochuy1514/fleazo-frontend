@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -29,9 +29,12 @@ function VerifyForgotOtpForm() {
 	const [errors, setErrors] = useState<
 		ApiErrorResponse<VerifyForgotOtpFields>
 	>({});
+	const codeOtpRef = useRef<HTMLInputElement>(null);
 	const [loading, setLoading] = useState(false);
 	const [resending, setResending] = useState(false);
-	const [cooldown, setCooldown] = useState(0);
+	// forgot-password just sent a code right before redirecting here —
+	// cooldown starts hot, not at 0, so resend can't fire redundantly.
+	const [cooldown, setCooldown] = useState(60);
 	const [resendMessage, setResendMessage] = useState<{
 		type: 'success' | 'error';
 		text: string;
@@ -58,6 +61,7 @@ function VerifyForgotOtpForm() {
 		setResending(true);
 		setResendMessage(null);
 		setErrors({});
+		if (codeOtpRef.current) codeOtpRef.current.value = '';
 
 		try {
 			// No separate resend endpoint — forgot-password itself
@@ -116,6 +120,7 @@ function VerifyForgotOtpForm() {
 						Mã xác thực
 					</label>
 					<Input
+						ref={codeOtpRef}
 						id="codeOtp"
 						name="codeOtp"
 						type="text"
