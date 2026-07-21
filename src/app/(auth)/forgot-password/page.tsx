@@ -73,7 +73,7 @@ export default function ForgotPasswordPage() {
 				Nhập email để nhận mã xác thực đặt lại mật khẩu
 			</p>
 
-			<form onSubmit={onSubmit} className="mt-4 space-y-2">
+			<form onSubmit={onSubmit} className="mt-4 space-y-4">
 				<div>
 					<label
 						htmlFor="email"

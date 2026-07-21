@@ -66,7 +66,7 @@ export default function RegisterPage() {
 				<span className="h-px flex-1 bg-border" aria-hidden="true" />
 			</div>
 
-			<form onSubmit={onSubmit} className="space-y-2">
+			<form onSubmit={onSubmit} className="space-y-4">
 				<div>
 					<label
 						htmlFor="fullName"

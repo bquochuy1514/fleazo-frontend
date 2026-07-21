@@ -62,7 +62,7 @@ function ResetPasswordForm() {
 				Tạo mật khẩu mới cho tài khoản của bạn
 			</p>
 
-			<form onSubmit={onSubmit} className="mt-6 space-y-2">
+			<form onSubmit={onSubmit} className="mt-4 space-y-4">
 				<input type="hidden" name="email" value={email} />
 
 				<div className="grid grid-cols-2 gap-3">

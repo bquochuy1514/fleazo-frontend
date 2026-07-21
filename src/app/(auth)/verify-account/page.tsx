@@ -136,7 +136,7 @@ function VerifyAccountForm() {
 				)}
 			</p>
 
-			<form onSubmit={onSubmit} className="mt-4 space-y-2">
+			<form onSubmit={onSubmit} className="mt-4 space-y-4">
 				<input type="hidden" name="email" value={email} />
 
 				<div>

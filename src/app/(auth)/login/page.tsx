@@ -12,6 +12,7 @@ import { ActionBanner } from '@/components/form/action-banner';
 import { GoogleAuthButton } from '@/components/auth/google-auth-button';
 import { api, parseApiError } from '@/lib/api';
 import type { ApiErrorResponse } from '@/types/api.types';
+import { useAuth } from '@/hooks/use-auth';
 
 type LoginFields = 'email' | 'password';
 
@@ -25,6 +26,7 @@ export default function LoginPage() {
 }
 
 function LoginForm() {
+	const auth = useAuth();
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	const successMessage =
@@ -59,6 +61,7 @@ function LoginForm() {
 				sessionStorage.setItem('access_token', data.access_token);
 			}
 
+			await auth.login(data.access_token);
 			router.push('/');
 		} catch (err) {
 			const parsed = parseApiError<LoginFields>(err);
@@ -98,7 +101,7 @@ function LoginForm() {
 				<span className="h-px flex-1 bg-border" aria-hidden="true" />
 			</div>
 
-			<form onSubmit={onSubmit} className="space-y-2">
+			<form onSubmit={onSubmit} className="space-y-4">
 				<div>
 					<label
 						htmlFor="email"

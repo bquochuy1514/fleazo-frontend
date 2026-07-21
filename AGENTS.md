@@ -23,11 +23,11 @@ Same three goals as the backend — real product, revenue-generating, graduation
 - Realtime: `socket.io-client` — **required**, backend uses Socket.IO, protocol is not compatible with raw WebSocket
 - Form handling: **no library** — reconsidered after building the login UI. `react-hook-form + zod` was tried first, then removed: client-side validation only catches "obviously wrong" input before a network call (empty field, malformed email) — it never replaces backend validation, which must re-check everything regardless. Current approach: uncontrolled inputs + native HTML5 types, backend errors surfaced per-field on submit — see **Form Conventions** section for the full pattern and shared building blocks. react-hook-form + zod remain the fallback choice if a form gets genuinely complex (multi-step, many cross-field rules), not ruled out permanently.
 - Token storage: **localStorage vs sessionStorage, decided by the user's "remember me" choice** — checked → both `access_token` and `refresh_token` in `localStorage` (survives browser close, enables silent refresh); unchecked → only `access_token` in `sessionStorage`, no `refresh_token` stored at all (session just ends when the access token expires or the tab closes). Not an httpOnly-cookie approach — plain client storage either way.
+- Client-state management: **React Context, not Zustand** — for auth state specifically. Auth is a single object that changes rarely (login/logout); Zustand's value (multiple stores, selectors to avoid re-renders, middleware) doesn't pay off for that. Not a blanket rejection of Zustand — reconsider per area if something with genuinely complex, frequently-changing state shows up (cart, filters) later.
 
 ### Undecided — decide incrementally as each area is built, then move to Confirmed
 
 - Server-state management (TanStack Query?) — decide when building the first data-fetching page
-- Client-state management (Zustand?) — decide when building auth state
 - Toast/notification library
 
 ⚠️ Framer Motion considered and rejected for now (see Design System → Interactive feedback) — plain Tailwind hover/active scale covers current needs. Revisit only if a genuinely complex animation need comes up.
@@ -174,11 +174,14 @@ src/
 │                                 #   layout. ⚠️ components.json "tailwind.css" must point
 │                                 #   here (src/styles/globals.css) or shadcn add breaks
 │
-├── hooks/                        # (planned) shared hooks (useAuth, useSocket...)
+├── hooks/                        # (planned) shared hooks (useAuth still pending, useSocket...)
 ├── types/
-│   └── api.types.ts              # ApiErrorResponse<TFields> — shared axios error-response
-│                                 #   shape (message/errorCode/errors), see Form Conventions
-└── providers/                    # (planned) app-wide providers (socket, state, query client)
+│   ├── api.types.ts              # ApiErrorResponse<TFields> — shared axios error-response
+│   │                             #   shape (message/errorCode/errors), see Form Conventions
+│   └── user.types.ts             # User — full GET /users/profile shape, reused anywhere
+│                                 #   a user entity is shown (not auth-specific)
+└── providers/
+    └── auth-provider.tsx         # AuthContext + AuthProvider — see Auth Flow → Client auth state
 
 components.json                   # shadcn CLI config — read by the CLI, not by app code
 public/                           # Static assets served as-is
@@ -207,6 +210,14 @@ Rules:
 - **A backend message paired with a suggested next step** (verify now, log in now, ...): `<ActionBanner message={...} actionHref={...} actionLabel={...} />` from `src/components/form/action-banner.tsx` — `actionHref`/`actionLabel` are optional for a plain message banner with no link. Always pass the backend's real `message`, never a hardcoded string, even though the action itself is branched via `errorCode`.
 - Escalate to react-hook-form + zod only when a form is genuinely complex (multi-step, many cross-field rules) — not needed anywhere yet.
 
+## Client Auth State
+
+- `AuthContext`/`AuthProvider` in `src/providers/auth-provider.tsx` — plain React Context, not Zustand (see Tech Stack → Confirmed for why). Holds `user: User | null` and `isLoading`; exposes `login(accessToken)` and `logout()`.
+- **`login(accessToken)` does not perform a login.** Auth pages (`login/page.tsx`) already own the entire login flow — calling `/auth/login`, the remember-me storage split, redirecting. This function only runs _after_ a valid token already exists in storage: it fetches `/users/profile` with that token and sets `user`. Call it right after the page's own token-storage step, right before `router.push`.
+- No axios interceptor for this — the token is attached by hand on the one `/users/profile` call. An interceptor (auto-attach token everywhere + 401 → refresh → retry) becomes worth building once many more endpoints need it; not the case yet with a single call site.
+- `fetchProfile` never throws to its caller — any failure (expired/invalid token, network error) resolves to `null`, meaning "not logged in". Callers don't need a second try/catch.
+- `children` are never hidden behind a loading gate (no `{!isLoading && children}`) — components that care (e.g. Header) read `isLoading` themselves and own their own loading UI.
+
 ## Key Conventions
 
 - **Import alias:** use `@/` absolute imports (Next.js default) — a deliberate departure from the backend's relative-imports rule. Frontend trees nest deeper and the Next ecosystem assumes `@/`.
@@ -228,6 +239,7 @@ Always check for existing utilities before writing new code:
 | `src/lib/format.ts`                      | `formatPrice`               | displaying a VNĐ price value                                |
 | `src/lib/utils.ts`                       | `cn`                        | merging Tailwind classes in a component with `className`    |
 | `src/types/api.types.ts`                 | `ApiErrorResponse<TFields>` | typing an axios error response for any form                 |
+| `src/types/user.types.ts`                | `User`                      | typing a user entity anywhere it's displayed                |
 | `src/components/form/field-error.tsx`    | `FieldError`                | rendering a field-level error message under an input        |
 | `src/components/form/password-input.tsx` | `PasswordInput`             | a password field that needs a show/hide toggle              |
 | `src/components/form/action-banner.tsx`  | `ActionBanner`              | showing a backend message with an optional suggested action |
