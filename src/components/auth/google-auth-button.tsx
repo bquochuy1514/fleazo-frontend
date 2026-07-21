@@ -31,7 +31,7 @@ export function GoogleAuthButton() {
 		<Button
 			type="button"
 			variant="outline"
-			className="h-12 w-full gap-2 bg-white text-base shadow-sm hover:bg-fz-primary-soft hover:shadow-md"
+			className="h-11 w-full gap-2 bg-white text-base shadow-sm hover:bg-fz-primary-soft hover:shadow-md"
 		>
 			<GoogleIcon className="size-5" />
 			Đăng nhập với Google

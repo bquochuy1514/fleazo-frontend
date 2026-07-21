@@ -5,20 +5,19 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
 import { PasswordInput } from '@/components/form/password-input';
 import { FieldError } from '@/components/form/field-error';
 import { GoogleAuthButton } from '@/components/auth/google-auth-button';
 import { api, isAxiosError } from '@/lib/api';
 import type { ApiErrorResponse } from '@/types/api.types';
 
-type LoginFields = 'email' | 'password';
+// Field names must match RegisterDto exactly (fleazo-backend/register.dto.ts).
+type RegisterFields = 'fullName' | 'email' | 'password' | 'confirmPassword';
 
-export default function LoginPage() {
+export default function RegisterPage() {
 	const router = useRouter();
-	const [errors, setErrors] = useState<ApiErrorResponse<LoginFields>>({});
-	const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
-	const [rememberMe, setRememberMe] = useState(true);
+	const [errors, setErrors] = useState<ApiErrorResponse<RegisterFields>>({});
+	const [emailAlreadyExists, setEmailAlreadyExists] = useState(false);
 	const [loading, setLoading] = useState(false);
 
 	const onSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
@@ -28,22 +27,16 @@ export default function LoginPage() {
 		const values = Object.fromEntries(new FormData(e.currentTarget));
 
 		try {
-			const { data } = await api.post('/auth/login', values);
+			await api.post('/auth/register', values);
 
-			// Remember me: with it, refresh_token persists in localStorage so
-			// the (future) 401 -> refresh -> retry interceptor can keep the
-			// session alive silently. Without it, only the access token goes
-			// into sessionStorage and no refresh token is stored at all.
-			if (rememberMe) {
-				localStorage.setItem('access_token', data.access_token);
-				localStorage.setItem('refresh_token', data.refresh_token);
-			} else {
-				sessionStorage.setItem('access_token', data.access_token);
-			}
-
-			router.push('/');
+			// handleRegister doesn't return tokens — account needs OTP
+			// verification before it can log in. Carry the email over so
+			// verify-account doesn't have to ask for it again.
+			router.push(
+				`/verify-account?email=${encodeURIComponent(String(values.email))}`,
+			);
 		} catch (err) {
-			const res = isAxiosError<ApiErrorResponse<LoginFields>>(err)
+			const res = isAxiosError<ApiErrorResponse<RegisterFields>>(err)
 				? err.response?.data
 				: undefined;
 			const hasFieldErrors =
@@ -61,11 +54,7 @@ export default function LoginPage() {
 
 			// errorCode matches src/common/constants/error-code.constant.ts
 			// on the backend — branch on this, never on message text.
-			setUnverifiedEmail(
-				res?.errorCode === 'ACCOUNT_NOT_VERIFIED'
-					? String(values.email)
-					: null,
-			);
+			setEmailAlreadyExists(res?.errorCode === 'EMAIL_ALREADY_EXISTS');
 		} finally {
 			setLoading(false);
 		}
@@ -74,10 +63,10 @@ export default function LoginPage() {
 	return (
 		<>
 			<h1 className="font-heading text-2xl font-semibold text-fz-ink sm:text-3xl">
-				Đăng nhập
+				Đăng ký
 			</h1>
 			<p className="mt-1.5 text-sm text-muted-foreground">
-				Chào mừng quay lại Fleazo
+				Tạo tài khoản để bắt đầu mua bán trên Fleazo
 			</p>
 
 			<div className="mt-4">
@@ -87,12 +76,29 @@ export default function LoginPage() {
 			<div className="my-4 flex items-center gap-3">
 				<span className="h-px flex-1 bg-border" aria-hidden="true" />
 				<span className="text-sm text-muted-foreground">
-					Hoặc đăng nhập bằng email
+					Hoặc đăng ký bằng email
 				</span>
 				<span className="h-px flex-1 bg-border" aria-hidden="true" />
 			</div>
 
 			<form onSubmit={onSubmit} className="space-y-2">
+				<div>
+					<label
+						htmlFor="fullName"
+						className="text-sm font-medium text-fz-ink"
+					>
+						Họ tên
+					</label>
+					<Input
+						id="fullName"
+						name="fullName"
+						type="text"
+						placeholder="Nguyễn Văn A"
+						className="mt-1.5 h-11 text-sm"
+					/>
+					<FieldError message={errors.errors?.fullName} />
+				</div>
+
 				<div>
 					<label
 						htmlFor="email"
@@ -110,50 +116,50 @@ export default function LoginPage() {
 					<FieldError message={errors.errors?.email} />
 				</div>
 
-				<div>
-					<label
-						htmlFor="password"
-						className="text-sm font-medium text-fz-ink"
-					>
-						Mật khẩu
-					</label>
-					<PasswordInput
-						id="password"
-						name="password"
-						placeholder="••••••••"
-						wrapperClassName="mt-1.5"
-						className="h-11 text-sm"
-					/>
-					<FieldError message={errors.errors?.password} />
-
-					<div className="mt-2 flex items-center justify-between">
-						<label className="flex items-center gap-2 text-sm text-fz-ink">
-							<Checkbox
-								checked={rememberMe}
-								onCheckedChange={(checked) =>
-									setRememberMe(checked === true)
-								}
-							/>
-							Ghi nhớ đăng nhập
-						</label>
-						<Link
-							href="/forgot-password"
-							tabIndex={-1}
-							className="text-sm text-fz-primary hover:underline"
+				<div className="grid grid-cols-2 gap-3">
+					<div>
+						<label
+							htmlFor="password"
+							className="text-sm font-medium text-fz-ink"
 						>
-							Quên mật khẩu?
-						</Link>
+							Mật khẩu
+						</label>
+						<PasswordInput
+							id="password"
+							name="password"
+							placeholder="••••••••"
+							wrapperClassName="mt-1.5"
+							className="h-11 text-sm"
+						/>
+						<FieldError message={errors.errors?.password} />
+					</div>
+
+					<div>
+						<label
+							htmlFor="confirmPassword"
+							className="text-sm font-medium text-fz-ink"
+						>
+							Xác nhận
+						</label>
+						<PasswordInput
+							id="confirmPassword"
+							name="confirmPassword"
+							placeholder="••••••••"
+							wrapperClassName="mt-1.5"
+							className="h-11 text-sm"
+						/>
+						<FieldError message={errors.errors?.confirmPassword} />
 					</div>
 				</div>
 
-				{unverifiedEmail ? (
-					<div className="my-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-2xl bg-fz-primary-soft px-4 py-3 text-sm text-fz-ink">
+				{emailAlreadyExists ? (
+					<div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-2xl bg-fz-primary-soft px-4 py-3 text-sm text-fz-ink">
 						<span>{errors.message}</span>
 						<Link
-							href={`/verify-account?email=${encodeURIComponent(unverifiedEmail)}`}
+							href="/login"
 							className="font-medium text-fz-primary hover:underline"
 						>
-							Xác thực ngay
+							Đăng nhập ngay
 						</Link>
 					</div>
 				) : (
@@ -166,17 +172,17 @@ export default function LoginPage() {
 					className="h-11 w-full text-sm"
 					disabled={loading}
 				>
-					{loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
+					{loading ? 'Đang đăng ký...' : 'Đăng ký'}
 				</Button>
 			</form>
 
 			<p className="mt-4 text-center text-sm text-muted-foreground">
-				Chưa có tài khoản?{' '}
+				Đã có tài khoản?{' '}
 				<Link
-					href="/register"
+					href="/login"
 					className="font-medium text-fz-primary hover:underline"
 				>
-					Đăng ký
+					Đăng nhập
 				</Link>
 			</p>
 		</>

@@ -24,24 +24,18 @@ const VALUE_PROPS = [
 	},
 ];
 
-// Auth shell — split layout, dark brand panel (left, md+) + form (right).
-// Logo only works on dark surfaces — see AGENTS.md → Dark surface.
-// Mobile: form is a rounded card that overlaps up into the dark panel
-// (bottom-sheet), instead of a hard split — dark surface stays visible
-// behind/around the card, giving the ambient blobs real room instead of
-// a logo-height strip.
 export default function AuthLayout({
 	children,
 }: Readonly<{
 	children: React.ReactNode;
 }>) {
 	return (
-		<div className="flex min-h-screen flex-col md:flex-row">
+		<div className="flex h-dvh flex-col md:flex-row">
 			<div className="relative shrink-0 overflow-hidden bg-fz-dark-surface px-6 pt-10 pb-16 md:flex md:w-[46%] md:items-center md:px-16 md:py-12">
 				<DarkSurfaceAmbient />
 
 				<div className="relative w-full max-w-md md:mx-auto">
-					<Logo className="h-14" clickable={false} />
+					<Logo className="h-14" clickable={true} />
 
 					{/* Value props — desktop only, no room once the card overlaps on mobile. */}
 					<div className="mt-12 hidden space-y-9 md:block">
@@ -64,10 +58,10 @@ export default function AuthLayout({
 				</div>
 			</div>
 
-			{/* Form card — overlaps up into the dark panel on mobile (bottom-sheet
-			    look), plain flat panel on md+ where the split is side-by-side. */}
-			<div className="relative z-10 -mt-8 flex-1 rounded-t-3xl bg-background px-4 pt-8 pb-10 shadow-[0_-8px_24px_rgba(0,0,0,0.08)] md:mt-0 md:flex md:items-center md:justify-center md:rounded-none md:px-4 md:py-12 md:shadow-none">
-				<div className="mx-auto w-full max-w-md">{children}</div>
+			<div className="relative z-10 -mt-8 min-h-0 flex-1 overflow-y-auto rounded-t-3xl bg-background px-4 pt-8 pb-10 shadow-[0_-8px_24px_rgba(0,0,0,0.08)] md:mt-0 md:flex md:min-h-0 md:overflow-y-auto md:rounded-none md:px-4 md:py-12 md:shadow-none">
+				<div className="mx-auto w-full max-w-md md:m-auto">
+					{children}
+				</div>
 			</div>
 		</div>
 	);
