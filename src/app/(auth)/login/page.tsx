@@ -27,7 +27,12 @@ export default function LoginPage() {
 function LoginForm() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
-	const justVerified = searchParams.get('verified') === 'true';
+	const successMessage =
+		searchParams.get('verified') === 'true'
+			? 'Xác thực tài khoản thành công! Đăng nhập để tiếp tục.'
+			: searchParams.get('passwordReset') === 'true'
+				? 'Đặt lại mật khẩu thành công! Đăng nhập để tiếp tục.'
+				: null;
 
 	const [errors, setErrors] = useState<ApiErrorResponse<LoginFields>>({});
 	const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
@@ -77,11 +82,8 @@ function LoginForm() {
 				Chào mừng quay lại Fleazo
 			</p>
 
-			{justVerified && (
-				<ActionBanner
-					message="Xác thực tài khoản thành công! Đăng nhập để tiếp tục."
-					className="mt-4"
-				/>
+			{successMessage && (
+				<ActionBanner message={successMessage} className="mt-4" />
 			)}
 
 			<div className="mt-4">

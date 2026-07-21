@@ -1,40 +1,34 @@
 'use client';
 
-import { Suspense, useEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { FieldError } from '@/components/form/field-error';
-import { ActionBanner } from '@/components/form/action-banner';
 import { api, parseApiError } from '@/lib/api';
 import type { ApiErrorResponse } from '@/types/api.types';
 
-type VerifyFields = 'email' | 'codeOtp';
+// Field names must match VerifyForgotOtpDto (fleazo-backend/verify-forgot-otp.dto.ts).
+type VerifyForgotOtpFields = 'email' | 'codeOtp';
 
 // useSearchParams needs a Suspense boundary (Next.js build requirement)
-export default function VerifyAccountPage() {
+export default function VerifyForgotOtpPage() {
 	return (
 		<Suspense fallback={null}>
-			<VerifyAccountForm />
+			<VerifyForgotOtpForm />
 		</Suspense>
 	);
 }
 
-function VerifyAccountForm() {
+function VerifyForgotOtpForm() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	const email = searchParams.get('email') ?? '';
-	// Set by the login banner only — see AGENTS.md → Auth Flow
-	const autoResend = searchParams.get('autoResend') === 'true';
 
-	const codeOtpRef = useRef<HTMLInputElement>(null);
-
-	const [errors, setErrors] = useState<ApiErrorResponse<VerifyFields>>({});
-	// Real backend message, not hardcoded — covers both onSubmit and onResend
-	const [alreadyActiveMessage, setAlreadyActiveMessage] = useState<
-		string | null
-	>(null);
+	const [errors, setErrors] = useState<
+		ApiErrorResponse<VerifyForgotOtpFields>
+	>({});
 	const [loading, setLoading] = useState(false);
 	const [resending, setResending] = useState(false);
 	const [cooldown, setCooldown] = useState(0);
@@ -50,18 +44,11 @@ function VerifyAccountForm() {
 		const values = Object.fromEntries(new FormData(e.currentTarget));
 
 		try {
-			await api.post('/auth/verify-otp', values);
+			await api.post('/auth/verify-forgot-otp', values);
 
-			// no tokens returned — still needs a normal login after
-			router.push('/login?verified=true');
+			router.push(`/reset-password?email=${encodeURIComponent(email)}`);
 		} catch (err) {
-			const parsed = parseApiError<VerifyFields>(err);
-			setErrors(parsed);
-			setAlreadyActiveMessage(
-				parsed.errorCode === 'ACCOUNT_ALREADY_ACTIVE'
-					? (parsed.message ?? null)
-					: null,
-			);
+			setErrors(parseApiError<VerifyForgotOtpFields>(err));
 		} finally {
 			setLoading(false);
 		}
@@ -71,26 +58,21 @@ function VerifyAccountForm() {
 		setResending(true);
 		setResendMessage(null);
 		setErrors({});
-		if (codeOtpRef.current) codeOtpRef.current.value = '';
 
 		try {
-			const { data } = await api.post('/auth/resend-otp', { email });
-			setAlreadyActiveMessage(null);
+			// No separate resend endpoint — forgot-password itself
+			// regenerates and re-sends the OTP every time it's called.
+			const { data } = await api.post('/auth/forgot-password', {
+				email,
+			});
 			setResendMessage({ type: 'success', text: data.message });
 			setCooldown(60);
 		} catch (err) {
 			const parsed = parseApiError(err);
-
-			if (parsed.errorCode === 'ACCOUNT_ALREADY_ACTIVE') {
-				setAlreadyActiveMessage(parsed.message ?? null);
-			} else {
-				setAlreadyActiveMessage(null);
-				setResendMessage({
-					type: 'error',
-					text:
-						parsed.message ?? 'Đã có lỗi xảy ra, vui lòng thử lại.',
-				});
-			}
+			setResendMessage({
+				type: 'error',
+				text: parsed.message ?? 'Đã có lỗi xảy ra, vui lòng thử lại.',
+			});
 		} finally {
 			setResending(false);
 		}
@@ -107,23 +89,10 @@ function VerifyAccountForm() {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [cooldown > 0]);
 
-	const hasAutoResent = useRef(false);
-
-	useEffect(() => {
-		if (autoResend && email && !hasAutoResent.current) {
-			hasAutoResent.current = true;
-			// queueMicrotask avoids react-hooks/set-state-in-effect
-			queueMicrotask(() => {
-				onResend();
-			});
-		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []);
-
 	return (
 		<>
 			<h1 className="font-heading text-2xl font-semibold text-fz-ink sm:text-3xl">
-				Xác thực tài khoản
+				Xác thực mã OTP
 			</h1>
 			<p className="mt-1.5 text-sm text-muted-foreground">
 				{email ? (
@@ -147,7 +116,6 @@ function VerifyAccountForm() {
 						Mã xác thực
 					</label>
 					<Input
-						ref={codeOtpRef}
 						id="codeOtp"
 						name="codeOtp"
 						type="text"
@@ -157,18 +125,9 @@ function VerifyAccountForm() {
 						placeholder="123456"
 						className="mt-1.5 h-11 text-center text-lg tracking-[0.5em]"
 					/>
-					{alreadyActiveMessage ? (
-						<ActionBanner
-							message={alreadyActiveMessage}
-							actionHref="/login"
-							actionLabel="Đăng nhập ngay"
-							className="my-3"
-						/>
-					) : (
-						<FieldError
-							message={errors.errors?.codeOtp ?? errors.message}
-						/>
-					)}
+					<FieldError
+						message={errors.errors?.codeOtp ?? errors.message}
+					/>
 				</div>
 
 				<Button
@@ -177,7 +136,7 @@ function VerifyAccountForm() {
 					className="h-11 w-full text-sm"
 					disabled={loading}
 				>
-					{loading ? 'Đang xác thực...' : 'Xác thực tài khoản'}
+					{loading ? 'Đang xác thực...' : 'Xác thực'}
 				</Button>
 			</form>
 
@@ -210,12 +169,12 @@ function VerifyAccountForm() {
 			)}
 
 			<p className="mt-2 text-center text-sm text-muted-foreground">
-				Sai email?{' '}
+				Nhớ mật khẩu rồi?{' '}
 				<Link
-					href="/register"
+					href="/login"
 					className="font-medium text-fz-primary hover:underline"
 				>
-					Đăng ký lại
+					Đăng nhập
 				</Link>
 			</p>
 		</>
