@@ -1,10 +1,11 @@
 // Ambient background for --color-dark-surface panels: drifting blurred blobs
 // + a repeating "tag treo" silhouette (see AGENTS.md → Design System →
 // Signature element). Decorative only, motion disabled under
-// prefers-reduced-motion (globals.css). Shared by Header, Footer, and the
-// (auth) dark panel — surfaces vary a lot in height, so blob size/offset
-// is responsive: full desktop size assumes a full-height panel, mobile
-// size is scaled down so blobs don't get clipped by a short container.
+// prefers-reduced-motion (globals.css). Shared by Header, Footer, the
+// (auth) dark panel, and the 404 page — surfaces vary a lot in height, so
+// blob size/offset is responsive: full desktop size assumes a full-height
+// panel, mobile size is scaled down so blobs don't get clipped by a short
+// container.
 export function DarkSurfaceAmbient() {
 	return (
 		<div

@@ -1,4 +1,5 @@
-import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 function GoogleIcon({ className }: { className?: string }) {
 	return (
@@ -23,18 +24,25 @@ function GoogleIcon({ className }: { className?: string }) {
 	);
 }
 
-// Shared by login + register. TODO: not wired to real Google OAuth yet —
-// see AGENTS.md → Key Conventions → Auth. Hook up once the backend flow and
-// Token storage decision (Tech Stack → Undecided) land.
+// Shared by login + register. Navigates the whole browser to the backend's
+// Google OAuth flow — a real navigation (<a>, not next/link, not a click
+// handler doing a fetch), since OAuth requires leaving the app entirely
+// (Google consent screen) and coming back via a server redirect. The loop
+// closes at `(auth)/google-callback`, which reads the tokens the backend
+// redirects back with.
 export function GoogleAuthButton() {
+	const googleLoginUrl = `${process.env.NEXT_PUBLIC_API_URL}/auth/google/login`;
+
 	return (
-		<Button
-			type="button"
-			variant="outline"
-			className="h-11 w-full gap-2 bg-white text-base shadow-sm hover:bg-fz-primary-soft hover:shadow-md"
+		<a
+			href={googleLoginUrl}
+			className={cn(
+				buttonVariants({ variant: 'outline' }),
+				'h-11 w-full gap-2 bg-white text-base shadow-sm hover:bg-fz-primary-soft hover:shadow-md',
+			)}
 		>
 			<GoogleIcon className="size-5" />
 			Đăng nhập với Google
-		</Button>
+		</a>
 	);
 }

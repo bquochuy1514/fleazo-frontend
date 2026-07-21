@@ -28,6 +28,7 @@ export function PasswordInput({
 			/>
 			<button
 				type="button"
+				tabIndex={-1}
 				onClick={() => setShowPassword((prev) => !prev)}
 				className="absolute top-1/2 right-4 -translate-y-1/2 cursor-pointer text-muted-foreground transition-colors hover:text-fz-ink"
 				aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}

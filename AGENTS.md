@@ -77,13 +77,13 @@ Recurring visual motif referencing a physical price tag: small rounded-rect badg
 - Price tag overlay on product images
 - Status badge (`SOLD` etc.)
 
-### Dark surface (Header + Footer)
+### Dark surface
 
-`Header` and `Footer` both use `--color-dark-surface` (dark navy, `#111828`) as a solid background bar, not `--background` — a deliberate exception, giving the page a matching navy "bookend" top and bottom. This token is exclusive to these two components; don't reuse it for cards/badges/other surfaces. All children of either component are styled explicitly for a dark surface (white/light text and icons) — don't default them to shadcn's `text-foreground`, which assumes a light page background.
+`--color-dark-surface` (dark navy, `#111828`) is used as a full-bleed background wherever the white logo wordmark needs a dark backdrop to sit on — currently `Header`, `Footer`, the `(auth)` split-layout dark panel, and the global 404 page, all via `DarkSurfaceAmbient` (`src/components/layout/dark-surface-ambient.tsx`). Still not a general-purpose surface — don't reuse it for cards/badges/other small UI surfaces, only for these full-bleed "logo needs to sit on dark" contexts. All children on this surface are styled explicitly for it (white/light text and icons) — don't default them to shadcn's `text-foreground`, which assumes a light page background.
 
-The logo asset works directly on this navy bar — contrast measured ~7.3:1 (green wordmark vs `#111828`), passes WCAG AAA. The real logo (`Logo` component, `src/components/logo.tsx`) is used in both Header and Footer on this surface.
+The logo asset works directly on this navy bar — contrast measured ~7.3:1 (green wordmark vs `#111828`), passes WCAG AAA.
 
-Tagline decided: **"The student swap marketplace"** (not yet placed anywhere in code — use when a hero/marketing copy slot is built).
+Tagline decided: **"The student swap marketplace"** — placed in the `(auth)` layout's desktop panel.
 
 ### Frontend design philosophy
 

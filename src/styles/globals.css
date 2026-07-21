@@ -99,10 +99,11 @@
 	--color-accent-bright: #0d9488;
 	--color-accent-deep-hover: #059669;
 	--color-accent-bright-hover: #0f766e;
-	/* Dark surface — shared by Header and Footer as a solid dark navy bar,
-     sampled from the reference mockup gradient (#111828 → #1e2939). Not a
-     general-purpose token; only these two components use this. Everything
-     else stays on --color-base. */
+	/* Dark surface — full-bleed dark navy backdrop, sampled from the
+     reference mockup gradient (#111828 → #1e2939). Used by Header, Footer,
+     the (auth) dark panel, and the 404 page — anywhere the white logo
+     wordmark needs a dark surface to sit on, via DarkSurfaceAmbient.
+     Everything else (ordinary pages/content) stays on --color-base. */
 	--color-dark-surface: #111828;
 
 	/* ============================= */
