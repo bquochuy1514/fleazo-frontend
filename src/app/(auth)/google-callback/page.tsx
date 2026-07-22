@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
+import { setSessionFlag } from '@/lib/session-flag';
 
 // useSearchParams needs a Suspense boundary (Next.js build requirement)
 export default function GoogleCallbackPage() {
@@ -36,6 +37,7 @@ function GoogleCallbackHandler() {
 		localStorage.setItem('access_token', accessToken);
 		localStorage.setItem('refresh_token', refreshToken);
 
+		setSessionFlag(true);
 		auth.login(accessToken).then(() => {
 			// replace, not push — the current entry (this URL, tokens in the
 			// query string) gets swapped away rather than kept in history.

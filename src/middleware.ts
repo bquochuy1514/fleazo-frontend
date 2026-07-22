@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server';
 
 const PROTECTED_PATHS: string[] = [
 	// thêm dần khi build trang trong (protected): "/ca-nhan", "/dang-tin", "/chat", ...
+	'/dang-tin',
 ];
 
 const AUTH_PATHS = [

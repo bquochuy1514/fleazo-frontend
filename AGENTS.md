@@ -17,16 +17,15 @@ Same three goals as the backend — real product, revenue-generating, graduation
 - Framework: Next.js (App Router, `src/` directory, Turbopack)
 - Language: TypeScript
 - Styling: Tailwind CSS v4
-- UI components: **shadcn/ui** — components are copied into the repo (`src/components/ui/`), owned and freely modifiable, not a dependency. Initialized with the **Maia** preset (soft, rounded, consumer-facing) on **Base UI** primitives (`@base-ui/react` — NOT Radix; imports in generated components come from `@base-ui/react/*`). CLI config lives in `components.json`.
-    - ⚠️ `src/components/ui/dropdown-menu.tsx` has been **hand-patched**: `DropdownMenuContent` additionally accepts `positionMethod` / `sticky` and forwards them to `Menu.Positioner` (not part of the CLI-generated file). Needed because a trigger living inside a `sticky` container (e.g. Header's avatar) jitters under Base UI's default `positionMethod="absolute"` — see Header's account menu for the usage (`positionMethod="fixed"` + `sticky`). If `npx shadcn add dropdown-menu` is ever re-run, this patch gets overwritten and must be re-applied.
-    - Base UI uses a `render` prop for polymorphism, not Radix's `asChild` — e.g. `<DropdownMenuItem render={<Link href="..." />}>`. Using `asChild` is a type error on this preset.
-    - Base UI `Menu.Root` has a `modal` prop (default `true`) that locks page scroll while the menu is open — pass `modal={false}` on menus that shouldn't block scrolling behind them (e.g. Header's account menu, since it isn't a true dialog).
-- Icons: **lucide-react** — sole icon library (do not add react-icons, hugeicons, or any second icon set)
+- UI components: **shadcn/ui** — copied into `src/components/ui/`, owned/modifiable, not a dependency. **Maia** preset on **Base UI** (`@base-ui/react`, NOT Radix — imports come from `@base-ui/react/*`, use the `render` prop instead of `asChild`).
+    - ⚠️ `dropdown-menu.tsx` is **hand-patched** (`positionMethod`/`sticky` forwarded to `Menu.Positioner`, for Header's account menu). Re-running `npx shadcn add dropdown-menu` overwrites this — must re-apply.
+    - `Menu.Root`'s `modal` prop defaults `true` (locks scroll) — pass `modal={false}` for non-dialog menus (e.g. Header's account menu).
+- Icons: **lucide-react** only — don't add a second icon set
 - HTTP client: axios
-- Realtime: `socket.io-client` — **required**, backend uses Socket.IO, protocol is not compatible with raw WebSocket
-- Form handling: **no library** — uncontrolled inputs + native HTML5 types, backend errors surfaced per-field on submit (client-side validation only catches "obviously wrong" input before a network call; it never replaces backend validation, which must re-check everything regardless) — see **Form Conventions** section for the full pattern and shared building blocks. Escalate to react-hook-form + zod only if a form gets genuinely complex (multi-step, many cross-field rules).
-- Token storage: **localStorage vs sessionStorage, decided by the user's "remember me" choice** — checked → both `access_token` and `refresh_token` in `localStorage` (survives browser close, enables silent refresh); unchecked → only `access_token` in `sessionStorage`, no `refresh_token` stored at all (session just ends when the access token expires or the tab closes). Not an httpOnly-cookie approach — plain client storage either way.
-- Client-state management: **React Context, not Zustand** — for auth state specifically. Auth is a single object that changes rarely (login/logout); Zustand's value (multiple stores, selectors to avoid re-renders, middleware) doesn't pay off for that. Not a blanket rejection of Zustand — reconsider per area if something with genuinely complex, frequently-changing state shows up (cart, filters) later.
+- Realtime: `socket.io-client` **required** — backend uses Socket.IO, not raw-WebSocket-compatible
+- Form handling: **no library** — uncontrolled inputs + native HTML5 types; see **Form Conventions** for the full pattern. Escalate to react-hook-form + zod only if a form gets genuinely complex.
+- Token storage: **"remember me" decides localStorage vs sessionStorage** — checked → `access_token`+`refresh_token` in `localStorage`; unchecked → only `access_token` in `sessionStorage`, no refresh token. Plain client storage, not httpOnly cookies.
+- Client-state management: **React Context, not Zustand**, for auth specifically — reconsider Zustand only if something with complex, frequently-changing state shows up (cart, filters).
 
 ### Undecided — decide incrementally as each area is built, then move to Confirmed
 
@@ -109,13 +108,13 @@ Approach every new UI piece like a design lead who gives each brief a distinct i
 - Spacing between page sections uses a shared token/util (e.g. `--section-gap`), not repeated raw Tailwind spacing classes copy-pasted per page
 - Radius: reuse shadcn's `--radius` scale for controls; cards get `12px` explicitly
 - `(auth)` pages use a split layout — dark brand panel (Logo + value props) on the left, form on the right; collapses to a compact top strip on mobile. See `(auth)/layout.tsx` comments. Content added deliberately (real value props, not decorative filler) per Frontend design philosophy.
-- **Account menu, desktop vs mobile:** Header's avatar opens a `DropdownMenu` (profile info, "Trang cá nhân", "Đăng xuất") — desktop only, deliberately not replicated on mobile since no mobile UI pattern pops a floating menu like this. `BottomNav`'s "Cá nhân" tab instead links straight to the `/ca-nhan` profile page, which holds its own "Đăng xuất" action inline — see Project Structure → `(protected)`.
-- **Button gradients:** `default` variant uses `--color-accent-deep → --color-accent-bright` (= Tailwind's `emerald-500`/`teal-600` hex, kept as tokens rather than hardcoded Tailwind color classes), darkening to `*-hover` tokens (`emerald-600`/`teal-700`) plus a stronger shadow (`shadow-md` → `shadow-lg`, both `shadow-fz-accent-deep/*`) on hover — no scale transform (see Interactive feedback below). ⚠️ White text on this pair measures ~2.5–3.7:1 — below WCAG AA (4.5:1). This was flagged and explicitly accepted by the user (aesthetic match to a reference design over strict AA) — don't silently "fix" it back to a higher-contrast pair. `secondary` variant is unchanged — lighter `--color-primary → --color-primary-soft` pair with ink text.
-- **Interactive feedback:** every clickable element gets a `hover`/`active` cue — no exceptions, no silent opt-outs. Buttons: hover is color/shadow-only per variant (see `button.tsx`); `active:scale-95` is on the shared base class, so every button — any variant, any size — gets the same uniform press feedback. `Logo` is an intentional exception — `hover:opacity-80`, no scale — because scaling a wide horizontal wordmark+icon lockup distorts it and risks overlapping neighboring header elements; opacity is the standard hover cue for logos generally. Avatar-type images follow the same opacity-hover exception (see Header account menu trigger). Plain CSS/Tailwind, not Framer Motion — no animation library is in the stack, and none is needed for scale/opacity-level feedback like this. Only reconsider Framer Motion if a genuinely complex interaction comes up (e.g. the mega menu's open/close transition, exit animations, drag gestures).
+- **Account menu, desktop vs mobile:** Header avatar → `DropdownMenu`, desktop only. `BottomNav`'s "Cá nhân" tab links straight to `/ca-nhan` instead, which has its own "Đăng xuất" inline — see Project Structure → `(protected)`.
+- **Button gradients:** `default` variant = `--color-accent-deep → --color-accent-bright` tokens, darkens on hover, no scale. ⚠️ White text contrast ~2.5–3.7:1 — below WCAG AA, accepted deliberately (aesthetic match over strict AA) — don't "fix" it back. `secondary` unchanged (`--color-primary → --color-primary-soft`, ink text).
+- **Interactive feedback:** every clickable gets a hover/active cue. Buttons: shared base class handles it (`active:scale-95`). `Logo` and avatar images use `hover:opacity-80` instead of scale (scaling distorts the wordmark/avatar). Plain CSS, no animation library — only reconsider Framer Motion for a genuinely complex interaction (mega menu, drag).
 
 - **Response format:** controllers return service results directly — no `{ statusCode, message, data }` wrapper. Type API responses as the plain data shape.
 - **Auth:** JWT access (short-lived) + refresh token rotation + Google OAuth. Axios layer must handle 401 → refresh → retry.
-- **Socket lifecycle:** the Socket.IO connection is opened once, app-wide, as soon as the user is logged in — it lives in a top-level provider/layout, NOT inside the Chat page. See backend AGENTS.md → Chat section for the full event contract.
+- **Socket lifecycle:** Socket.IO connects once, app-wide, as soon as the user is logged in — lives in a top-level provider/layout, NOT inside the Chat page. See backend AGENTS.md → Chat section for the event contract.
 - **Price:** VNĐ, no decimals (`Decimal(12,0)` in DB). Format with a shared `formatPrice` util.
 - **Images:** served from Cloudinary (`res.cloudinary.com`) — must be whitelisted in `next.config` `images.remotePatterns`.
 - **Location picker:** frontend calls `provinces.open-api.vn/api/v2/` directly (free, no key). 2-level structure only (Tỉnh/Thành phố → Phường/Xã) — do NOT use `/api/v1/` (pre-merger, 3-level, obsolete). Backend stores the selection result (`provinceCode/Name`, `wardCode/Name`), never the reference list.
@@ -128,13 +127,17 @@ One tree, current state + planned. Items marked `(planned)` don't exist yet — 
 
 ```
 src/
+├── middleware.ts                 # Route guards — cookie-flag optimistic redirect at the
+│                                 #   edge, alongside `app/` (NOT inside it, since this repo
+│                                 #   uses the `src/` directory). See Route Guards section.
 ├── app/                          # App Router — pages, layouts, route groups
 │   ├── layout.tsx                # Root layout: <html>/<body>, font (vietnamese subset),
 │   │                             #   lang="vi", future app-wide providers — NO header/footer
 │   ├── not-found.tsx             # Global 404 (planned)
 │   │
 │   ├── (auth)/                   # Auth screens: centered card layout,
-│   │   ├── layout.tsx            #   no marketplace header/footer
+│   │   ├── layout.tsx            #   no marketplace header/footer, wraps children in
+│   │   │                         #   GuestOnlyGuard — see Route Guards section
 │   │   ├── dang-nhap/            #   login
 │   │   ├── dang-ky/              #   register
 │   │   ├── xac-thuc-tai-khoan/   #   email OTP after register
@@ -152,9 +155,9 @@ src/
 │       │   ├── page.tsx          # Home (/)
 │       │   └── ...               # (planned) product detail, category, search,
 │       │                         #   seller public profile
-│       └── (protected)/          # Requires login — exists, no pages yet
-│           ├── layout.tsx        # (planned) auth guard: redirect to /dang-nhap if not
-│           │                     #   authenticated — written ONCE here, never per page
+│       └── (protected)/          # Requires login
+│           ├── layout.tsx        # Auth guard: redirect to /dang-nhap if not authenticated —
+│           │                     #   written ONCE here, never per page. See Route Guards.
 │           └── ...               # (planned) post listing, saved, my profile (`/ca-nhan`,
 │                                 #   see Component conventions → Account menu), chat, settings
 │
@@ -175,7 +178,8 @@ src/
 │   │                             #   dropdown/guest-link/loading states),
 │   │                             #   mobile-account-sheet.tsx (Client, useAuth — same
 │   │                             #   content as account-menu.tsx, right-side sheet instead)
-│   ├── auth/                     #   Shared by (auth) pages: google-auth-button.tsx
+│   ├── auth/                     #   Shared by (auth) pages: google-auth-button.tsx,
+│   │                             #   guest-only-guard.tsx (see Route Guards)
 │   └── form/                     #   Shared form building blocks (see Form Conventions):
 │                                 #   field-error.tsx, password-input.tsx,
 │                                 #   action-banner.tsx
@@ -183,6 +187,7 @@ src/
 ├── lib/                          # Shared non-UI code (see Common Utilities table)
 │   ├── api.ts                    # Shared axios instance
 │   ├── format.ts                 # formatPrice + future formatting utils
+│   ├── session-flag.ts           # setSessionFlag/clearSessionFlag — see Route Guards
 │   └── utils.ts                  # cn() — shadcn class merge util
 │
 ├── styles/
@@ -213,6 +218,14 @@ Rules:
 - Chat will live under `(main)/(protected)` but needs a full-viewport-height layout (hide footer, lock height) — design that when building chat, do not hardcode the footer somewhere hard to remove.
 
 > ⚠️ Keep this tree in sync whenever a folder is added or moved under `src/`.
+
+## Route Guards
+
+Tokens live in `localStorage`/`sessionStorage`, not cookies — Middleware can't read them. So a non-httpOnly boolean cookie (`fz_session`) is set/cleared via `setSessionFlag`/`clearSessionFlag` (`src/lib/session-flag.ts`) at every login/logout point, purely so `middleware.ts` can redirect before a page renders — **never used for authorization**.
+
+- `middleware.ts` checks `pathname` against `PROTECTED_PATHS`/`AUTH_PATHS` — **add each new `(protected)` page to `PROTECTED_PATHS` as it's built.**
+- `google-callback` stays out of `AUTH_PATHS` on purpose — it's the OAuth redirect target, must always be reachable.
+- `(protected)/layout.tsx` and `GuestOnlyGuard` are the client-side fallback for a stale/missing cookie — see their own code comments for behavior details.
 
 ## Form Conventions
 
@@ -250,15 +263,17 @@ Rules:
 
 Always check for existing utilities before writing new code:
 
-| Path                                     | Export                      | Use when                                                    |
-| ---------------------------------------- | --------------------------- | ----------------------------------------------------------- |
-| `src/lib/api.ts`                         | `api`, `parseApiError`      | HTTP calls; parsing a caught error                          |
-| `src/lib/format.ts`                      | `formatPrice`               | displaying a VNĐ price value                                |
-| `src/lib/utils.ts`                       | `cn`                        | merging Tailwind classes in a component with `className`    |
-| `src/types/api.types.ts`                 | `ApiErrorResponse<TFields>` | typing an axios error response for any form                 |
-| `src/components/form/field-error.tsx`    | `FieldError`                | rendering a field-level error message under an input        |
-| `src/components/form/password-input.tsx` | `PasswordInput`             | a password field that needs a show/hide toggle              |
-| `src/components/form/action-banner.tsx`  | `ActionBanner`              | showing a backend message with an optional suggested action |
+| Path                                       | Export                      | Use when                                                    |
+| ------------------------------------------ | --------------------------- | ----------------------------------------------------------- |
+| `src/lib/api.ts`                           | `api`, `parseApiError`      | HTTP calls; parsing a caught error                          |
+| `src/lib/format.ts`                        | `formatPrice`               | displaying a VNĐ price value                                |
+| `src/lib/session-flag.ts`                  | `set/clearSessionFlag`      | at every login/logout point — see Route Guards              |
+| `src/lib/utils.ts`                         | `cn`                        | merging Tailwind classes in a component with `className`    |
+| `src/types/api.types.ts`                   | `ApiErrorResponse<TFields>` | typing an axios error response for any form                 |
+| `src/components/form/field-error.tsx`      | `FieldError`                | rendering a field-level error message under an input        |
+| `src/components/form/password-input.tsx`   | `PasswordInput`             | a password field that needs a show/hide toggle              |
+| `src/components/form/action-banner.tsx`    | `ActionBanner`              | showing a backend message with an optional suggested action |
+| `src/components/auth/guest-only-guard.tsx` | `GuestOnlyGuard`            | wrap `(auth)` pages to redirect logged-in users             |
 
 > ⚠️ Whenever a new file is added to `src/lib/` or `src/components/form/`, update this table immediately.
 > ⚠️ Keep **Use when** to one short line — a few words of context is fine, but push edge cases, caveats, or "not implemented yet" notes into a note below the table instead of into the cell.
@@ -278,6 +293,7 @@ Note on `api.ts`: auth interceptors (attach access token, 401 → refresh → re
 - ✅ Done — `AuthProvider`/`useAuth` (login/logout, `/users/profile` fetch) wired into root layout
 - ✅ Done — `Header`, `BottomNav` wired to real auth state (avatar vs guest nav);
 - ✅ Done — global 404 page (dark-surface treatment, reuses tag-treo motif)
+- ✅ Done — route guards: `middleware.ts` cookie-flag redirect + `(protected)/layout.tsx` + `GuestOnlyGuard` client-side fallback (see Route Guards)
 
 ## Agent Behavior
 
