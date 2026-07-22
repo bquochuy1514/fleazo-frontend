@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Plus, MessageCircle, ClipboardList } from 'lucide-react';
 import { buttonVariants } from '@/components/ui/button';
@@ -12,15 +12,7 @@ import { cn } from '@/lib/utils';
 import { Logo } from '../logo';
 
 export function Header() {
-	const [scrolled, setScrolled] = useState(false);
 	const headerRef = useRef<HTMLElement>(null);
-
-	useEffect(() => {
-		const onScroll = () => setScrolled(window.scrollY > 8);
-		onScroll();
-		window.addEventListener('scroll', onScroll, { passive: true });
-		return () => window.removeEventListener('scroll', onScroll);
-	}, []);
 
 	useEffect(() => {
 		const el = headerRef.current;
@@ -44,32 +36,13 @@ export function Header() {
 			{/* Ambient background — shared with Footer, see dark-surface-ambient.tsx */}
 			<DarkSurfaceAmbient />
 
-			<div
-				className={cn(
-					'relative mx-auto max-w-6xl px-4 transition-[padding] duration-300',
-					scrolled ? 'py-4' : 'py-6',
-				)}
-			>
+			<div className="relative mx-auto max-w-6xl px-4 py-4">
 				<div className="flex items-center gap-3">
-					{/* Logo: shrinks to the icon-only mark below sm once scrolled,
-					    freeing the row for the search bar next to it. Unaffected at
-					    sm+ (full wordmark, only the height varies). */}
-					<Logo
-						mark={scrolled}
-						className={cn(
-							'transition-[height] duration-300',
-							scrolled ? 'h-10' : 'h-11',
-						)}
-					/>
+					<Logo className="h-11" />
 
-					{/* Search merges into this row once scrolled — at every
-					    breakpoint. Unscrolled, it lives in the full-width row
-					    below instead (see below). */}
-					{scrolled && (
-						<div className="flex-1">
-							<SearchInput />
-						</div>
-					)}
+					<div className="flex-1">
+						<SearchInput />
+					</div>
 
 					<div className="ml-auto hidden shrink-0 items-center gap-2 sm:flex">
 						{/* Tin nhắn + Quản lý tin: always visible, regardless of
@@ -124,17 +97,8 @@ export function Header() {
 					    quick account actions from a right-side sheet, since
 					    the whole cluster above is hidden below sm. See
 					    mobile-account-sheet.tsx. */}
-					<MobileAccountSheet className="ml-auto shrink-0 sm:hidden" />
+					<MobileAccountSheet className="shrink-0 sm:hidden" />
 				</div>
-
-				{/* Full-width row: visible only unscrolled, at every breakpoint —
-				    this is what makes the header tall at the top. Once scrolled it
-				    disappears entirely, merged into the row above instead. */}
-				{!scrolled && (
-					<div className="mt-4">
-						<SearchInput />
-					</div>
-				)}
 			</div>
 		</header>
 	);
