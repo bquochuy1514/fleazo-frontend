@@ -49,7 +49,7 @@ function VerifyForgotOtpForm() {
 		try {
 			await api.post('/auth/verify-forgot-otp', values);
 
-			router.push(`/reset-password?email=${encodeURIComponent(email)}`);
+			router.push(`/dat-lai-mat-khau?email=${encodeURIComponent(email)}`);
 		} catch (err) {
 			setErrors(parseApiError<VerifyForgotOtpFields>(err));
 		} finally {
@@ -176,7 +176,7 @@ function VerifyForgotOtpForm() {
 			<p className="mt-2 text-center text-sm text-muted-foreground">
 				Nhớ mật khẩu rồi?{' '}
 				<Link
-					href="/login"
+					href="/dang-nhap"
 					className="font-medium text-fz-primary hover:underline"
 				>
 					Đăng nhập

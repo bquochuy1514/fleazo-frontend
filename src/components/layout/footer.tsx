@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { Mail, Phone } from 'lucide-react';
-import { DarkSurfaceAmbient } from '@/components/layout/dark-surface-ambient';
+import { DarkSurfaceAmbient } from '@/components/dark-surface-ambient';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import type { Category } from '@/types/category.types';

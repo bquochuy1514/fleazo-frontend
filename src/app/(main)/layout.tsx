@@ -14,9 +14,11 @@ export default function MainLayout({
 		<>
 			<Header />
 			<BottomNav />
-			<main className="flex-1">
+			<main
+				className="flex-1"
+				style={{ paddingTop: 'var(--header-height, 152px)' }}
+			>
 				{children}
-				<div className="min-h-[1000px]">Nội dung test scroll...</div>
 			</main>
 			<Footer />
 		</>

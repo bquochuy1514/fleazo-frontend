@@ -45,7 +45,7 @@ function ResetPasswordForm() {
 			await api.post('/auth/reset-password', values);
 
 			// no tokens returned — still needs a normal login after
-			router.push('/login?passwordReset=true');
+			router.push('/dang-nhap?passwordReset=true');
 		} catch (err) {
 			setErrors(parseApiError<ResetPasswordFields>(err));
 		} finally {
@@ -116,7 +116,7 @@ function ResetPasswordForm() {
 			<p className="mt-4 text-center text-sm text-muted-foreground">
 				Nhớ mật khẩu rồi?{' '}
 				<Link
-					href="/login"
+					href="/dang-nhap"
 					className="font-medium text-fz-primary hover:underline"
 				>
 					Đăng nhập

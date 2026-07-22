@@ -27,7 +27,7 @@ function GoogleCallbackHandler() {
 		const refreshToken = searchParams.get('refresh_token');
 
 		if (!accessToken || !refreshToken) {
-			router.replace('/login');
+			router.replace('/dang-nhap');
 			return;
 		}
 

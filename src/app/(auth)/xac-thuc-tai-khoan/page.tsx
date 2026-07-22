@@ -53,7 +53,7 @@ function VerifyAccountForm() {
 			await api.post('/auth/verify-otp', values);
 
 			// no tokens returned — still needs a normal login after
-			router.push('/login?verified=true');
+			router.push('/dang-nhap?verified=true');
 		} catch (err) {
 			const parsed = parseApiError<VerifyFields>(err);
 			setErrors(parsed);
@@ -212,7 +212,7 @@ function VerifyAccountForm() {
 			<p className="mt-2 text-center text-sm text-muted-foreground">
 				Sai email?{' '}
 				<Link
-					href="/register"
+					href="/dang-ky"
 					className="font-medium text-fz-primary hover:underline"
 				>
 					Đăng ký lại

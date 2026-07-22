@@ -174,7 +174,7 @@ export function MobileAccountSheet({ className }: { className?: string }) {
 						</div>
 						<div className="flex w-full flex-col gap-2 pt-2">
 							<SheetClose
-								render={<Link href="/login" />}
+								render={<Link href="/dang-nhap" />}
 								nativeButton={false}
 								className={buttonVariants({
 									variant: 'default',
@@ -183,7 +183,7 @@ export function MobileAccountSheet({ className }: { className?: string }) {
 								Đăng nhập
 							</SheetClose>
 							<SheetClose
-								render={<Link href="/register" />}
+								render={<Link href="/dang-ky" />}
 								nativeButton={false}
 								className={buttonVariants({
 									variant: 'outline',

@@ -1,5 +1,6 @@
 import { Logo } from '@/components/logo';
-import { DarkSurfaceAmbient } from '@/components/layout/dark-surface-ambient';
+import { DarkSurfaceAmbient } from '@/components/dark-surface-ambient';
+import { GuestOnlyGuard } from '@/components/auth/guest-only-guard';
 import { Gift, MessagesSquare, SlidersHorizontal } from 'lucide-react';
 
 // Real Fleazo features only — each line maps to something actually built:
@@ -60,7 +61,7 @@ export default function AuthLayout({
 
 			<div className="relative z-10 -mt-8 min-h-0 flex-1 overflow-y-auto rounded-t-3xl bg-background px-4 pt-8 pb-10 shadow-[0_-8px_24px_rgba(0,0,0,0.08)] md:mt-0 md:flex md:min-h-0 md:overflow-y-auto md:rounded-none md:px-4 md:py-12 md:shadow-none">
 				<div className="mx-auto w-full max-w-md md:m-auto">
-					{children}
+					<GuestOnlyGuard>{children}</GuestOnlyGuard>
 				</div>
 			</div>
 		</div>

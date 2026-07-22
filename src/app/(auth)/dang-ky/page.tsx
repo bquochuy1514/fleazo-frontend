@@ -140,7 +140,7 @@ export default function RegisterPage() {
 				{emailAlreadyExists ? (
 					<ActionBanner
 						message={errors.message ?? ''}
-						actionHref="/login"
+						actionHref="/dang-nhap"
 						actionLabel="Đăng nhập ngay"
 						className="my-3"
 					/>
@@ -161,7 +161,7 @@ export default function RegisterPage() {
 			<p className="mt-4 text-center text-sm text-muted-foreground">
 				Đã có tài khoản?{' '}
 				<Link
-					href="/login"
+					href="/dang-nhap"
 					className="font-medium text-fz-primary hover:underline"
 				>
 					Đăng nhập

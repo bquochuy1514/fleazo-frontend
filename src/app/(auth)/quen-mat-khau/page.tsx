@@ -38,7 +38,7 @@ export default function ForgotPasswordPage() {
 			await api.post('/auth/forgot-password', values);
 
 			router.push(
-				`/verify-forgot-otp?email=${encodeURIComponent(String(values.email))}`,
+				`/xac-thuc-otp-quen-mat-khau?email=${encodeURIComponent(String(values.email))}`,
 			);
 		} catch (err) {
 			const parsed = parseApiError<ForgotPasswordFields>(err);
@@ -47,13 +47,13 @@ export default function ForgotPasswordPage() {
 			if (parsed.errorCode === 'EMAIL_NOT_FOUND') {
 				setActionBanner({
 					message: parsed.message ?? '',
-					href: '/register',
+					href: '/dang-ky',
 					label: 'Đăng ký ngay',
 				});
 			} else if (parsed.errorCode === 'ACCOUNT_NOT_VERIFIED') {
 				setActionBanner({
 					message: parsed.message ?? '',
-					href: `/verify-account?email=${encodeURIComponent(String(values.email))}&autoResend=true`,
+					href: `/xac-thuc-tai-khoan?email=${encodeURIComponent(String(values.email))}&autoResend=true`,
 					label: 'Xác thực ngay',
 				});
 			} else {
@@ -115,7 +115,7 @@ export default function ForgotPasswordPage() {
 			<p className="mt-4 text-center text-sm text-muted-foreground">
 				Nhớ mật khẩu rồi?{' '}
 				<Link
-					href="/login"
+					href="/dang-nhap"
 					className="font-medium text-fz-primary hover:underline"
 				>
 					Đăng nhập

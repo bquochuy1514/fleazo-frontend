@@ -27,11 +27,11 @@ Same three goals as the backend — real product, revenue-generating, graduation
 - Form handling: **no library** — uncontrolled inputs + native HTML5 types, backend errors surfaced per-field on submit (client-side validation only catches "obviously wrong" input before a network call; it never replaces backend validation, which must re-check everything regardless) — see **Form Conventions** section for the full pattern and shared building blocks. Escalate to react-hook-form + zod only if a form gets genuinely complex (multi-step, many cross-field rules).
 - Token storage: **localStorage vs sessionStorage, decided by the user's "remember me" choice** — checked → both `access_token` and `refresh_token` in `localStorage` (survives browser close, enables silent refresh); unchecked → only `access_token` in `sessionStorage`, no `refresh_token` stored at all (session just ends when the access token expires or the tab closes). Not an httpOnly-cookie approach — plain client storage either way.
 - Client-state management: **React Context, not Zustand** — for auth state specifically. Auth is a single object that changes rarely (login/logout); Zustand's value (multiple stores, selectors to avoid re-renders, middleware) doesn't pay off for that. Not a blanket rejection of Zustand — reconsider per area if something with genuinely complex, frequently-changing state shows up (cart, filters) later.
-- Toast notifications: **Sonner** — shadcn's own `toast` component is deprecated in favor of it, and Sonner doesn't depend on Radix or Base UI primitives itself, so it's unaffected by the Base UI preset choice. `<Toaster richColors position="top-center" />` lives in the root layout; `toast.success(...)` fires on login (`login/page.tsx`, right before `router.push`) and logout (inside `AuthProvider.logout()` — single call site covers both `AccountMenu` and `MobileAccountSheet`). Always pass the backend's own `message` field, never a hardcoded string — same rule as `ActionBanner` (see Form Conventions). Logout keeps one hardcoded fallback string only for the one case with no backend message available (the best-effort API call itself failed).
 
 ### Undecided — decide incrementally as each area is built, then move to Confirmed
 
 - Server-state management (TanStack Query?) — decide when building the first data-fetching page
+- Toast/notification library — tried Sonner (dark-surface-styled `showToast`), reverted: felt visually off, and login/logout already have a clear enough visual signal (avatar appearing/disappearing) without one. Revisit only if a real need for toasts shows up elsewhere.
 
 ⚠️ Framer Motion considered and rejected for now (see Design System → Interactive feedback) — plain Tailwind hover/active scale covers current needs. Revisit only if a genuinely complex animation need comes up.
 
@@ -82,7 +82,7 @@ Recurring visual motif referencing a physical price tag: small rounded-rect badg
 
 ### Dark surface
 
-`--color-dark-surface` (dark navy, `#111828`) is used as a full-bleed background wherever the white logo wordmark needs a dark backdrop to sit on — currently `Header`, `Footer`, the `(auth)` split-layout dark panel, and the global 404 page, all via `DarkSurfaceAmbient` (`src/components/layout/dark-surface-ambient.tsx`). Still not a general-purpose surface — don't reuse it for cards/badges/other small UI surfaces, only for these full-bleed "logo needs to sit on dark" contexts. All children on this surface are styled explicitly for it (white/light text and icons) — don't default them to shadcn's `text-foreground`, which assumes a light page background.
+`--color-dark-surface` (dark navy, `#111828`) is used as a full-bleed background wherever the white logo wordmark needs a dark backdrop to sit on — currently `Header`, `Footer`, the `(auth)` split-layout dark panel, and the global 404 page, all via `DarkSurfaceAmbient` (`src/components/dark-surface-ambient.tsx` — top-level, not under `layout/`, since it isn't app-shell-exclusive). Still not a general-purpose surface — don't reuse it for cards/badges/other small UI surfaces, only for these full-bleed "logo needs to sit on dark" contexts. All children on this surface are styled explicitly for it (white/light text and icons) — don't default them to shadcn's `text-foreground`, which assumes a light page background.
 
 The logo asset works directly on this navy bar — contrast measured ~7.3:1 (green wordmark vs `#111828`), passes WCAG AAA.
 
@@ -133,14 +133,17 @@ src/
 │   │                             #   lang="vi", future app-wide providers — NO header/footer
 │   ├── not-found.tsx             # Global 404 (planned)
 │   │
-│   ├── (auth)/                   # (planned) Auth screens: centered card layout,
+│   ├── (auth)/                   # Auth screens: centered card layout,
 │   │   ├── layout.tsx            #   no marketplace header/footer
-│   │   ├── login/
-│   │   ├── register/
-│   │   ├── verify-account/       #   email OTP after register
-│   │   ├── forgot-password/
-│   │   ├── reset-password/
-│   │   └── google-callback/      #   reads tokens from query, calls auth.login()
+│   │   ├── dang-nhap/            #   login
+│   │   ├── dang-ky/              #   register
+│   │   ├── xac-thuc-tai-khoan/   #   email OTP after register
+│   │   ├── quen-mat-khau/        #   forgot password
+│   │   ├── xac-thuc-quen-mat-khau/ # OTP verify for forgot-password flow
+│   │   ├── dat-lai-mat-khau/     #   reset password
+│   │   └── google-callback/      #   kept in English — Google OAuth redirect target,
+│   │                             #   not user-facing, don't rename (Google Cloud Console
+│   │                             #   Authorized redirect URIs would need re-sync)
 │   │
 │   └── (main)/                   # Marketplace shell
 │       ├── layout.tsx            # <Header /> + <main> + <Footer /> — MUST live here, not
@@ -150,7 +153,7 @@ src/
 │       │   └── ...               # (planned) product detail, category, search,
 │       │                         #   seller public profile
 │       └── (protected)/          # Requires login — exists, no pages yet
-│           ├── layout.tsx        # (planned) auth guard: redirect to /login if not
+│           ├── layout.tsx        # (planned) auth guard: redirect to /dang-nhap if not
 │           │                     #   authenticated — written ONCE here, never per page
 │           └── ...               # (planned) post listing, saved, my profile (`/ca-nhan`,
 │                                 #   see Component conventions → Account menu), chat, settings
@@ -163,11 +166,15 @@ src/
 │   ├── logo.tsx                  #   Shared across Header, Footer, AND (auth) pages —
 │   │                             #   top-level, not nested under layout/, because
 │   │                             #   it isn't exclusive to the app shell
+│   ├── dark-surface-ambient.tsx  #   Same reasoning as logo.tsx above — used by
+│   │                             #   Header/Footer/(auth)/404, not app-shell-exclusive
 │   ├── layout/                   #   App shell components: header.tsx (Client), footer.tsx
 │   │                             #   (async Server Component, fetches GET /categories),
 │   │                             #   search-input.tsx, bottom-nav.tsx (Client, useAuth),
 │   │                             #   account-menu.tsx (Client, useAuth — Header's avatar
-│   │                             #   dropdown/guest-link/loading states), dark-surface-ambient.tsx
+│   │                             #   dropdown/guest-link/loading states),
+│   │                             #   mobile-account-sheet.tsx (Client, useAuth — same
+│   │                             #   content as account-menu.tsx, right-side sheet instead)
 │   ├── auth/                     #   Shared by (auth) pages: google-auth-button.tsx
 │   └── form/                     #   Shared form building blocks (see Form Conventions):
 │                                 #   field-error.tsx, password-input.tsx,
@@ -223,7 +230,7 @@ Rules:
 ## Client Auth State
 
 - `AuthContext`/`AuthProvider` in `src/providers/auth-provider.tsx` — plain React Context, not Zustand (see Tech Stack → Confirmed for why). Holds `user: User | null` and `isLoading`; exposes `login(accessToken)` and `logout()`.
-- **`login(accessToken)` does not perform a login.** Auth pages (`login/page.tsx`) already own the entire login flow — calling `/auth/login`, the remember-me storage split, redirecting. This function only runs _after_ a valid token already exists in storage: it fetches `/users/profile` with that token and sets `user`. Call it right after the page's own token-storage step, right before `router.push`.
+- **`login(accessToken)` does not perform a login.** Auth pages (`dang-nhap/page.tsx`) already own the entire login flow — calling `/auth/login`, the remember-me storage split, redirecting. This function only runs _after_ a valid token already exists in storage: it fetches `/users/profile` with that token and sets `user`. Call it right after the page's own token-storage step, right before `router.push`.
 - No axios interceptor for this — the token is attached by hand on the one `/users/profile` call. An interceptor (auto-attach token everywhere + 401 → refresh → retry) becomes worth building once many more endpoints need it; not the case yet with a single call site.
 - `fetchProfile` never throws to its caller — any failure (expired/invalid token, network error) resolves to `null`, meaning "not logged in". Callers don't need a second try/catch.
 - `children` are never hidden behind a loading gate (no `{!isLoading && children}`) — components that care (e.g. Header) read `isLoading` themselves and own their own loading UI.
@@ -232,7 +239,7 @@ Rules:
 
 - **Import alias:** use `@/` absolute imports (Next.js default) — a deliberate departure from the backend's relative-imports rule. Frontend trees nest deeper and the Next ecosystem assumes `@/`.
 - **User-facing text:** Vietnamese. Form validation messages mirror the backend DTO messages (Vietnamese) where the same field exists.
-- **Code comments:** English, same as backend. Keep them **short, tag-style**, placed directly above the element/line they describe — `// Logo: only works on dark surfaces for now` above `<Logo />`, not a multi-line paragraph block. One line per note; if a decision genuinely needs more context, put the detail here in AGENTS.md and leave just a pointer comment in code (`// see AGENTS.md → Header surface`). Comments document **project decisions**, never the AI's own reasoning/uncertainty process while writing the code — no "inferred from X", "wasn't shared so double-check", "assuming Y based on Z". If something is genuinely unconfirmed, say so once in chat, not as a permanent comment baked into the file.
+- **Code comments:** English, same as backend. **Default to no comment** — most lines don't need one; only add a comment when the code would genuinely confuse someone without it (a non-obvious workaround, a gotcha, a "why not the obvious approach" decision). Don't comment routine/self-explanatory code, and don't add one for every prop, className, or small tweak just because it changed. When a comment is warranted, keep it **short, tag-style**, placed directly above the element/line it describes — `// Logo: only works on dark surfaces for now` above `<Logo />`, not a multi-line paragraph block. One line per note; if a decision genuinely needs more context, put the detail here in AGENTS.md and leave just a pointer comment in code (`// see AGENTS.md → Header surface`). Comments document **project decisions**, never the AI's own reasoning/uncertainty process while writing the code — no "inferred from X", "wasn't shared so double-check", "assuming Y based on Z". If something is genuinely unconfirmed, say so once in chat, not as a permanent comment baked into the file.
 - **HTTP calls:** all requests go through the shared axios instance in `src/lib/api.ts` — never import `axios` directly in components/pages.
 - **Env vars:** `NEXT_PUBLIC_` prefix required for any variable read on the client. Grouped into named sections with `# ===========================` dividers (same as backend). Every new var must also be added to `.env.example`.
 - Date manipulation: `dayjs` (same as backend)
@@ -267,7 +274,7 @@ Note on `api.ts`: auth interceptors (attach access token, 401 → refresh → re
 - ✅ Done — shadcn/ui init (Maia + Base UI, lucide icons, vietnamese-subset fonts)
 - ✅ Done — design system (color tokens, typography, "tag treo" signature)
 - ✅ Done — `globals.css` brand tokens
-- ✅ Done — full `(auth)` flow: layout + `login`/`register`/`verify-account`/`forgot-password`/`verify-forgot-otp`/`reset-password`/`google-callback` pages (uncontrolled forms, shared `FieldError`/`PasswordInput`/`ActionBanner`, `errorCode`-based branching — see Form Conventions)
+- ✅ Done — full `(auth)` flow: layout + `dang-nhap`/`dang-ky`/`xac-thuc-tai-khoan`/`quen-mat-khau`/`xac-thuc-quen-mat-khau`/`dat-lai-mat-khau`/`google-callback` pages (uncontrolled forms, shared `FieldError`/`PasswordInput`/`ActionBanner`, `errorCode`-based branching — see Form Conventions)
 - ✅ Done — `AuthProvider`/`useAuth` (login/logout, `/users/profile` fetch) wired into root layout
 - ✅ Done — `Header`, `BottomNav` wired to real auth state (avatar vs guest nav);
 - ✅ Done — global 404 page (dark-surface treatment, reuses tag-treo motif)

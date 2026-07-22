@@ -3,7 +3,6 @@
 import { Suspense, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -12,6 +11,7 @@ import { FieldError } from '@/components/form/field-error';
 import { ActionBanner } from '@/components/form/action-banner';
 import { GoogleAuthButton } from '@/components/auth/google-auth-button';
 import { api, parseApiError } from '@/lib/api';
+import { setSessionFlag } from '@/lib/session-flag';
 import type { ApiErrorResponse } from '@/types/api.types';
 import { useAuth } from '@/hooks/use-auth';
 
@@ -62,9 +62,9 @@ function LoginForm() {
 				sessionStorage.setItem('access_token', data.access_token);
 			}
 
+			setSessionFlag(rememberMe);
 			await auth.login(data.access_token);
 
-			toast.success(data.message);
 			router.push('/');
 		} catch (err) {
 			const parsed = parseApiError<LoginFields>(err);
@@ -149,7 +149,7 @@ function LoginForm() {
 							Ghi nhớ đăng nhập
 						</label>
 						<Link
-							href="/forgot-password"
+							href="/quen-mat-khau"
 							tabIndex={-1}
 							className="text-sm text-fz-primary hover:underline"
 						>
@@ -182,7 +182,7 @@ function LoginForm() {
 			<p className="mt-4 text-center text-sm text-muted-foreground">
 				Chưa có tài khoản?{' '}
 				<Link
-					href="/register"
+					href="/dang-ky"
 					className="font-medium text-fz-primary hover:underline"
 				>
 					Đăng ký

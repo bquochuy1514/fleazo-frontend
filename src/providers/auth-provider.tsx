@@ -1,8 +1,8 @@
 'use client';
 
 import { createContext, useEffect, useState } from 'react';
-import { toast } from 'sonner';
 import { api } from '@/lib/api';
+import { clearSessionFlag } from '@/lib/session-flag';
 import type { User } from '@/types/user.types';
 
 type AuthContextValue = {
@@ -67,21 +67,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 	const logout = async () => {
 		const token = getStoredAccessToken();
-		// Backend's own message ("Đăng xuất thành công.") — never hardcode
-		// text the API already returns, same rule as ActionBanner (see
-		// frontend AGENTS.md → Form Conventions). Fallback only covers the
-		// best-effort-failure branch below, where there's no backend
-		// message to use at all (no token, or the call itself failed).
-		let message = 'Đã đăng xuất.';
 
 		if (token) {
 			try {
-				const { data } = await api.post<{ message: string }>(
+				await api.post<{ message: string }>(
 					'/auth/logout',
 					{},
 					{ headers: { Authorization: `Bearer ${token}` } },
 				);
-				message = data.message;
 			} catch {
 				// best-effort — still clear local state even if this fails
 			}
@@ -91,12 +84,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		localStorage.removeItem('refresh_token');
 		// do not have refresh_token in the sessionStorage
 		sessionStorage.removeItem('access_token');
+		clearSessionFlag();
 		setUser(null);
-
-		// Single source of truth for logout — AccountMenu and
-		// MobileAccountSheet both call this same function, so the toast
-		// fires regardless of which one triggered it.
-		toast.success(message);
 	};
 
 	return (

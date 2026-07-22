@@ -1,18 +1,19 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Plus, MessageCircle, ClipboardList } from 'lucide-react';
 import { buttonVariants } from '@/components/ui/button';
 import { AccountMenu } from '@/components/layout/account-menu';
 import { MobileAccountSheet } from '@/components/layout/mobile-account-sheet';
 import { SearchInput } from '@/components/layout/search-input';
-import { DarkSurfaceAmbient } from '@/components/layout/dark-surface-ambient';
+import { DarkSurfaceAmbient } from '@/components/dark-surface-ambient';
 import { cn } from '@/lib/utils';
 import { Logo } from '../logo';
 
 export function Header() {
 	const [scrolled, setScrolled] = useState(false);
+	const headerRef = useRef<HTMLElement>(null);
 
 	useEffect(() => {
 		const onScroll = () => setScrolled(window.scrollY > 8);
@@ -21,8 +22,25 @@ export function Header() {
 		return () => window.removeEventListener('scroll', onScroll);
 	}, []);
 
+	useEffect(() => {
+		const el = headerRef.current;
+		if (!el) return;
+
+		const observer = new ResizeObserver(([entry]) => {
+			document.documentElement.style.setProperty(
+				'--header-height',
+				`${entry.contentRect.height}px`,
+			);
+		});
+		observer.observe(el);
+		return () => observer.disconnect();
+	}, []);
+
 	return (
-		<header className="sticky top-0 z-50 overflow-hidden bg-fz-dark-surface">
+		<header
+			ref={headerRef}
+			className="fixed inset-x-0 top-0 z-50 overflow-hidden bg-fz-dark-surface"
+		>
 			{/* Ambient background — shared with Footer, see dark-surface-ambient.tsx */}
 			<DarkSurfaceAmbient />
 

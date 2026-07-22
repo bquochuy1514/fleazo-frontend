@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { buttonVariants } from '@/components/ui/button';
 import { Logo } from '@/components/logo';
-import { DarkSurfaceAmbient } from '@/components/layout/dark-surface-ambient';
+import { DarkSurfaceAmbient } from '@/components/dark-surface-ambient';
 
 // Global 404 — lives at the app root, so it's NOT wrapped by (main)'s
 // Header/Footer. Stands alone: brings its own logo, no nav beyond "home".

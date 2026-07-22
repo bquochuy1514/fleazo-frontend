@@ -42,7 +42,7 @@ export function AccountMenu() {
 	if (!user) {
 		return (
 			<Link
-				href="/login"
+				href="/dang-nhap"
 				className={cn(
 					buttonVariants({ variant: 'ghost' }),
 					'text-white hover:bg-white/10 hover:text-white',
@@ -191,26 +191,14 @@ export function AccountMenu() {
 				)}
 				<DropdownMenuSeparator className="my-1" />
 
-				<DropdownMenuGroup>
-					<DropdownMenuLabel className="px-2 pt-1 pb-0.5 text-[11px] font-semibold tracking-wide text-muted-foreground/70 uppercase">
-						Danger
-					</DropdownMenuLabel>
-					<DropdownMenuItem
-						variant="destructive"
-						onClick={logout}
-						// variant="destructive" is what actually stops the
-						// item's own default-variant rule (not-data-[variant=
-						// destructive]:focus:**:text-accent-foreground) from
-						// forcing the icon green on hover — that rule only
-						// applies when NOT destructive. The `!` overrides then
-						// swap the built-in destructive red for our brand
-						// danger token, on both text and icon alike.
-						className="cursor-pointer gap-2 rounded-lg py-1.5 text-fz-danger! focus:bg-fz-danger/10! focus:text-fz-danger! [&_svg]:text-fz-danger!"
-					>
-						<LogOut className="size-4" />
-						Đăng xuất
-					</DropdownMenuItem>
-				</DropdownMenuGroup>
+				<DropdownMenuItem
+					variant="destructive"
+					onClick={logout}
+					className="cursor-pointer gap-2 rounded-lg py-1.5 text-fz-danger! focus:bg-fz-danger/10! focus:text-fz-danger! [&_svg]:text-fz-danger!"
+				>
+					<LogOut className="size-4" />
+					Đăng xuất
+				</DropdownMenuItem>
 			</DropdownMenuContent>
 		</DropdownMenu>
 	);
