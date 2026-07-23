@@ -11,6 +11,7 @@ import { ActionBanner } from '@/components/form/action-banner';
 import { GoogleAuthButton } from '@/components/auth/google-auth-button';
 import { api, parseApiError } from '@/lib/api';
 import type { ApiErrorResponse } from '@/types/api.types';
+import { toast } from 'sonner';
 
 // Field names must match RegisterDto exactly (fleazo-backend/register.dto.ts).
 type RegisterFields = 'fullName' | 'email' | 'password' | 'confirmPassword';
@@ -28,13 +29,14 @@ export default function RegisterPage() {
 		const values = Object.fromEntries(new FormData(e.currentTarget));
 
 		try {
-			await api.post('/auth/register', values);
+			const { data } = await api.post('/auth/register', values);
 
 			// handleRegister doesn't return tokens — account needs OTP
 			// verification before it can log in. Carry the email over so
 			// verify-account doesn't have to ask for it again.
+			toast.success(data.message);
 			router.push(
-				`/verify-account?email=${encodeURIComponent(String(values.email))}`,
+				`/xac-thuc-tai-khoan?email=${encodeURIComponent(String(values.email))}`,
 			);
 		} catch (err) {
 			const parsed = parseApiError<RegisterFields>(err);

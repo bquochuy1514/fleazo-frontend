@@ -38,7 +38,7 @@ export function Header() {
 
 			<div className="relative mx-auto max-w-6xl px-4 py-4">
 				<div className="flex items-center gap-3">
-					<Logo className="h-11" />
+					<Logo className="h-11" mark />
 
 					<div className="flex-1">
 						<SearchInput />

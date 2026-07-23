@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
 import { setSessionFlag } from '@/lib/session-flag';
 
@@ -26,6 +27,7 @@ function GoogleCallbackHandler() {
 
 		const accessToken = searchParams.get('access_token');
 		const refreshToken = searchParams.get('refresh_token');
+		const message = searchParams.get('message');
 
 		if (!accessToken || !refreshToken) {
 			router.replace('/dang-nhap');
@@ -39,6 +41,7 @@ function GoogleCallbackHandler() {
 
 		setSessionFlag(true);
 		auth.login(accessToken).then(() => {
+			if (message) toast.success(message);
 			// replace, not push — the current entry (this URL, tokens in the
 			// query string) gets swapped away rather than kept in history.
 			router.replace('/');

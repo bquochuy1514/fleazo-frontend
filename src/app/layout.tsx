@@ -3,6 +3,7 @@ import { Be_Vietnam_Pro, Manrope } from 'next/font/google';
 import '../styles/globals.css';
 import { cn } from '@/lib/utils';
 import { AuthProvider } from '@/providers/auth-provider';
+import { Toaster } from '@/components/ui/sonner';
 
 // Body text — see AGENTS.md → Design System → Typography
 const beVietnamPro = Be_Vietnam_Pro({
@@ -42,6 +43,7 @@ export default function RootLayout({
 		>
 			<body className="min-h-full flex flex-col">
 				<AuthProvider>{children}</AuthProvider>
+				<Toaster position="bottom-center" />
 			</body>
 		</html>
 	);

@@ -12,13 +12,17 @@ export default function ProtectedLayout({
 }: Readonly<{
 	children: React.ReactNode;
 }>) {
-	const { user, isLoading } = useAuth();
+	const { user, isLoading, isLoggingOut } = useAuth();
 	const router = useRouter();
 
 	useEffect(() => {
-		if (!isLoading && !user) router.replace('/dang-nhap');
-	}, [isLoading, user, router]);
+		if (isLoading || user || isLoggingOut) return;
+		router.replace('/dang-nhap');
+	}, [isLoading, user, isLoggingOut, router]);
 
-	if (isLoading || !user) return null;
+	// Mid-logout, keep showing the previous content instead of blanking —
+	// logout() is already navigating home; blanking here would just flash
+	// white for the split second before that navigation lands.
+	if (isLoading || (!user && !isLoggingOut)) return null;
 	return <>{children}</>;
 }

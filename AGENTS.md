@@ -26,11 +26,11 @@ Same three goals as the backend — real product, revenue-generating, graduation
 - Form handling: **no library** — uncontrolled inputs + native HTML5 types; see **Form Conventions** for the full pattern. Escalate to react-hook-form + zod only if a form gets genuinely complex.
 - Token storage: **"remember me" decides localStorage vs sessionStorage** — checked → `access_token`+`refresh_token` in `localStorage`; unchecked → only `access_token` in `sessionStorage`, no refresh token. Plain client storage, not httpOnly cookies.
 - Client-state management: **React Context, not Zustand**, for auth specifically — reconsider Zustand only if something with complex, frequently-changing state shows up (cart, filters).
+- Toast/notification: **Sonner** — `src/components/ui/sonner.tsx` is the shadcn-generated `<Toaster />` wrapper, mounted once in root layout (`src/app/layout.tsx`). Any component calls `toast(...)`/`toast.success(...)` directly from `import { toast } from 'sonner'` — no separate app-level wrapper function. Styled frosted-glass (translucent `--popover` background + `backdrop-blur-md`, see the `style`/`toastOptions` in `sonner.tsx`) — a deliberate departure from the dark-surface solid style tried earlier and reverted (felt visually off). **Always show the backend's own `message` string from the response — never a hardcoded client-side string.** Currently wired: login (email/password + Google), logout.
 
 ### Undecided — decide incrementally as each area is built, then move to Confirmed
 
 - Server-state management (TanStack Query?) — decide when building the first data-fetching page
-- Toast/notification library — tried Sonner (dark-surface-styled `showToast`), reverted: felt visually off, and login/logout already have a clear enough visual signal (avatar appearing/disappearing) without one. Revisit only if a real need for toasts shows up elsewhere.
 
 ⚠️ Framer Motion considered and rejected for now (see Design System → Interactive feedback) — plain Tailwind hover/active scale covers current needs. Revisit only if a genuinely complex animation need comes up.
 
@@ -146,7 +146,12 @@ src/
 │   │   ├── dat-lai-mat-khau/     #   reset password
 │   │   └── google-callback/      #   kept in English — Google OAuth redirect target,
 │   │                             #   not user-facing, don't rename (Google Cloud Console
-│   │                             #   Authorized redirect URIs would need re-sync)
+│   │                             #   Authorized redirect URIs would need re-sync).
+│   │                             #   Backend's redirect URL carries access_token,
+│   │                             #   refresh_token, AND message (the same success
+│   │                             #   message loginWithGoogle() returns) as query
+│   │                             #   params — this page reads message to show the
+│   │                             #   login-success toast, same as email/password login.
 │   │
 │   └── (main)/                   # Marketplace shell
 │       ├── layout.tsx            # <Header /> + <main> + <Footer /> — MUST live here, not
@@ -156,10 +161,14 @@ src/
 │       │   └── ...               # (planned) product detail, category, search,
 │       │                         #   seller public profile
 │       └── (protected)/          # Requires login
-│           ├── layout.tsx        # Auth guard: redirect to /dang-nhap if not authenticated —
-│           │                     #   written ONCE here, never per page. See Route Guards.
-│           └── ...               # (planned) post listing, saved, my profile (`/ca-nhan`,
-│                                 #   see Component conventions → Account menu), chat, settings
+│           ├── layout.tsx        # Auth guard: redirect to /dang-nhap if not authenticated
+│           │                     #   (except mid-logout, which goes home instead) — written
+│           │                     #   ONCE here, never per page. See Route Guards.
+│           ├── dang-tin/         # Post listing form — two-column layout (form left,
+│           │                     #   location + sticky submit sidebar right) on lg+,
+│           │                     #   single column on mobile. See Component conventions.
+│           └── ...               # (planned) saved, my profile (`/ca-nhan`, see Component
+│                                 #   conventions → Account menu), chat, settings
 │
 ├── components/
 │   ├── ui/                       #   shadcn-generated components (button.tsx, ...) —
@@ -226,6 +235,7 @@ Tokens live in `localStorage`/`sessionStorage`, not cookies — Middleware can't
 - `middleware.ts` checks `pathname` against `PROTECTED_PATHS`/`AUTH_PATHS` — **add each new `(protected)` page to `PROTECTED_PATHS` as it's built.**
 - `google-callback` stays out of `AUTH_PATHS` on purpose — it's the OAuth redirect target, must always be reachable.
 - `(protected)/layout.tsx` and `GuestOnlyGuard` are the client-side fallback for a stale/missing cookie — see their own code comments for behavior details.
+- **Logging out from a protected page goes to `/` (home), not `/dang-nhap`** — `AuthProvider.logout()` navigates there itself (`router.push('/')`). `(protected)/layout.tsx`'s guard reads an `isLoggingOut` flag off `useAuth()` (set at the start of `logout()`) to skip its own redirect during this transition, and also to keep rendering the previous page's content instead of blanking to `null` while the navigation is in flight (blanking here would flash white for a moment). ⚠️ `isLoggingOut` is only ever reset by the next successful `login()` — **never reset it inside the guard's own effect.** It sits in that effect's dependency array, so resetting it there re-runs the effect a second time with the flag already cleared, silently falling through to `router.replace('/dang-nhap')` again (this exact regression happened once — cost real debugging time to track down via the Network tab).
 
 ## Form Conventions
 
@@ -242,7 +252,7 @@ Tokens live in `localStorage`/`sessionStorage`, not cookies — Middleware can't
 
 ## Client Auth State
 
-- `AuthContext`/`AuthProvider` in `src/providers/auth-provider.tsx` — plain React Context, not Zustand (see Tech Stack → Confirmed for why). Holds `user: User | null` and `isLoading`; exposes `login(accessToken)` and `logout()`.
+- `AuthContext`/`AuthProvider` in `src/providers/auth-provider.tsx` — plain React Context, not Zustand (see Tech Stack → Confirmed for why). Holds `user: User | null`, `isLoading`, and `isLoggingOut` (see Route Guards for what that last one is for); exposes `login(accessToken)` and `logout()`.
 - **`login(accessToken)` does not perform a login.** Auth pages (`dang-nhap/page.tsx`) already own the entire login flow — calling `/auth/login`, the remember-me storage split, redirecting. This function only runs _after_ a valid token already exists in storage: it fetches `/users/profile` with that token and sets `user`. Call it right after the page's own token-storage step, right before `router.push`.
 - No axios interceptor for this — the token is attached by hand on the one `/users/profile` call. An interceptor (auto-attach token everywhere + 401 → refresh → retry) becomes worth building once many more endpoints need it; not the case yet with a single call site.
 - `fetchProfile` never throws to its caller — any failure (expired/invalid token, network error) resolves to `null`, meaning "not logged in". Callers don't need a second try/catch.
@@ -293,7 +303,8 @@ Note on `api.ts`: auth interceptors (attach access token, 401 → refresh → re
 - ✅ Done — `AuthProvider`/`useAuth` (login/logout, `/users/profile` fetch) wired into root layout
 - ✅ Done — `Header`, `BottomNav` wired to real auth state (avatar vs guest nav);
 - ✅ Done — global 404 page (dark-surface treatment, reuses tag-treo motif)
-- ✅ Done — route guards: `middleware.ts` cookie-flag redirect + `(protected)/layout.tsx` + `GuestOnlyGuard` client-side fallback (see Route Guards)
+- ✅ Done — route guards: `middleware.ts` cookie-flag redirect + `(protected)/layout.tsx` + `GuestOnlyGuard` client-side fallback (see Route Guards), incl. logout-from-protected-page going home instead of `/dang-nhap`
+- ✅ Done — Sonner toast (frosted-glass style), wired to login (email/password + Google) and logout, always showing the backend's own message (see Tech Stack → Toast/notification)
 
 ## Agent Behavior
 
