@@ -3,6 +3,13 @@
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import type { Category } from '@/types/category.types';
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from '@/components/ui/select';
 
 type CategoryPickerProps = {
 	onChange?: (categoryId: number | null) => void;
@@ -23,53 +30,70 @@ export function CategoryPicker({ onChange }: CategoryPickerProps) {
 	const parents = categories.filter((c) => c.parentId === null);
 	const children = parents.find((p) => p.id === parentId)?.children ?? [];
 
-	const handleParentChange = (value: string) => {
+	const parentPlaceholder = isLoading ? 'Đang tải...' : 'Chọn danh mục';
+
+	const handleParentChange = (value: string | null) => {
 		const id = value ? Number(value) : null;
 		setParentId(id);
 		setChildId(null);
 		onChange?.(null);
 	};
 
-	const handleChildChange = (value: string) => {
+	const handleChildChange = (value: string | null) => {
 		const id = value ? Number(value) : null;
 		setChildId(id);
 		onChange?.(id);
 	};
 
-	const selectClassName =
-		'h-11 w-full rounded-lg border border-input bg-transparent px-3 text-sm text-fz-ink outline-none focus:border-fz-primary disabled:opacity-50';
-
 	return (
 		<div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-			<select
-				value={parentId ?? ''}
-				onChange={(e) => handleParentChange(e.target.value)}
+			<Select
+				value={parentId ? String(parentId) : undefined}
+				onValueChange={handleParentChange}
 				disabled={isLoading}
-				className={selectClassName}
 			>
-				<option value="">
-					{isLoading ? 'Đang tải...' : 'Chọn danh mục'}
-				</option>
-				{parents.map((p) => (
-					<option key={p.id} value={p.id}>
-						{p.name}
-					</option>
-				))}
-			</select>
+				<SelectTrigger className="w-full !h-11">
+					<SelectValue placeholder={parentPlaceholder}>
+						{(value: string | null) =>
+							value
+								? (parents.find((p) => String(p.id) === value)
+										?.name ?? parentPlaceholder)
+								: parentPlaceholder
+						}
+					</SelectValue>
+				</SelectTrigger>
+				<SelectContent>
+					{parents.map((p) => (
+						<SelectItem key={p.id} value={String(p.id)}>
+							{p.name}
+						</SelectItem>
+					))}
+				</SelectContent>
+			</Select>
 
-			<select
-				value={childId ?? ''}
-				onChange={(e) => handleChildChange(e.target.value)}
+			<Select
+				value={childId ? String(childId) : undefined}
+				onValueChange={handleChildChange}
 				disabled={!parentId}
-				className={selectClassName}
 			>
-				<option value="">Chọn danh mục con</option>
-				{children.map((c) => (
-					<option key={c.id} value={c.id}>
-						{c.name}
-					</option>
-				))}
-			</select>
+				<SelectTrigger className="w-full !h-11">
+					<SelectValue placeholder="Chọn danh mục con">
+						{(value: string | null) =>
+							value
+								? (children.find((c) => String(c.id) === value)
+										?.name ?? 'Chọn danh mục con')
+								: 'Chọn danh mục con'
+						}
+					</SelectValue>
+				</SelectTrigger>
+				<SelectContent>
+					{children.map((c) => (
+						<SelectItem key={c.id} value={String(c.id)}>
+							{c.name}
+						</SelectItem>
+					))}
+				</SelectContent>
+			</Select>
 		</div>
 	);
 }

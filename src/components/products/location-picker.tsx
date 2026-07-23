@@ -1,6 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from '@/components/ui/select';
 
 type Ward = { code: number; name: string };
 type Province = { code: number; name: string; wards: Ward[] };
@@ -32,7 +39,9 @@ export function LocationPicker({ onChange }: LocationPickerProps) {
 	const selectedProvince = provinces.find((p) => p.code === provinceCode);
 	const wards = selectedProvince?.wards ?? [];
 
-	const handleProvinceChange = (value: string) => {
+	const provincePlaceholder = isLoading ? 'Đang tải...' : 'Tỉnh/Thành phố';
+
+	const handleProvinceChange = (value: string | null) => {
 		const code = value ? Number(value) : null;
 		const province = provinces.find((p) => p.code === code);
 		setProvinceCode(code);
@@ -45,7 +54,7 @@ export function LocationPicker({ onChange }: LocationPickerProps) {
 		});
 	};
 
-	const handleWardChange = (value: string) => {
+	const handleWardChange = (value: string | null) => {
 		const code = value ? Number(value) : null;
 		const ward = wards.find((w) => w.code === code);
 		setWardCode(code);
@@ -57,40 +66,56 @@ export function LocationPicker({ onChange }: LocationPickerProps) {
 		});
 	};
 
-	const selectClassName =
-		'h-11 w-full rounded-lg border border-input bg-transparent px-3 text-sm text-fz-ink outline-none focus:border-fz-primary disabled:opacity-50';
-
 	return (
 		<div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-			<select
-				value={provinceCode ?? ''}
-				onChange={(e) => handleProvinceChange(e.target.value)}
+			<Select
+				value={provinceCode ? String(provinceCode) : undefined}
+				onValueChange={handleProvinceChange}
 				disabled={isLoading}
-				className={selectClassName}
 			>
-				<option value="">
-					{isLoading ? 'Đang tải...' : 'Tỉnh/Thành phố'}
-				</option>
-				{provinces.map((p) => (
-					<option key={p.code} value={p.code}>
-						{p.name}
-					</option>
-				))}
-			</select>
+				<SelectTrigger className="w-full !h-11">
+					<SelectValue placeholder={provincePlaceholder}>
+						{(value: string | null) =>
+							value
+								? (provinces.find(
+										(p) => String(p.code) === value,
+									)?.name ?? provincePlaceholder)
+								: provincePlaceholder
+						}
+					</SelectValue>
+				</SelectTrigger>
+				<SelectContent>
+					{provinces.map((p) => (
+						<SelectItem key={p.code} value={String(p.code)}>
+							{p.name}
+						</SelectItem>
+					))}
+				</SelectContent>
+			</Select>
 
-			<select
-				value={wardCode ?? ''}
-				onChange={(e) => handleWardChange(e.target.value)}
+			<Select
+				value={wardCode ? String(wardCode) : undefined}
+				onValueChange={handleWardChange}
 				disabled={!provinceCode}
-				className={selectClassName}
 			>
-				<option value="">Phường/Xã</option>
-				{wards.map((w) => (
-					<option key={w.code} value={w.code}>
-						{w.name}
-					</option>
-				))}
-			</select>
+				<SelectTrigger className="w-full !h-11">
+					<SelectValue placeholder="Phường/Xã">
+						{(value: string | null) =>
+							value
+								? (wards.find((w) => String(w.code) === value)
+										?.name ?? 'Phường/Xã')
+								: 'Phường/Xã'
+						}
+					</SelectValue>
+				</SelectTrigger>
+				<SelectContent>
+					{wards.map((w) => (
+						<SelectItem key={w.code} value={String(w.code)}>
+							{w.name}
+						</SelectItem>
+					))}
+				</SelectContent>
+			</Select>
 		</div>
 	);
 }

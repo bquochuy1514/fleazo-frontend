@@ -1,7 +1,15 @@
 'use client';
 
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from '@/components/ui/select';
 import { ImageUploader } from '@/components/products/image-uploader';
 import { CategoryPicker } from '@/components/products/category-picker';
 import { LocationPicker } from '@/components/products/location-picker';
@@ -13,9 +21,6 @@ const CONDITIONS = [
 	{ value: 'FAIR', label: 'Khá' },
 	{ value: 'POOR', label: 'Cũ' },
 ];
-
-const selectClassName =
-	'h-11 w-full rounded-lg border border-input bg-transparent px-3 text-sm text-fz-ink outline-none focus:border-fz-primary';
 
 export default function DangTinPage() {
 	return (
@@ -60,12 +65,12 @@ export default function DangTinPage() {
 						>
 							Mô tả
 						</label>
-						<textarea
+						<Textarea
 							id="description"
 							name="description"
 							rows={5}
 							placeholder="Mô tả tình trạng, lý do bán, thông tin thêm..."
-							className="mt-1.5 w-full resize-none rounded-lg border border-input bg-transparent px-3 py-2.5 text-sm text-fz-ink outline-none focus:border-fz-primary"
+							className="mt-1.5 text-sm field-sizing-fixed"
 						/>
 					</div>
 
@@ -94,21 +99,24 @@ export default function DangTinPage() {
 							>
 								Tình trạng
 							</label>
-							<select
-								id="condition"
-								name="condition"
-								defaultValue=""
-								className={`mt-1.5 ${selectClassName}`}
-							>
-								<option value="" disabled>
-									Chọn tình trạng
-								</option>
-								{CONDITIONS.map((c) => (
-									<option key={c.value} value={c.value}>
-										{c.label}
-									</option>
-								))}
-							</select>
+							<Select name="condition">
+								<SelectTrigger
+									id="condition"
+									className="mt-1.5 w-full !h-11"
+								>
+									<SelectValue placeholder="Chọn tình trạng" />
+								</SelectTrigger>
+								<SelectContent>
+									{CONDITIONS.map((c) => (
+										<SelectItem
+											key={c.value}
+											value={c.value}
+										>
+											{c.label}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
 						</div>
 					</div>
 				</section>
@@ -139,7 +147,7 @@ export default function DangTinPage() {
 				<div className="flex gap-3 pt-2">
 					<Button
 						type="button"
-						variant="secondary"
+						variant="outline"
 						className="h-11 flex-1 text-sm"
 					>
 						Lưu nháp
