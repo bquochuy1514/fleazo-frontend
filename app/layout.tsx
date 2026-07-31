@@ -29,7 +29,9 @@ export default function RootLayout({
 			lang="vi"
 			className={`${spaceGrotesk.variable} ${hankenGrotesk.variable} h-full antialiased`}
 		>
-			<body className="min-h-full flex flex-col">{children}</body>
+			{/* No Header/Footer here — each route group owns its own chrome,
+			    so (auth) and (bare) can render none at all. */}
+			<body className="flex min-h-full flex-col">{children}</body>
 		</html>
 	);
 }

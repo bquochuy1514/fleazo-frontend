@@ -109,7 +109,10 @@
 	--chart-4: var(--color-rust);
 	--chart-5: var(--color-border-warm);
 
-	--radius: 0.5rem;
+	/* Buttons read at ~12px via shadcn's rounded-lg (= --radius). Everything
+	   else on the scale derives from this — the Header pill is the one
+	   deliberate exception, it stays rounded-full. */
+	--radius: 0.75rem;
 
 	--sidebar: #ffffff;
 	--sidebar-foreground: var(--color-ink);
