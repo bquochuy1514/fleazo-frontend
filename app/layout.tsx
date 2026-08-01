@@ -17,6 +17,9 @@ const hankenGrotesk = Hanken_Grotesk({
 export const metadata: Metadata = {
 	title: 'Fleazo — Chợ đồ cũ sinh viên',
 	description: 'Nền tảng mua bán đồ cũ dành cho sinh viên',
+	icons: {
+		icon: '/logo.png',
+	},
 };
 
 export default function RootLayout({

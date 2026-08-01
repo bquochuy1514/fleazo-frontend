@@ -1,136 +1,177 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { Search, X } from 'lucide-react';
+import {
+	ALL_PROVINCES_LABEL,
+	LocationPicker,
+} from '@/components/layout/location-picker';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import type { Province } from '@/lib/locations';
+import {
+	getProvinceServerSnapshot,
+	getProvinceSnapshot,
+	setSavedProvince,
+	subscribeToProvince,
+} from '@/lib/province-store';
 import { cn } from '@/lib/utils';
 
-// Desktop: the field grows leftward out of the trigger, into the header's
-// empty middle space — the icons to the trigger's right never shift.
-// Mobile: the header pill has no room for that, so it opens as an overlay.
-export function HeaderSearch() {
-	const router = useRouter();
-	const [open, setOpen] = useState(false);
-	const inputRef = useRef<HTMLInputElement>(null);
-	const desktopRef = useRef<HTMLDivElement>(null);
+const PLACEHOLDER = 'Tìm sách, laptop, xe đạp…';
+// The trigger button is ~145px wide once the logo and the account button have
+// taken their share, which leaves room for about eleven characters. The full
+// placeholder goes in the sheet, where the field is 233px.
+const TRIGGER_HINT = 'Tìm đồ cũ…';
+
+export function HeaderSearch({
+	provinces,
+	className,
+}: {
+	provinces: Province[];
+	className?: string;
+}) {
+	const saved = useSyncExternalStore(
+		subscribeToProvince,
+		getProvinceSnapshot,
+		getProvinceServerSnapshot,
+	);
+	const provinceCode = saved === null ? null : Number(saved);
+
+	const [sheetOpen, setSheetOpen] = useState(false);
+	const sheetInputRef = useRef<HTMLInputElement>(null);
 
 	useEffect(() => {
-		if (!open) return;
-		inputRef.current?.focus();
-
+		if (!sheetOpen) return;
+		// Explicit focus rather than the autoFocus attribute: the field is
+		// mounted by a state flip, and React's autoFocus is unreliable on
+		// nodes that appear that way.
+		sheetInputRef.current?.focus();
 		const onKeyDown = (e: KeyboardEvent) => {
-			if (e.key === 'Escape') setOpen(false);
-		};
-		const onPointerDown = (e: PointerEvent) => {
-			if (!desktopRef.current?.contains(e.target as Node)) setOpen(false);
+			if (e.key === 'Escape') setSheetOpen(false);
 		};
 		document.addEventListener('keydown', onKeyDown);
-		document.addEventListener('pointerdown', onPointerDown);
-		return () => {
-			document.removeEventListener('keydown', onKeyDown);
-			document.removeEventListener('pointerdown', onPointerDown);
-		};
-	}, [open]);
+		return () => document.removeEventListener('keydown', onKeyDown);
+	}, [sheetOpen]);
 
-	const submit = (e: React.FormEvent<HTMLFormElement>) => {
-		e.preventDefault();
-		const q = new FormData(e.currentTarget).get('q');
-		const keyword = typeof q === 'string' ? q.trim() : '';
-		if (!keyword) return;
-		setOpen(false);
-		router.push(`/tim-kiem?q=${encodeURIComponent(keyword)}`);
-	};
+	const provinceField = provinceCode !== null && (
+		<input type="hidden" name="provinceCode" value={provinceCode} />
+	);
 
 	return (
-		<>
-			{/* Desktop. The field is always mounted so it can animate its own
-			    width; collapsed it's zero-width and inert, which also keeps it
-			    out of the tab order. */}
-			<div ref={desktopRef} className="hidden items-center md:flex">
-				<form onSubmit={submit} className="flex items-center">
-					<div
-						className={cn(
-							'overflow-hidden transition-[width,opacity] duration-200 ease-out motion-reduce:transition-none',
-							open ? 'w-56 opacity-100' : 'w-0 opacity-0',
-						)}
-					>
-						<Input
-							ref={inputRef}
-							name="q"
-							type="search"
-							placeholder="Tìm sách, laptop, xe đạp..."
-							aria-label="Tìm kiếm"
-							aria-hidden={!open}
-							tabIndex={open ? 0 : -1}
-							autoComplete="off"
-							className="h-9 rounded-full pr-3 pl-4"
-						/>
-					</div>
-					<Button
-						type={open ? 'submit' : 'button'}
-						variant="ghost"
-						size="icon"
-						aria-label={open ? 'Tìm kiếm' : 'Mở ô tìm kiếm'}
-						aria-expanded={open}
-						onClick={() => {
-							if (!open) setOpen(true);
-						}}
-					>
-						<Search className="size-5" />
-					</Button>
-				</form>
-			</div>
-
-			{/* Mobile trigger */}
-			<Button
-				variant="ghost"
-				size="icon"
-				aria-label="Mở ô tìm kiếm"
-				aria-expanded={open}
-				className="md:hidden"
-				onClick={() => setOpen(true)}
+		<div className={cn('min-w-0', className)}>
+			{/* ── Desktop: one pill holding two things — where you're looking
+			    and what you're looking for. Not two controls side by side: a
+			    marketplace search reads as a sentence, and the hairline is the
+			    only thing separating the halves. */}
+			<form
+				action="/tim-kiem"
+				role="search"
+				className="hidden h-11 w-full max-w-md items-center rounded-full border border-border bg-card pr-1 transition-colors focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/30 md:flex"
 			>
-				<Search className="size-5" />
-			</Button>
+				<LocationPicker
+					provinces={provinces}
+					value={provinceCode}
+					onChange={setSavedProvince}
+				/>
+				<span aria-hidden className="h-5 w-px shrink-0 bg-border" />
 
-			{open && (
+				<Search className="pointer-events-none mr-2 ml-3 size-4 shrink-0 text-muted-foreground" />
+				<Input
+					name="q"
+					type="search"
+					placeholder={PLACEHOLDER}
+					aria-label="Tìm kiếm sản phẩm"
+					autoComplete="off"
+					className="h-full min-w-0 flex-1 rounded-none border-0 bg-transparent px-0 focus-visible:border-0 focus-visible:ring-0"
+				/>
+				{provinceField}
+				<Button
+					type="submit"
+					size="icon"
+					aria-label="Tìm kiếm"
+					className="size-9"
+				>
+					<Search className="size-4" />
+				</Button>
+			</form>
+
+			{/* ── Below md, a full-screen sheet instead. Inline, the same pill
+			    leaves the text field ~19px at 640px and ~100px at 375px once
+			    the logo and the location segment have taken their share — a
+			    field that narrow can't even show its own placeholder. The
+			    cutover is md, not sm, because the inline version only stops
+			    being cramped somewhere around 750px. A different layout for
+			    small screens, not the desktop one squeezed. */}
+			<button
+				type="button"
+				onClick={() => setSheetOpen(true)}
+				aria-label="Mở ô tìm kiếm"
+				className="flex h-11 w-full items-center gap-2.5 rounded-full border border-border bg-card pr-4 pl-4 text-left transition-colors md:hidden"
+			>
+				<Search className="size-4 shrink-0 text-muted-foreground" />
+				<span className="truncate text-sm text-muted-foreground">
+					{TRIGGER_HINT}
+				</span>
+			</button>
+
+			{sheetOpen && (
 				<div
 					role="dialog"
 					aria-modal="true"
 					aria-label="Tìm kiếm"
-					className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm md:hidden"
-					onClick={(e) => {
-						if (e.target === e.currentTarget) setOpen(false);
-					}}
+					className="fixed inset-0 z-50 bg-background md:hidden"
 				>
-					<div className="flex items-center gap-2 px-4 pt-5">
-						<form onSubmit={submit} className="flex flex-1 gap-2">
+					<div className="flex items-center gap-2 px-4 pt-4">
+						<form
+							action="/tim-kiem"
+							role="search"
+							className="flex h-12 min-w-0 flex-1 items-center gap-2 rounded-full border border-border bg-card px-4 transition-colors focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/30"
+						>
+							<Search className="pointer-events-none size-4 shrink-0 text-muted-foreground" />
 							<Input
-								ref={inputRef}
+								ref={sheetInputRef}
 								name="q"
 								type="search"
-								placeholder="Tìm sách, laptop, xe đạp..."
-								aria-label="Tìm kiếm"
+								placeholder={PLACEHOLDER}
+								aria-label="Tìm kiếm sản phẩm"
 								autoComplete="off"
-								className="h-11 flex-1 rounded-full px-4"
+								className="h-full min-w-0 flex-1 rounded-none border-0 bg-transparent px-0 focus-visible:border-0 focus-visible:ring-0"
 							/>
-							<Button type="submit" size="icon-lg" aria-label="Tìm kiếm">
-								<Search className="size-5" />
-							</Button>
+							{provinceField}
 						</form>
 						<Button
 							variant="ghost"
-							size="icon-lg"
+							size="icon"
 							aria-label="Đóng"
-							onClick={() => setOpen(false)}
+							className="size-11"
+							onClick={() => setSheetOpen(false)}
 						>
 							<X className="size-5" />
 						</Button>
 					</div>
+
+					{/* The location choice moves in here, where it has room to
+					    be a labelled control instead of a 135px segment eating
+					    the text field. */}
+					<div className="px-4 pt-6">
+						<p className="text-xs font-medium tracking-[0.12em] text-muted-foreground uppercase">
+							Khu vực
+						</p>
+						<div className="mt-2 inline-flex h-11 items-center rounded-full border border-border bg-card">
+							<LocationPicker
+								provinces={provinces}
+								value={provinceCode}
+								onChange={setSavedProvince}
+							/>
+						</div>
+						<p className="mt-3 text-sm text-muted-foreground">
+							{provinceCode === null
+								? `Đang tìm trên ${ALL_PROVINCES_LABEL.toLowerCase()}.`
+								: 'Chỉ hiện tin đăng trong khu vực này.'}
+						</p>
+					</div>
 				</div>
 			)}
-		</>
+		</div>
 	);
 }

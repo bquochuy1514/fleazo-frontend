@@ -46,7 +46,9 @@ export function Footer() {
 			<div className="mx-auto max-w-6xl px-4 py-10">
 				<div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
 					<div className="col-span-2 sm:col-span-2">
-						<Logo />
+						{/* Full lockup at the larger size — the footer has the
+						    room the header doesn't. */}
+						<Logo size="lg" />
 						<p className="mt-2 max-w-xs text-sm text-muted-foreground">
 							Chợ đồ cũ dành cho sinh viên — mua bán nhanh, gọn,
 							đáng tin.

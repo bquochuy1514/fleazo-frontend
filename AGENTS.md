@@ -7,6 +7,34 @@
 > design decisions** — this file does not duplicate them, only notes what the frontend
 > must know.
 
+## What belongs in this file
+
+**Applies to every section below.** This file records **direction and current state** —
+decisions a contributor could not derive by reading the code, plus what actually exists
+today. It is not a changelog, not a design diary, and not a place to re-explain code
+that already explains itself.
+
+Write it down when it is:
+
+- a product or domain decision plus the constraint behind it ("no cart exists, so the
+  card's second action is Liên hệ, not Buy Now")
+- a rule that binds future work ("search lives only in the header — don't add a second
+  one to a hero")
+- a trap in a tool or dependency that costs real time to rediscover
+- where something lives, and what is or isn't built yet
+
+Leave it out when it is:
+
+- reasoning about one specific line of CSS or one magic number — that belongs in a
+  comment beside the number, where it cannot drift out of sync
+- measurements that expire the moment an asset changes (contrast ratios, pixel widths,
+  colour stops tuned to one photo)
+- "an earlier version did X" — history is in git
+- anything obvious from opening the file being described
+
+A bullet past ~4 lines has almost certainly become a diary entry. Cut it back to the
+decision.
+
 ## Project Overview
 
 Fleazo is a student secondhand marketplace platform built for Vietnamese university
@@ -50,15 +78,15 @@ Defined as CSS variables in `styles/globals.css`, consumed via Tailwind. **Never
 these hex values anywhere else** — reference the tokens (`bg-fz-ink`, `text-fz-accent`,
 etc.) or shadcn's semantic tokens (`bg-primary`, `bg-muted`, ...) instead.
 
-| Token                  | Hex       | Role                                              |
-| ----------------------- | --------- | ------------------------------------------------- |
-| `--color-ink`          | `#211F1C` | Primary text, solid CTA buttons (e.g. "Liên hệ")  |
-| `--color-paper`        | `#F6F3EE` | Page background                                    |
-| `--color-muted-warm`   | `#8B857A` | Secondary text, outline-button borders             |
-| `--color-border-warm`  | `#E4E0D8` | Card/image-placeholder borders                     |
-| `--color-moss`         | `#5B6B4F` | **The one accent** — price tags, save/favorite active state only |
-| `--color-moss-soft`    | `#E8ECE1` | Light moss tint (badges, hover fills)              |
-| `--color-rust`         | `#A8442E` | Errors/destructive only                            |
+| Token                 | Hex       | Role                                                             |
+| --------------------- | --------- | ---------------------------------------------------------------- |
+| `--color-ink`         | `#211F1C` | Primary text, solid CTA buttons (e.g. "Liên hệ")                 |
+| `--color-paper`       | `#F6F3EE` | Page background                                                  |
+| `--color-muted-warm`  | `#8B857A` | Secondary text, outline-button borders                           |
+| `--color-border-warm` | `#E4E0D8` | Card/image-placeholder borders                                   |
+| `--color-moss`        | `#5B6B4F` | **The one accent** — price tags, save/favorite active state only |
+| `--color-moss-soft`   | `#E8ECE1` | Light moss tint (badges, hover fills)                            |
+| `--color-rust`        | `#A8442E` | Errors/destructive only                                          |
 
 Rule: `--color-moss` is deliberately **not** the color of the primary CTA button — the
 main "Liên hệ"/contact-seller button is solid ink (high-contrast, matches the reference's
@@ -71,7 +99,7 @@ shadcn's own semantic `--primary` maps to ink (not moss) for this reason — see
 
 ### Typography
 
-- Heading/display (including the oversized hero wordmark): **Space Grotesk** — distinctive
+- Heading/display: **Space Grotesk** — distinctive
   squared-off grotesk, confirmed full Vietnamese diacritic support, not reused from
   `fleazo-frontend` (which used Manrope).
 - Body: **Hanken Grotesk** — confirmed full Vietnamese diacritic support.
@@ -102,39 +130,42 @@ shadcn's own semantic `--primary` maps to ink (not moss) for this reason — see
 - **Footer CTA banner**: not a newsletter/email-capture form (no such backend feature
   exists) — reworked as a seller-acquisition CTA ("Có đồ không dùng nữa? Đăng tin ngay")
   linking to the post-listing flow.
-- **Hero wordmark**: "Fleazo", set large enough (`text-[30vw]`) to run edge-to-edge
-  against the hero image (matches the reference's oversized cropped "Shop" treatment),
-  not shrunk to fit inside a frame. Centered horizontally, sitting low in the hero with
-  the search bridge card overlapping its bottom edge.
+- **Hero content sits in three tiers**: statement (eyebrow + `h1` + subcopy), then the
+  action tier (category quick-pick chips), then a demoted footnote tier (the trust row,
+  behind a hairline rule). The gaps *between* tiers are the hierarchy — spacing them
+  evenly turns five blocks into five equal things. Exact values live in the JSX.
+- **The hero's right side is deliberately empty** — the photo occupies it. Listing cards
+  were built there and cut on purpose. Don't refill it without reversing that decision.
 - **Header is a floating inset pill, not a full-bleed bar** — `fixed`, with side gutters,
-  so the homepage hero photo shows through around and behind it (as in the reference).
-  Two consequences: (1) the hero is `min-h-dvh` starting at viewport top, header
-  included, and (2) the header occupies **no flow space**, so any page without its own
-  full-bleed hero must add top padding to clear it.
-- **Hero photo source resolution**: the hero is `object-cover` over a full-viewport box,
-  so the source file must be **at least 2000px wide (2560×1707 / 3:2 is the target)** —
-  a smaller file gets upscaled and reads visibly blurry, and no CSS change fixes that.
-  Avoid 16:9 sources: portrait (mobile) viewports crop a landscape image hard on the
-  sides, so the flatter the source, the more of it disappears; 3:2 or 4:3 survives the
-  crop better. Keep the subject mid-frame for the same reason. Don't switch to
-  `object-contain` to "fix" cropping — that letterboxes and exposes bare scrim bands.
-- **Hero photo + scrim**: an Unsplash 2400×1600 photo in `public/`, via `next/image` with
-  `fill`+`priority`. A `from-fz-ink/40 via-fz-ink/65 to-fz-ink/90` gradient scrim sits
-  between it and the wordmark — weighted toward the bottom, since that's where the white
-  wordmark sits and where the photo's brightest areas fall. Measured worst-case contrast
-  is **4.1:1 desktop / 3.9:1 mobile**, passing WCAG AA for large text (3:1).
-  **Re-measure whenever the photo changes** — a brighter photo silently drops this below
-  AA (swapping photos already took it to 2.4:1 once with the earlier, lighter scrim).
-- **Hero `sizes` must over-declare on portrait viewports**: `object-cover` scales a 3:2
-  photo by HEIGHT on a tall/narrow screen, but `sizes` is a *width* hint — a plain
-  `sizes="100vw"` makes the browser fetch a variant that ends up upscaled ~3× and
-  visibly blurry on phones. Hence `sizes="(max-width: 640px) 330vw, (max-width: 1024px)
-  200vw, 100vw"`. Recompute those multipliers if the photo's aspect ratio changes.
-- **Wordmark/card overlap is set in `em`, not `vw`** (`-mb-[0.17em]` on the `h1`): the
-  card should clip only the *feet* of the letters, never cut across them. About 0.11em
-  of that margin merely covers the empty space below the baseline, so the actual bite is
-  ~8–9% of the letter height — and it stays that fraction at any font size, which `vw`
-  would not.
+  so the hero photo shows through around and behind it. Two consequences: the hero starts
+  at viewport top, header included, and the header occupies **no flow space**, so any
+  page without its own full-bleed hero must add top padding to clear it.
+- **Search lives in the header on every page, hero included.** No second search pill in a
+  hero — search is the marketplace's primary action and can't be the control that
+  disappears on the screen everybody lands on. The hero's category chips are the
+  alternative way in for someone who doesn't know what to type.
+- **Hero photo requirements**: at least 2000px wide, and 3:2 or 4:3 — never 16:9. The
+  photo is `object-cover` over a full-viewport box, so a smaller file upscales and reads
+  blurry, and a flatter source loses more of itself to the crop on portrait viewports.
+  Keep the subject low and mid-frame; the hero pins it with `object-bottom`. Don't reach
+  for `object-contain` to "fix" cropping — that letterboxes and exposes bare scrim bands.
+- **The hero's two scrims MULTIPLY** — combined coverage is `1−(1−a₁)(1−a₂)`, not
+  `a₁+a₂`, which makes it very easy to end up with a photo nobody can see while every
+  text element sits far above the contrast it needed. The horizontal one carries
+  legibility and is breakpoint-dependent (a phone can't use the desktop falloff — text
+  spans the full width there); the vertical one is mood only.
+  **Whenever the photo changes, re-measure text contrast and retune both together.** The
+  committed stops are tuned to the current photo and mean nothing for a different one.
+  Measure against the glyph runs (`Range.getClientRects()`), not element boxes.
+- **Logo is one PNG cropped into two halves** (`components/logo.tsx`): the source is a
+  _stacked_ lockup, unusable at header height, so mark and wordmark are cropped out by
+  mask percentages and re-laid out horizontally. **Re-measure those crop boxes if the
+  PNG's internal layout changes.** Both halves are masked to `currentColor` — the lockup
+  is monochrome by choice and inverts to white over the hero. Mark-only below `md`.
+- **Hero motion lives in `styles/globals.css`** (`.fz-rise`, `.fz-drift`), not Tailwind's
+  animation utilities. Keyframes start from the _hidden_ state so the
+  `prefers-reduced-motion` branch only has to switch the animation off. Never invert that
+  — an `opacity-0` base class leaves content invisible wherever the animation doesn't run.
 
 Home, Header, and Footer are now built against these decisions — see Project Structure
 and Current Status below for what's actually live.
@@ -159,24 +190,37 @@ and Current Status below for what's actually live.
 ## Project Structure
 
 ```
-app/                    # App Router — no src/ directory
-├── layout.tsx          # Root layout: fonts (Space Grotesk + Hanken Grotesk, vietnamese
-│                       #   subset), lang="vi", renders <Header/>/<Footer/> around
-│                       #   children — no route groups yet, only Home exists so far
-└── page.tsx            # Home — full-viewport photo hero + category grid + "Tin mới
-                        #   đăng", see Layout decisions. `revalidate = 60`.
+app/                            # App Router — no src/ directory. Route groups are
+├── layout.tsx                  #   live; see "Planned route-group structure" below for
+│                               #   the full intended shape and the rules governing it.
+│                               # Root layout: fonts, lang="vi", app-wide providers.
+│                               #   Renders NO chrome — each group owns its own.
+├── (auth)/layout.tsx           # Empty shells so far — the pages inside each of these
+├── (bare)/layout.tsx           #   four groups are not built yet.
+├── (header-only)/layout.tsx
+└── (main)/
+    ├── layout.tsx              # Header + main + Footer + BottomNav. Fetches provinces
+    │                           #   once for the header. ⚠️ still holds a temporary
+    │                           #   h-[1000px] scroll spacer — delete when Home grows
+    │                           #   its real sections.
+    ├── (protected)/layout.tsx  # Shell only — no ProtectedGuard yet, no pages
+    └── (public)/page.tsx       # Home — photo hero only so far. `revalidate = 60`.
 
 components/
-├── ui/                  # shadcn-generated (Radix-based) — button.tsx, sheet.tsx
-├── logo.tsx             # Text-based "Fleazo" logotype — no image asset yet
+├── ui/                  # shadcn-generated (Radix-based) — button, input, popover, sheet
+├── logo.tsx             # Two masked crops of public/logo.png — see Layout decisions
 ├── layout/
-│   ├── header.tsx       # Fixed floating pill (see Layout decisions) — logo, nav,
-│   │                    #   search/messages icons, Đăng tin CTA, guest Đăng nhập
-│   │                    #   link (no real auth wired up yet), mobile Sheet
+│   ├── header.tsx       # Fixed floating pill — logo, always-on search, Đăng nhập +
+│   │                    #   Đăng tin, mobile account Sheet. Goes transparent over a
+│   │                    #   hero via HERO_ROUTES + an IntersectionObserver.
+│   ├── header-search.tsx#   Inline pill from md; a full-screen sheet below it
+│   ├── location-picker.tsx# Province chip, shared by header search and its sheet
+│   ├── bottom-nav.tsx   # Mobile-only tab bar (md:hidden) — desktop keeps the header CTA
 │   └── footer.tsx       # Đăng-tin CTA band + link columns + copyright
 └── products/
     └── product-card.tsx # Trimmed card: condition+location badge, price pill — no
-                         #   rating, no save button (no auth yet)
+                         #   rating, no save button (no auth yet). Not rendered anywhere
+                         #   yet — Home has no listings section.
 
 lib/
 ├── utils.ts             # cn() — shadcn class-merge util
@@ -185,7 +229,9 @@ lib/
 │                        #   from fleazo-frontend, same backend contract, unchanged)
 ├── categories.ts        # getCategories()
 ├── products.ts          # getProducts, firstImageUrl, locationLabel
-└── format.ts             # formatPrice
+├── locations.ts         # getProvinces() — third-party list, no backend endpoint exists
+├── province-store.ts    # Client store backing the location picker
+└── format.ts            # formatPrice
 
 types/
 ├── api.types.ts          # ApiErrorResponse<TFields>
@@ -194,14 +240,16 @@ types/
                           #   that only exists on findOne)
 
 styles/
-└── globals.css         # Tailwind entry + brand/shadcn CSS variables — imported by
-                        #   root layout as `@/styles/globals.css`. ⚠️ components.json
-                        #   "tailwind.css" must point here or `shadcn add` breaks.
+└── globals.css         # Tailwind entry + brand/shadcn CSS variables + the hero's
+                        #   .fz-rise/.fz-drift keyframes. Imported by the root layout as
+                        #   `@/styles/globals.css`. ⚠️ components.json "tailwind.css"
+                        #   must point here or `shadcn add` breaks.
 
 components.json          # shadcn CLI config (style: radix-nova, iconLibrary: lucide)
 public/
-└── hero-image.jpg       # Homepage hero photo (user-supplied) — see Layout decisions
-                         #   for the scrim/contrast constraint tied to it
+├── logo.png             # Stacked lockup — cropped in two by components/logo.tsx
+└── <hero photo>         # Homepage hero, user-supplied and swapped often. Re-measure
+                         #   contrast on every swap (Layout decisions → hero scrims).
 ```
 
 `hooks/`, `providers/` don't exist yet — create only when the first real need shows up
@@ -265,13 +313,13 @@ app/
 Rules (same as `fleazo-frontend`, they earned these the hard way):
 
 - **Which group a page belongs in is two independent decisions.** `(public)` vs
-  `(protected)` is an *auth* decision; `(main)` vs `(header-only)` vs `(bare)` is a
-  *how much chrome* decision. Watch for near-duplicates: a seller's public profile is
+  `(protected)` is an _auth_ decision; `(main)` vs `(header-only)` vs `(bare)` is a
+  _how much chrome_ decision. Watch for near-duplicates: a seller's public profile is
   public, "my profile" (editable) is protected — two different pages.
 - **Every page under `(main)` goes in `(public)` or `(protected)`** — none directly in
   `(main)/`.
 - **`(main)/layout.tsx` renders Header/Footer/BottomNav unconditionally.** A layout
-  nested deeper *cannot* un-render them, so a page needing less chrome must live outside
+  nested deeper _cannot_ un-render them, so a page needing less chrome must live outside
   the `(main)` tree entirely — that's the whole reason `(header-only)`/`(bare)` are
   siblings of `(main)` rather than nested inside it.
 - **Guard logic lives once in `ProtectedGuard`**, never re-checked per page. Each of
@@ -281,13 +329,9 @@ Rules (same as `fleazo-frontend`, they earned these the hard way):
 - Route groups `(...)` never appear in the URL — they exist purely to give each area its
   own `layout.tsx`.
 
-**Migration note — Header/Footer must move.** They currently render in
-`app/layout.tsx` (fine while Home is the only page). The moment `(auth)` exists they
-have to move down into `(main)/layout.tsx`, or login/register would inherit marketplace
-chrome. Two things to re-check during that move: the Header is `fixed` and occupies no
-flow space (see Layout decisions), so `(main)` pages without a full-bleed hero need
-their own top padding; and `BottomNav` doesn't exist yet at all — it needs building
-plus bottom padding on `(main)` pages so it never covers the last row of content.
+The four group layouts and `BottomNav` exist; the pages inside them do not, and neither
+do `proxy.ts` or `ProtectedGuard`. Chrome already lives in `(main)/layout.tsx` rather
+than the root, so `(auth)` and `(bare)` can render none of it.
 
 ## Environment Variables
 
@@ -323,16 +367,19 @@ readable client-side, grouped under a named `# ===` section, added to both files
 - ✅ Done — env vars + Cloudinary image whitelist in `next.config.ts`
 - ✅ Done — `lib/api.ts` (axios instance + interceptors, ported unchanged) and the
   `lib/`+`types/` helpers Home needs (`categories`, `products`, `format`)
-- ✅ Done — `Header` (fixed floating pill), `Footer`, `Logo`, `ProductCard`, wired into
-  the root layout
-- ✅ Done — Home: full-viewport photo hero (measured for AA contrast + image sharpness,
-  see Layout decisions), category grid, "Tin mới đăng" from real backend data
-- 📋 Agreed, not started — the route-group split (`(auth)`/`(main)`/`(header-only)`/
-  `(bare)`), `proxy.ts` guards, and `BottomNav`. See Project Structure → Planned
-  route-group structure. Nothing here has been built; don't begin it unasked.
-- Next: no page beyond Home exists yet. Whatever comes next, decide its route group
-  first — building another page into the root layout would deepen the Header/Footer
-  migration debt noted above.
+- ✅ Done — route-group split: `(auth)`/`(main)`/`(header-only)`/`(bare)` layouts exist,
+  chrome moved out of the root layout into `(main)/layout.tsx`
+- ✅ Done — `Header` (floating pill, always-on search, province picker), `BottomNav`,
+  `Footer`, `Logo`, `ProductCard`
+- ✅ Done — Home hero: photo + three content tiers + category chips from live data,
+  measured for AA contrast at 375/1280/1920
+- 🚧 Home is **hero only** — the category grid and "Tin mới đăng" sections are agreed
+  (see Layout decisions) but not built. `ProductCard` is therefore unused so far.
+- 📋 Not started — every page inside the four route groups, `proxy.ts` guards,
+  `ProtectedGuard`, and auth state in the UI. Don't begin unasked.
+- ⚠️ Known debt — a temporary `h-[1000px]` spacer in `(main)/layout.tsx`; the hero's
+  scroll cue and category chips link to routes that don't exist yet; no `openGraph`
+  metadata (deliberately deferred).
 
 ## Agent Behavior
 

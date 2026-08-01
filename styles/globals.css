@@ -109,9 +109,10 @@
 	--chart-4: var(--color-rust);
 	--chart-5: var(--color-border-warm);
 
-	/* Buttons read at ~12px via shadcn's rounded-lg (= --radius). Everything
-	   else on the scale derives from this — the Header pill is the one
-	   deliberate exception, it stays rounded-full. */
+	/* Radius scale for surfaces — cards, inputs, sheets, badges. Buttons are
+	   NOT on this scale: every button is rounded-full at every size (see
+	   components/ui/button.tsx), matching the Header pill and the hero search
+	   pill. Pill = interactive, radius scale = surface. */
 	--radius: 0.75rem;
 
 	--sidebar: #ffffff;
@@ -167,6 +168,52 @@
 	--sidebar-ring: #7c8d6e;
 }
 
+/* ── Hero motion ────────────────────────────────────────────────────────────
+   Both animations start from their *hidden* keyframe rather than setting a
+   hidden base state in the class list. That way the reduced-motion branch
+   below only has to switch the animation off — the element then renders at
+   its natural, visible state. Doing it the other way round (opacity-0 in the
+   markup, animation to reveal) leaves the content invisible for anyone whose
+   animation never runs. */
+@keyframes fz-rise {
+	from {
+		opacity: 0;
+		transform: translateY(12px);
+	}
+}
+
+/* 4px of drift, not Tailwind's animate-bounce. animate-bounce travels 25% of
+   the element with a springy ease and reads as a toy; the cue's job is to say
+   "the page continues", which a slow breath does without demanding attention. */
+@keyframes fz-drift {
+	0%,
+	100% {
+		transform: translateY(0);
+	}
+	50% {
+		transform: translateY(4px);
+	}
+}
+
+/* `both` so the from-keyframe holds during animation-delay — that delay is
+   what staggers the hero's blocks, and without it every block would be
+   visible until its turn came and then blink. */
+.fz-rise {
+	animation: fz-rise 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.fz-drift {
+	animation: fz-drift 2.4s ease-in-out infinite;
+}
+
+/* Must come after the two rules above — same specificity, so order decides. */
+@media (prefers-reduced-motion: reduce) {
+	.fz-rise,
+	.fz-drift {
+		animation: none;
+	}
+}
+
 @layer base {
 	* {
 		@apply border-border outline-ring/50;
@@ -185,5 +232,19 @@
 	/* Prices and other tabular numbers */
 	.tabular-nums {
 		font-variant-numeric: tabular-nums;
+	}
+
+	/* Chrome and Safari draw their own ✕ inside `type="search"`. We keep the
+	   search type — it's what gives a phone keyboard its "Tìm kiếm" key and
+	   tells assistive tech what the field is — but the browser's clear button
+	   is drawn to its own design, sits outside our spacing, and duplicates
+	   affordances we already provide (the mobile sheet has its own close
+	   button). Hide it and let people clear the field themselves. */
+	input[type='search']::-webkit-search-cancel-button,
+	input[type='search']::-webkit-search-decoration,
+	input[type='search']::-webkit-search-results-button,
+	input[type='search']::-webkit-search-results-decoration {
+		-webkit-appearance: none;
+		appearance: none;
 	}
 }
