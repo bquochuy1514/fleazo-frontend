@@ -35,14 +35,48 @@ export default async function Home() {
 			data-hero
 			className="relative flex min-h-dvh items-center overflow-hidden"
 		>
+			{/* Art-directed pair, not one photo stretched to fit everything. A
+			    single crop can't look right on both a phone and a wide
+			    monitor: at the old 3:2 source, `cover` had to slice ~70% off
+			    the SIDES on a phone to fill its height, and `contain` left
+			    bare scrim bands down the sides of a wide desktop instead. Two
+			    purpose-cut files fix both — a 3:5 portrait crop and a ~16:9
+			    landscape crop, see AGENTS.md → Layout decisions for the crop
+			    math.
+			    Switched on `orientation`, not a width breakpoint: a portrait
+			    tablet (768px, same width as `md`) still needs the PORTRAIT
+			    crop, so any width-only cutover picks the wrong image for it.
+			    `priority` on both is deliberate, not an oversight — Next
+			    preloads a `priority` image unconditionally, before CSS
+			    resolves which one `hidden` applies to, so there's no way to
+			    preload only the visible one without hand-rolling the
+			    preload `<link>`. The extra request for the orientation NOT
+			    shown is the accepted cost.
+			    ⚠️ Expect a dev-only console warning ("sizes... but image is
+			    not rendered at full viewport width") on WHICHEVER of these
+			    two is currently `display: none` — Next's dev check measures
+			    every `fill` image regardless of CSS visibility, sees 0×0
+			    against `sizes="100vw"`, and can't tell "hidden on purpose by
+			    an orientation query" from "sizes is wrong". It flips to
+			    naming the other file the moment you rotate/resize. Harmless,
+			    doesn't appear in production — not a bug to chase. */}
+			<Image
+				src="/hero-image-mobile.png"
+				alt=""
+				fill
+				priority
+				quality={90}
+				sizes="100vw"
+				className="block object-cover object-bottom [@media(orientation:landscape)]:hidden"
+			/>
 			<Image
 				src="/hero-image.png"
 				alt=""
 				fill
 				priority
 				quality={90}
-				sizes="(max-width: 640px) 330vw, (max-width: 1024px) 200vw, 100vw"
-				className="object-cover object-bottom"
+				sizes="100vw"
+				className="hidden object-cover object-bottom [@media(orientation:landscape)]:block"
 			/>
 
 			<div className="absolute inset-0 bg-gradient-to-r from-fz-ink/85 via-fz-ink/70 to-fz-ink/55 lg:from-fz-ink/82 lg:via-fz-ink/66 lg:to-fz-ink/12" />

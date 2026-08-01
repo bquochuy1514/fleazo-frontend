@@ -247,4 +247,35 @@
 		-webkit-appearance: none;
 		appearance: none;
 	}
+
+	/* A thin, palette-colored scrollbar everywhere — both the whole page
+	   (html) and any region designed to scroll on its own while its
+	   surroundings stay put (.scrollbar-refined, e.g. the auth form panel
+	   — see components/auth/auth-form-panel.tsx). The OS default scrollbar
+	   is a wide, high-contrast bar dropped onto an otherwise restrained
+	   page; this keeps the same "restrained system" the rest of the
+	   palette commits to instead of an unstyled system control suddenly
+	   showing up. */
+	html,
+	.scrollbar-refined {
+		scrollbar-width: thin;
+		scrollbar-color: var(--color-border-warm) transparent;
+	}
+	html::-webkit-scrollbar,
+	.scrollbar-refined::-webkit-scrollbar {
+		width: 6px;
+	}
+	html::-webkit-scrollbar-track,
+	.scrollbar-refined::-webkit-scrollbar-track {
+		background: transparent;
+	}
+	html::-webkit-scrollbar-thumb,
+	.scrollbar-refined::-webkit-scrollbar-thumb {
+		background-color: var(--color-border-warm);
+		border-radius: 9999px;
+	}
+	html::-webkit-scrollbar-thumb:hover,
+	.scrollbar-refined::-webkit-scrollbar-thumb:hover {
+		background-color: var(--color-muted-warm);
+	}
 }

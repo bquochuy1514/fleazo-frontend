@@ -1,8 +1,10 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { ClipboardList, Home, MessageCircle, User, Plus } from 'lucide-react';
+import { useAuth } from '@/hooks/use-auth';
 import { cn } from '@/lib/utils';
 
 const NAV_ITEMS = [
@@ -14,8 +16,10 @@ const NAV_ITEMS = [
 
 // Mobile-only tab bar — the header keeps the desktop "Đăng tin" CTA instead.
 // Active state uses ink weight rather than the moss accent, which is reserved
-// for prices and the save toggle. No auth state yet: "Cá nhân" is a plain icon
-// (no avatar) and "Tin nhắn" carries no unread badge.
+// for prices and the save toggle. "Cá nhân" swaps its icon for the signed-in
+// user's avatar (see NavLink's `avatar` prop), matching Header's own
+// AccountMenu; "Tin nhắn" still carries no unread badge — that needs a
+// message count this repo doesn't fetch anywhere yet, unrelated to auth.
 //
 // "Quản lý tin", "Tin nhắn", "Đăng tin" and "Cá nhân" are all sign-in-only —
 // there's no session state here to branch on, so each just points at its real
@@ -28,6 +32,7 @@ const NAV_ITEMS = [
 // here.
 export function BottomNav() {
 	const pathname = usePathname();
+	const { user } = useAuth();
 
 	return (
 		<nav
@@ -64,6 +69,9 @@ export function BottomNav() {
 						key={item.href}
 						item={item}
 						active={pathname === item.href}
+						// Only "Cá nhân" ever gets an avatar — the other slots
+						// keep their lucide icon regardless of auth state.
+						avatar={item.href === '/ca-nhan' ? user?.avatar : undefined}
 					/>
 				))}
 			</div>
@@ -74,9 +82,11 @@ export function BottomNav() {
 function NavLink({
 	item,
 	active,
+	avatar,
 }: {
 	item: (typeof NAV_ITEMS)[number];
 	active: boolean;
+	avatar?: string;
 }) {
 	const Icon = item.icon;
 	return (
@@ -92,7 +102,20 @@ function NavLink({
 		>
 			{/* Fixed-height slot keeps every label on the same baseline. */}
 			<span className="flex h-7 items-center justify-center">
-				<Icon className="size-5" />
+				{avatar ? (
+					<Image
+						src={avatar}
+						alt=""
+						width={20}
+						height={20}
+						className={cn(
+							'size-5 rounded-full object-cover ring-1',
+							active ? 'ring-fz-ink' : 'ring-border',
+						)}
+					/>
+				) : (
+					<Icon className="size-5" />
+				)}
 			</span>
 			{item.label}
 		</Link>

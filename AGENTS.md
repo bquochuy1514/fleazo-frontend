@@ -196,11 +196,27 @@ shadcn's own semantic `--primary` maps to ink (not moss) for this reason — see
   hero — search is the marketplace's primary action and can't be the control that
   disappears on the screen everybody lands on. The hero's category chips are the
   alternative way in for someone who doesn't know what to type.
-- **Hero photo requirements**: at least 2000px wide, and 3:2 or 4:3 — never 16:9. The
-  photo is `object-cover` over a full-viewport box, so a smaller file upscales and reads
-  blurry, and a flatter source loses more of itself to the crop on portrait viewports.
-  Keep the subject low and mid-frame; the hero pins it with `object-bottom`. Don't reach
-  for `object-contain` to "fix" cropping — that letterboxes and exposes bare scrim bands.
+- **Hero photo is two art-directed crops, not one image stretched to fit every
+  viewport** — `hero-image-mobile.png` (960×1600, 3:5) and `hero-image-desktop.png`
+  (2400×1351, ~16:9), both `object-cover`, swapped with a CSS `orientation` media query
+  (`[@media(orientation:landscape)]:hidden`/`:block`), never `object-contain` (letterboxes,
+  exposes bare scrim bands — tried and rejected). One crop can't serve both ends: at a
+  single 3:2 source, `cover` had to slice ~70% off the SIDES on a phone to fill its
+  height, and any crop wide enough to look right on a wide desktop makes that phone crop
+  worse, not better — the two needs pull in opposite directions as the source aspect
+  changes, so a single file always loses on one end.
+  **The swap is keyed on `orientation`, not a width breakpoint** — a portrait tablet
+  (768px, same width as `md`) still needs the PORTRAIT crop, and any width-only cutover
+  hands it the landscape one instead.
+  **Both images carry `priority`, deliberately** — Next injects a `priority` image's
+  preload `<link>` unconditionally, before CSS resolves which `hidden` applies, so there
+  is no way to preload only the visible one short of hand-rolling the preload tag with
+  its own `media` attribute. The extra request for the orientation not shown is an
+  accepted cost, not an oversight.
+  **Whenever the photo changes, re-cut BOTH crops from the new source** (mobile ~3:5,
+  desktop ~16:9, subject low/mid-frame per `object-bottom`) and re-measure text contrast
+  against both — the aspect ratios above are the load-bearing part of this rule; the
+  exact pixel dimensions will drift with whatever source photo is current.
 - **The hero's two scrims MULTIPLY** — combined coverage is `1−(1−a₁)(1−a₂)`, not
   `a₁+a₂`, which makes it very easy to end up with a photo nobody can see while every
   text element sits far above the contrast it needed. The horizontal one carries

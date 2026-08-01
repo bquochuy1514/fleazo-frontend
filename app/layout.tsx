@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from 'next';
 import { Space_Grotesk, Hanken_Grotesk } from 'next/font/google';
 import '@/styles/globals.css';
+import { AuthProvider } from '@/providers/auth-provider';
+import { Toaster } from '@/components/ui/sonner';
 
 const spaceGrotesk = Space_Grotesk({
 	variable: '--font-heading',
@@ -41,9 +43,10 @@ export default function RootLayout({
 			lang="vi"
 			className={`${spaceGrotesk.variable} ${hankenGrotesk.variable} h-full antialiased`}
 		>
-			{/* No Header/Footer here — each route group owns its own chrome,
-			    so (auth) and (bare) can render none at all. */}
-			<body className="flex min-h-full flex-col">{children}</body>
+			<body className="flex min-h-full flex-col">
+				<AuthProvider>{children}</AuthProvider>
+				<Toaster position="bottom-center" />
+			</body>
 		</html>
 	);
 }

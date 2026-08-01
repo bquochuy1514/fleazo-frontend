@@ -2,56 +2,56 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { Heart, Menu, MessageCircle, Plus, UserRound } from 'lucide-react';
+import {
+	ClipboardList,
+	Crown,
+	Heart,
+	LogOut,
+	Menu,
+	MessageCircle,
+	Plus,
+	Settings,
+	ShieldCheck,
+	Star,
+	UserRound,
+} from 'lucide-react';
 import { Logo } from '@/components/logo';
 import { HeaderSearch } from '@/components/layout/header-search';
+import { AccountMenu } from '@/components/layout/account-menu';
 import { Button, buttonVariants } from '@/components/ui/button';
 import {
 	Sheet,
+	SheetClose,
 	SheetContent,
 	SheetHeader,
 	SheetTitle,
 	SheetTrigger,
 } from '@/components/ui/sheet';
+import { useAuth } from '@/hooks/use-auth';
 import type { Province } from '@/lib/locations';
 import { cn } from '@/lib/utils';
 
-// Routes whose page renders a full-bleed hero BEHIND the header. On these the
-// header starts bare — no pill, white text straight on the photo — and only
-// solidifies once the hero leaves. Everywhere else the pill is there from the
-// first paint, because white text on the paper background is unreadable.
-//
-// An explicit list, not DOM-sniffing for a hero element: usePathname resolves
-// during SSR too, so the very first paint is already the right chrome. A
-// detect-then-flip approach would render the wrong one and swap after
-// hydration, which is a visible flash on every load.
-// **Add a route here whenever a page gets its own full-bleed hero.**
 const HERO_ROUTES: string[] = ['/'];
 
-// Height the header occupies from the top of the viewport: pt-4 (16) + h-16.
-// The pill has to be solid by the time the hero's bottom edge reaches this
-// line, or paper-coloured content slides under white text.
 const HEADER_CLEARANCE_PX = 80;
 
-// Floating inset pill, not a full-bleed bar — it overlays the page rather than
-// occupying flow space, so the homepage hero shows through on both sides and
-// above it. Any page WITHOUT a full-bleed hero must add its own top padding to
-// clear this (see AGENTS.md → Layout).
-//
-// Logged-out shape only for now. Signed-in adds unread badges to the Tin nhắn
-// and Tin đã lưu icons and turns "Đăng nhập" into an avatar menu (Hồ sơ / Đăng
-// xuất); none of that can exist until there's session state in the UI.
+// Same recipe as PickerOption (components/ui/picker.tsx) and AccountMenu's
+// own ITEM (account-menu.tsx, kept in sync with this file's Sheet content)
+// — rounded-full, generous padding, transition-colors. rounded-lg here
+// before was a different radius than the desktop dropdown's rounded-md AND
+// than Picker's rounded-full — three different corner radii for
+// conceptually the same "row in a list" element across the app.
+const SHEET_ITEM =
+	'flex items-center gap-3 rounded-full px-3 py-3 text-sm text-fz-ink transition-colors duration-200 active:bg-muted';
+
 export function Header({ provinces }: { provinces: Province[] }) {
+	const { user, isLoading, logout } = useAuth();
 	const pathname = usePathname();
 	const overHero = HERO_ROUTES.includes(pathname);
 	const [heroPassed, setHeroPassed] = useState(false);
 
-	// Flip exactly when the hero leaves, not at a fixed scroll distance: the
-	// pill exists to keep the header readable, and it's only unreadable once
-	// something other than the hero is behind it. An IntersectionObserver on
-	// the hero itself needs no magic number and no scroll handler on the main
-	// thread.
 	useEffect(() => {
 		if (!overHero) return;
 		const hero = document.querySelector('[data-hero]');
@@ -81,11 +81,6 @@ export function Header({ provinces }: { provinces: Province[] }) {
 
 	return (
 		<header className="fixed inset-x-0 top-0 z-50 px-4 pt-3 sm:pt-4">
-			{/* Travelling scrim. Without it the bare header drifts over the
-			    hero photo's bright window on the way past and its text
-			    measures 2.4:1 — unreadable. This band holds the worst case
-			    across the whole hero at 4.8:1. It fades out with the pill, and
-			    reads as vignetting on the photo rather than as a bar. */}
 			<div
 				aria-hidden
 				className={cn(
@@ -94,16 +89,6 @@ export function Header({ provinces }: { provinces: Province[] }) {
 				)}
 			/>
 
-			{/* Only colour/shadow transition — nothing here animates a
-			    property that would reflow the page. */}
-			{/* Below lg this is a plain flex row — logo, then search, then the
-			    buttons. From lg it becomes a 1fr/auto/1fr grid so the search
-			    sits dead centre of the pill rather than centre of whatever
-			    space the sides left over (the logo is 122px and the button
-			    pair is 217px, so "centred in the remainder" is 48px off).
-			    The grid only starts at lg because it needs room for the widest
-			    side on BOTH sides: at 768px that would leave the middle column
-			    270px, and the search doesn't fit in that. */}
 			<div
 				className={cn(
 					'relative mx-auto flex h-16 max-w-6xl items-center gap-3 rounded-full border px-3 transition-[background-color,border-color,box-shadow] duration-300 ease-out motion-reduce:transition-none sm:gap-4 sm:px-4 lg:grid lg:grid-cols-[1fr_auto_1fr]',
@@ -112,65 +97,28 @@ export function Header({ provinces }: { provinces: Province[] }) {
 						: 'border-border bg-card/90 shadow-sm backdrop-blur-md',
 				)}
 			>
-				{/* Mark-only below md. The full lockup is 122px wide, and at
-				    375px that against a 44px menu button pushes the search
-				    field 39px off centre — the mark alone is 37px, so the two
-				    sides balance and the field sits where it looks like it
-				    should. */}
 				<Logo
 					wordmarkClassName="hidden md:block"
 					className={cn(
-						// mr-auto rather than justify-self-start: an auto margin
-						// pins the item to its edge in flex AND grid, so the
-						// same class covers both layouts below and above lg.
 						'mr-auto ml-1 transition-colors duration-300 motion-reduce:transition-none sm:ml-1.5',
-						// Reaches the wordmark's mask through currentColor. The
-						// mark keeps its own colours in both states — it reads
-						// against the photo and against paper alike.
 						bare && 'text-white',
 					)}
 				/>
 
-				{/* Present in both states, hero included: search is this
-				    marketplace's primary action, so it can't be the thing that
-				    disappears on the one screen everybody lands on. Over the
-				    photo it goes glass along with everything else in the pill —
-				    an opaque white field here would be the only solid object in
-				    a header of white-on-photo elements, which is what made the
-				    bare state read as unfinished. */}
 				<div className="min-w-0 flex-1 lg:w-[28rem] lg:flex-none">
 					<HeaderSearch provinces={provinces} bare={bare} />
 				</div>
 
-				{/* Below md this is BottomNav's job — it already carries Tin
-				    nhắn, Đăng tin and Cá nhân, and duplicating them here is
-				    exactly what the old hamburger was doing. Same breakpoint
-				    BottomNav itself uses, so the two never both show. */}
-				{/* ml-auto pins this to the right edge in both layouts — as a
-				    grid item it absorbs the leftover width of its column, which
-				    justify-self-end would otherwise have to do.
-				    Three chunks, not one evenly-spaced row of four buttons: the
-				    two utility icons sit close (gap-1, they're one family), a
-				    real hairline — the same divider the search pill uses
-				    between its two halves — marks where that family ends, then
-				    a wider gap before the login/post pair, which keeps its own
-				    tighter gap-2 as the third chunk. Spacing alone (no
-				    divider) tries the same thing but reads as one undifferentiated
-				    row at this item count. */}
 				<div className="ml-auto hidden shrink-0 items-center gap-3 md:flex">
-					{/* No unread badges yet — matches BottomNav's own note, no
-					    auth state or save/message counts exist in the UI yet.
-					    Not auth-gated at the link level either: there's no
-					    session state to check here, so both always point at
-					    their real route and lean on the (planned)
-					    ProtectedGuard/proxy.ts to bounce a signed-out visitor to
-					    /dang-nhap. */}
 					<div className="flex items-center gap-1">
 						<Link
 							href="/tin-da-luu"
 							aria-label="Tin đã lưu"
 							className={cn(
-								buttonVariants({ variant: 'ghost', size: 'icon' }),
+								buttonVariants({
+									variant: 'ghost',
+									size: 'icon',
+								}),
 								'size-10 text-fz-ink transition-colors duration-300 motion-reduce:transition-none',
 								bare && ghostOnDark,
 							)}
@@ -181,7 +129,10 @@ export function Header({ provinces }: { provinces: Province[] }) {
 							href="/tin-nhan"
 							aria-label="Tin nhắn"
 							className={cn(
-								buttonVariants({ variant: 'ghost', size: 'icon' }),
+								buttonVariants({
+									variant: 'ghost',
+									size: 'icon',
+								}),
 								'size-10 text-fz-ink transition-colors duration-300 motion-reduce:transition-none',
 								bare && ghostOnDark,
 							)}
@@ -199,16 +150,23 @@ export function Header({ provinces }: { provinces: Province[] }) {
 					/>
 
 					<div className="flex items-center gap-2">
-						<Link
-							href="/dang-nhap"
-							className={cn(
-								buttonVariants({ variant: 'ghost' }),
-								'h-10 px-4 text-fz-ink transition-colors duration-300 motion-reduce:transition-none',
-								bare && ghostOnDark,
-							)}
-						>
-							Đăng nhập
-						</Link>
+						{/* Guest-only — once signed in this slot disappears
+						    rather than turning into anything, since the
+						    avatar takes the OPPOSITE side of "Đăng tin"
+						    (right, not left) instead of replacing this link
+						    in place. */}
+						{!user && !isLoading && (
+							<Link
+								href="/dang-nhap"
+								className={cn(
+									buttonVariants({ variant: 'ghost' }),
+									'h-10 px-4 text-fz-ink transition-colors duration-300 motion-reduce:transition-none',
+									bare && ghostOnDark,
+								)}
+							>
+								Đăng nhập
+							</Link>
+						)}
 						{/* The one primary action on the page, last in the row
 						    where the pill's own curve frames it. On the photo it
 						    inverts to a white chip — a solid chip rather than white
@@ -226,15 +184,19 @@ export function Header({ provinces }: { provinces: Province[] }) {
 							<Plus className="size-4" />
 							Đăng tin
 						</Link>
+
+						{/* Fixed-size placeholder while the session resolves
+						    (AuthProvider fetches the profile on first mount)
+						    — matches AccountMenu's own size-10 trigger
+						    exactly, so nothing jumps once auth state settles. */}
+						{isLoading ? (
+							<div className="size-10 shrink-0 animate-pulse rounded-full bg-muted" />
+						) : (
+							<AccountMenu />
+						)}
 					</div>
 				</div>
 
-				{/* Account drawer, below md only. This is NOT the old
-				    hamburger: that one listed Trang chủ / Danh mục / Tin nhắn /
-				    Đăng tin, all four of which BottomNav already carries. This
-				    one holds identity and nothing else, so the two never
-				    overlap. Stays visible while the header is bare — on the
-				    hero it and the logo are all that's left up there. */}
 				<Sheet>
 					<SheetTrigger asChild>
 						<Button
@@ -251,52 +213,190 @@ export function Header({ provinces }: { provinces: Province[] }) {
 					</SheetTrigger>
 
 					<SheetContent side="right">
-						<SheetHeader>
+						<SheetHeader className="shrink-0">
 							<SheetTitle>Tài khoản</SheetTitle>
 						</SheetHeader>
 
-						{/* Signed-out shape. Signed in, this block becomes the
-						    user's name/avatar plus Hồ sơ · Đăng xuất — same
-						    drawer, different contents, which is why it isn't a
-						    plain link list. Quản lý tin/Tin nhắn/Tin đã lưu don't
-						    move in here: BottomNav and the header icon row
-						    already carry them, this drawer is identity only. */}
-						<div className="px-4">
-							<div className="flex items-center gap-3 rounded-2xl bg-muted px-4 py-3.5">
-								<span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-card">
-									<UserRound className="size-5 text-muted-foreground" />
-								</span>
-								<div className="min-w-0">
-									<p className="font-medium text-fz-ink">
-										Bạn chưa đăng nhập
-									</p>
-									<p className="mt-0.5 text-xs text-muted-foreground">
-										Đăng nhập để nhắn tin, lưu tin và đăng
-										tin của mình.
-									</p>
+						{/* min-h-0 is load-bearing: SheetContent is a flex
+						    column with a fixed h-full, and without it this
+						    child's default flex-basis (auto, i.e. its own
+						    content height) refuses to shrink below that,
+						    so overflow-y-auto never gets anything to
+						    actually scroll. Content here has grown to 6
+						    items across 3 sections (plus a 4th for admins)
+						    — confirmed it silently clips below the fold
+						    with no way to reach "Đăng xuất" on a landscape
+						    phone or anything shorter than ~600px tall. */}
+						<div className="min-h-0 flex-1 overflow-y-auto scrollbar-refined">
+							{user ? (
+							<div className="flex flex-col gap-1 px-4">
+								{/* Card, not a bare row — matches the guest
+								    panel's own rounded-2xl/bg-muted identity
+								    block below and AccountMenu's desktop
+								    dropdown (see that file's comment). */}
+								<div className="flex items-center gap-3 rounded-2xl bg-muted px-4 py-3.5">
+									<Image
+										src={user.avatar}
+										alt={user.fullName}
+										width={40}
+										height={40}
+										className="size-10 shrink-0 rounded-full object-cover"
+									/>
+									<div className="min-w-0">
+										<p className="truncate text-sm font-medium text-fz-ink">
+											{user.fullName}
+										</p>
+										<p className="truncate text-xs text-muted-foreground">
+											{user.email}
+										</p>
+									</div>
+								</div>
+
+								<SheetClose asChild>
+									<Link
+										href="/ca-nhan"
+										className={cn('mt-1', SHEET_ITEM)}
+									>
+										<UserRound className="size-5 text-muted-foreground" />
+										Trang cá nhân
+									</Link>
+								</SheetClose>
+
+								{/* Sections separated by space, not another
+								    hairline — see account-menu.tsx's comment
+								    (this panel mirrors it): the identity card
+								    above and the rule before "Đăng xuất"
+								    below are the only boundaries that
+								    actually carry meaning. */}
+								<div className="mt-2 px-2 pt-1 pb-0.5 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
+									Tài khoản
+								</div>
+								<SheetClose asChild>
+									<Link
+										href="/goi-thanh-vien"
+										className={SHEET_ITEM}
+									>
+										<Crown className="size-5 text-muted-foreground" />
+										Gói thành viên
+									</Link>
+								</SheetClose>
+								<SheetClose asChild>
+									<Link
+										href="/cai-dat"
+										className={SHEET_ITEM}
+									>
+										<Settings className="size-5 text-muted-foreground" />
+										Đổi mật khẩu / Cài đặt
+									</Link>
+								</SheetClose>
+
+								<div className="mt-2 px-2 pt-1 pb-0.5 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
+									Hoạt động
+								</div>
+								<SheetClose asChild>
+									<Link
+										href="/quan-ly-tin"
+										className={SHEET_ITEM}
+									>
+										<ClipboardList className="size-5 text-muted-foreground" />
+										Quản lý tin
+									</Link>
+								</SheetClose>
+								<SheetClose asChild>
+									<Link
+										href="/tin-da-luu"
+										className={SHEET_ITEM}
+									>
+										<Heart className="size-5 text-muted-foreground" />
+										Tin đã lưu
+									</Link>
+								</SheetClose>
+								<SheetClose asChild>
+									<Link
+										href="/danh-gia-cua-toi"
+										className={SHEET_ITEM}
+									>
+										<Star className="size-5 text-muted-foreground" />
+										Đánh giá của tôi
+									</Link>
+								</SheetClose>
+
+								{user.role === 'ADMIN' && (
+									<>
+										<div className="mt-2 px-2 pt-1 pb-0.5 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
+											Quản trị
+										</div>
+										<SheetClose asChild>
+											<Link
+												href="/admin"
+												className={SHEET_ITEM}
+											>
+												<ShieldCheck className="size-5 text-muted-foreground" />
+												Trang quản trị
+											</Link>
+										</SheetClose>
+									</>
+								)}
+
+								<div className="mt-2 h-px bg-border" />
+
+								<SheetClose asChild>
+									<button
+										type="button"
+										onClick={logout}
+										className={cn(
+											SHEET_ITEM,
+											'text-left text-fz-danger active:bg-fz-danger/10',
+										)}
+									>
+										<LogOut className="size-5" />
+										Đăng xuất
+									</button>
+								</SheetClose>
+							</div>
+						) : (
+							<div className="px-4">
+								<div className="flex items-center gap-3 rounded-2xl bg-muted px-4 py-3.5">
+									<span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-card">
+										<UserRound className="size-5 text-muted-foreground" />
+									</span>
+									<div className="min-w-0">
+										<p className="font-medium text-fz-ink">
+											Bạn chưa đăng nhập
+										</p>
+										<p className="mt-0.5 text-xs text-muted-foreground">
+											Đăng nhập để nhắn tin, lưu tin và
+											đăng tin của mình.
+										</p>
+									</div>
+								</div>
+
+								<div className="mt-4 flex flex-col gap-2">
+									<Link
+										href="/dang-nhap"
+										className={cn(
+											buttonVariants({
+												variant: 'default',
+											}),
+											'h-11',
+										)}
+									>
+										Đăng nhập
+									</Link>
+									<Link
+										href="/dang-ky"
+										className={cn(
+											buttonVariants({
+												variant: 'outline',
+											}),
+											'h-11',
+										)}
+									>
+										Đăng ký
+									</Link>
 								</div>
 							</div>
-
-							<div className="mt-4 flex flex-col gap-2">
-								<Link
-									href="/dang-nhap"
-									className={cn(
-										buttonVariants({ variant: 'default' }),
-										'h-11',
-									)}
-								>
-									Đăng nhập
-								</Link>
-								<Link
-									href="/dang-ky"
-									className={cn(
-										buttonVariants({ variant: 'outline' }),
-										'h-11',
-									)}
-								>
-									Đăng ký
-								</Link>
-							</div>
+						)}
 						</div>
 					</SheetContent>
 				</Sheet>
