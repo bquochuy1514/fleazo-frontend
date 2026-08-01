@@ -43,6 +43,39 @@ production quality always — see backend AGENTS.md → Project Overview). This 
 visual and structural reset of the frontend, not a backend change — every API
 contract/data model decision documented in the backend's AGENTS.md still applies as-is.
 
+## iOS Safari traps — read before building any overlay or input
+
+**None of these reproduce in a desktop browser's device emulator.** Chrome DevTools'
+responsive mode is still Blink; every item below is WebKit-only behaviour, so "it looks
+right at 390px on the laptop" proves nothing about a phone. Each one here cost a
+round-trip to a real device to find. **Test overlays and text fields on a real iPhone.**
+
+- **Any focusable field must be ≥16px at every width below `md`.** iOS zooms the whole
+  page in when a focused `input`/`textarea`/`select` has a smaller font size, and it does
+  not zoom back out. Use `text-base md:text-sm` — never `text-sm` or `text-[15px]` as the
+  base. `components/ui/input.tsx` already does this; hand-written fields must too.
+  Non-focusable elements (buttons, list rows) are exempt — only fields trigger it.
+- **A `position: fixed` overlay cannot live inside an element with a `backdrop-filter`.**
+  A filter/backdrop-filter/transform makes that element the containing block for fixed
+  descendants, so `inset-0` resolves against *it*, not the viewport. This is spec, not a
+  bug, and it bites here because the header pill gains `backdrop-blur-md` the moment it
+  leaves the hero — the search overlay silently collapsed to the pill's own 397×62 box.
+  Portal such overlays to `<body>`.
+- **A full-screen overlay must lock the page behind it** — `hooks/use-scroll-lock.ts`,
+  which pins `<body>` and restores the offset. `overflow: hidden` alone does not stop
+  touch scrolling on iOS, and iOS scrolls the *document* to reveal a focused field even
+  when that field is inside a fixed overlay, walking the page toward the top a little on
+  every open. Pair it with `focus({ preventScroll: true })`. Radix Dialog (our `Sheet`,
+  and `Picker` through it) brings its own lock — this is only for hand-rolled overlays.
+- **Cap a bottom sheet's height in `svh`, not `dvh`.** With the page scroll-locked iOS
+  keeps the URL bar retracted, which is the state `dvh` resolves *larger* in, so a `dvh`
+  cap can exceed the area actually on screen.
+- **Don't size a scroll region by `flex-1` inside a container whose height comes from
+  `max-height`.** Blink resolves the shrink against the cap; WebKit gives the item its
+  full content height instead, and the panel grows past the viewport with its overflow
+  never engaging — a sheet with nothing to scroll, running off the top of the screen.
+  Put the `max-height` on the scroller itself.
+
 ## Tech Stack
 
 - Framework: Next.js 16.2.12 (App Router, Turbopack), **root `app/`, no `src/` directory**
@@ -114,16 +147,35 @@ shadcn's own semantic `--primary` maps to ink (not moss) for this reason — see
 
 - **Home (`/`)**: a lighter composition — hero + a few curated sections. Not the full
   browse layout below.
-- **Danh mục / Tìm kiếm** (planned routes): the full reference composition — hero +
-  sidebar category filter (2-level tree, matches `Category.parentId` hierarchy) + product
-  grid + pagination.
+- **No `/danh-muc` route.** Category browsing lives in two places only: a 4-chip
+  teaser on the homepage (`QUICK_PICKS`, links straight to `/tim-kiem?categoryId=`) and
+  `/tim-kiem`'s own sidebar filter, which with no params applied IS the "browse
+  everything" view. A dedicated directory page would have duplicated that sidebar's job
+  for no real gain — cut before it was ever built, not deprecated.
+- **Tìm kiếm** (planned route): the full reference composition — hero + sidebar category
+  filter (2-level tree, matches `Category.parentId` hierarchy) + product grid +
+  pagination.
+- **Signed-out visitors are pushed to log in, deliberately, for anything identity-shaped**
+  — `/quan-ly-tin`, `/tin-nhan`, `/dang-tin`, `/ca-nhan`. None of the four render anything
+  meaningful without a session (a listings dashboard, a chat inbox, a post-a-listing form
+  and a profile all need to know who's asking), so there's no guest-mode version worth
+  building for them. `BottomNav` and the header's `Tin nhắn` icon link to these routes
+  unconditionally — there is no auth state in the UI to branch on yet (see Current
+  Status), so the redirect is the job of the planned `ProtectedGuard`/`proxy.ts`, not
+  something hand-rolled per link. Two things make this a gate and not a wall: send the
+  visitor back to what they tapped after login (`?next=`), not to the homepage; and the
+  login screen should say why it's asking ("Đăng nhập để nhắn tin với người bán"), not
+  present a bare form. Neither is built yet — the routes exist, the bounce doesn't.
 - **Product card**: no per-product star rating (Fleazo reviews are seller-level only —
   see backend AGENTS.md → Reviews section, every listing sells once). Show a condition
   badge + location instead. Two actions: outline "Lưu tin" (save/favorite) + solid-ink
   "Liên hệ" (→ chat with seller) — **not** "Add to Chart"/"Buy Now", Fleazo has no
   cart/checkout (see backend AGENTS.md → Money Flow, trades happen off-platform).
-- **Header**: cart icon from the reference → messages icon with unread badge (mirrors
-  `fleazo-frontend`'s `Header`/`UnreadBadge` pattern, not a cart — no cart concept exists).
+- **Header**: cart icon from the reference → messages icon (mirrors `fleazo-frontend`'s
+  `Header`/`UnreadBadge` pattern for the eventual unread count, not built yet — not a
+  cart, no cart concept exists). Sits from `md` in its own `gap-4` cluster, separated
+  from the Đăng nhập/Đăng tin pair (`gap-2` internally) rather than one evenly-spaced row
+  of three — it's a standalone utility, not a third member of the auth/CTA group.
 - **"Explore our recommendations" section** → renamed/reworked as **"Tin mới đăng"**
   (newest listings, chronological) — Fleazo has no recommendation engine, personalized or
   otherwise (see backend AGENTS.md → Listing Quality & AI Chatbot, dropped deliberately).
@@ -208,11 +260,17 @@ app/                            # App Router — no src/ directory. Route groups
 
 components/
 ├── ui/                  # shadcn-generated (Radix-based) — button, input, popover, sheet
+│   └── picker.tsx       # ⚠️ hand-written, NOT from `shadcn add`. One control, two
+│                        #   presentations: anchored popover from md, bottom sheet below
+│                        #   it. Reach for this for every list-choice control — a popover
+│                        #   on a phone puts a nested scroller at the far end of the
+│                        #   thumb's reach.
 ├── logo.tsx             # Two masked crops of public/logo.png — see Layout decisions
 ├── layout/
-│   ├── header.tsx       # Fixed floating pill — logo, always-on search, Đăng nhập +
-│   │                    #   Đăng tin, mobile account Sheet. Goes transparent over a
-│   │                    #   hero via HERO_ROUTES + an IntersectionObserver.
+│   ├── header.tsx       # Fixed floating pill — logo, always-on search, Tin nhắn +
+│   │                    #   Đăng nhập + Đăng tin (md+), mobile account Sheet. Goes
+│   │                    #   transparent over a hero via HERO_ROUTES + an
+│   │                    #   IntersectionObserver.
 │   ├── header-search.tsx#   Inline pill from md; a full-screen sheet below it
 │   ├── location-picker.tsx# Province chip, shared by header search and its sheet
 │   ├── bottom-nav.tsx   # Mobile-only tab bar (md:hidden) — desktop keeps the header CTA
@@ -221,6 +279,14 @@ components/
     └── product-card.tsx # Trimmed card: condition+location badge, price pill — no
                          #   rating, no save button (no auth yet). Not rendered anywhere
                          #   yet — Home has no listings section.
+
+hooks/
+├── use-media-query.ts   # For the cases where both branches can't be in the DOM at once
+│                        #   (Picker's popover/sheet split). Answers false on the server
+│                        #   and through hydration — the false branch must be the
+│                        #   server-renderable one.
+└── use-scroll-lock.ts   # Freezes + restores the page behind a hand-rolled overlay
+                         #   (see iOS Safari traps)
 
 lib/
 ├── utils.ts             # cn() — shadcn class-merge util
@@ -252,7 +318,7 @@ public/
                          #   contrast on every swap (Layout decisions → hero scrims).
 ```
 
-`hooks/`, `providers/` don't exist yet — create only when the first real need shows up
+`providers/` doesn't exist yet — create only when the first real need shows up
 (matches `fleazo-frontend`'s "no empty placeholder folders" rule), not preemptively. No
 `AuthProvider`/`useAuth` yet either — Header/ProductCard are built for a guest viewer
 only; wire real auth state in before adding anything that needs a logged-in user.
@@ -293,7 +359,9 @@ app/
 │   ├── (public)/                 #   Anyone can view — SEO matters here
 │   │   ├── page.tsx              #     Home (moves here from app/page.tsx)
 │   │   ├── san-pham/[id]/        #     Product detail (ACTIVE-only)
-│   │   └── danh-muc/ tim-kiem/   #     Category + search — the full reference layout
+│   │   └── tim-kiem/             #     Search + category filter — the full reference
+│   │                             #     layout. No sibling danh-muc/ — see Layout
+│   │                             #     decisions for why
 │   └── (protected)/              #   Login required, still wants full chrome
 │       ├── layout.tsx            #     Wraps children in ProtectedGuard — written ONCE
 │       │                         #     here, never re-checked per page

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, Plus, UserRound } from 'lucide-react';
+import { Heart, Menu, MessageCircle, Plus, UserRound } from 'lucide-react';
 import { Logo } from '@/components/logo';
 import { HeaderSearch } from '@/components/layout/header-search';
 import { Button, buttonVariants } from '@/components/ui/button';
@@ -39,9 +39,9 @@ const HEADER_CLEARANCE_PX = 80;
 // above it. Any page WITHOUT a full-bleed hero must add its own top padding to
 // clear this (see AGENTS.md → Layout).
 //
-// Logged-out shape only for now. Signed-in adds a messages icon with an unread
-// badge and an avatar menu (Quản lý tin / Tin đã lưu / Hồ sơ / Đăng xuất);
-// none of that can exist until there's session state in the UI.
+// Logged-out shape only for now. Signed-in adds unread badges to the Tin nhắn
+// and Tin đã lưu icons and turns "Đăng nhập" into an avatar menu (Hồ sơ / Đăng
+// xuất); none of that can exist until there's session state in the UI.
 export function Header({ provinces }: { provinces: Province[] }) {
 	const pathname = usePathname();
 	const overHero = HERO_ROUTES.includes(pathname);
@@ -133,48 +133,100 @@ export function Header({ provinces }: { provinces: Province[] }) {
 
 				{/* Present in both states, hero included: search is this
 				    marketplace's primary action, so it can't be the thing that
-				    disappears on the one screen everybody lands on. The pill is
-				    opaque, which is what keeps it legible straight on the
-				    photo. */}
+				    disappears on the one screen everybody lands on. Over the
+				    photo it goes glass along with everything else in the pill —
+				    an opaque white field here would be the only solid object in
+				    a header of white-on-photo elements, which is what made the
+				    bare state read as unfinished. */}
 				<div className="min-w-0 flex-1 lg:w-[28rem] lg:flex-none">
-					<HeaderSearch provinces={provinces} />
+					<HeaderSearch provinces={provinces} bare={bare} />
 				</div>
 
-				{/* Below md this is BottomNav's job — it already carries Đăng
-				    tin and Cá nhân, and duplicating them here is exactly what
-				    the old hamburger was doing. Same breakpoint BottomNav
-				    itself uses, so the two never both show. */}
+				{/* Below md this is BottomNav's job — it already carries Tin
+				    nhắn, Đăng tin and Cá nhân, and duplicating them here is
+				    exactly what the old hamburger was doing. Same breakpoint
+				    BottomNav itself uses, so the two never both show. */}
 				{/* ml-auto pins this to the right edge in both layouts — as a
 				    grid item it absorbs the leftover width of its column, which
-				    justify-self-end would otherwise have to do. */}
-				<div className="ml-auto hidden shrink-0 items-center gap-2 md:flex">
-					<Link
-						href="/dang-nhap"
+				    justify-self-end would otherwise have to do.
+				    Three chunks, not one evenly-spaced row of four buttons: the
+				    two utility icons sit close (gap-1, they're one family), a
+				    real hairline — the same divider the search pill uses
+				    between its two halves — marks where that family ends, then
+				    a wider gap before the login/post pair, which keeps its own
+				    tighter gap-2 as the third chunk. Spacing alone (no
+				    divider) tries the same thing but reads as one undifferentiated
+				    row at this item count. */}
+				<div className="ml-auto hidden shrink-0 items-center gap-3 md:flex">
+					{/* No unread badges yet — matches BottomNav's own note, no
+					    auth state or save/message counts exist in the UI yet.
+					    Not auth-gated at the link level either: there's no
+					    session state to check here, so both always point at
+					    their real route and lean on the (planned)
+					    ProtectedGuard/proxy.ts to bounce a signed-out visitor to
+					    /dang-nhap. */}
+					<div className="flex items-center gap-1">
+						<Link
+							href="/tin-da-luu"
+							aria-label="Tin đã lưu"
+							className={cn(
+								buttonVariants({ variant: 'ghost', size: 'icon' }),
+								'size-10 text-fz-ink transition-colors duration-300 motion-reduce:transition-none',
+								bare && ghostOnDark,
+							)}
+						>
+							<Heart className="size-[18px]" />
+						</Link>
+						<Link
+							href="/tin-nhan"
+							aria-label="Tin nhắn"
+							className={cn(
+								buttonVariants({ variant: 'ghost', size: 'icon' }),
+								'size-10 text-fz-ink transition-colors duration-300 motion-reduce:transition-none',
+								bare && ghostOnDark,
+							)}
+						>
+							<MessageCircle className="size-[18px]" />
+						</Link>
+					</div>
+
+					<span
+						aria-hidden
 						className={cn(
-							buttonVariants({ variant: 'ghost' }),
-							'h-10 px-4 text-fz-ink transition-colors duration-300 motion-reduce:transition-none',
-							bare && ghostOnDark,
+							'h-5 w-px shrink-0 transition-colors duration-300 ease-out motion-reduce:transition-none',
+							bare ? 'bg-white/25' : 'bg-border',
 						)}
-					>
-						Đăng nhập
-					</Link>
-					{/* The one primary action on the page, last in the row
-					    where the pill's own curve frames it. On the photo it
-					    inverts to a white chip — a solid chip rather than white
-					    text, so it stays legible over the bright part of the
-					    image. */}
-					<Link
-						href="/dang-tin"
-						className={cn(
-							buttonVariants({ variant: 'default' }),
-							'h-10 gap-1.5 px-4 transition-colors duration-300 motion-reduce:transition-none',
-							bare &&
-								'bg-white text-fz-ink hover:bg-white/85 focus-visible:ring-white/50',
-						)}
-					>
-						<Plus className="size-4" />
-						Đăng tin
-					</Link>
+					/>
+
+					<div className="flex items-center gap-2">
+						<Link
+							href="/dang-nhap"
+							className={cn(
+								buttonVariants({ variant: 'ghost' }),
+								'h-10 px-4 text-fz-ink transition-colors duration-300 motion-reduce:transition-none',
+								bare && ghostOnDark,
+							)}
+						>
+							Đăng nhập
+						</Link>
+						{/* The one primary action on the page, last in the row
+						    where the pill's own curve frames it. On the photo it
+						    inverts to a white chip — a solid chip rather than white
+						    text, so it stays legible over the bright part of the
+						    image. */}
+						<Link
+							href="/dang-tin"
+							className={cn(
+								buttonVariants({ variant: 'default' }),
+								'h-10 gap-1.5 px-4 transition-colors duration-300 motion-reduce:transition-none',
+								bare &&
+									'bg-white text-fz-ink hover:bg-white/85 focus-visible:ring-white/50',
+							)}
+						>
+							<Plus className="size-4" />
+							Đăng tin
+						</Link>
+					</div>
 				</div>
 
 				{/* Account drawer, below md only. This is NOT the old
@@ -204,9 +256,11 @@ export function Header({ provinces }: { provinces: Province[] }) {
 						</SheetHeader>
 
 						{/* Signed-out shape. Signed in, this block becomes the
-						    user's name/avatar plus Quản lý tin · Tin đã lưu ·
-						    Hồ sơ · Đăng xuất — same drawer, different contents,
-						    which is why it isn't a plain link list. */}
+						    user's name/avatar plus Hồ sơ · Đăng xuất — same
+						    drawer, different contents, which is why it isn't a
+						    plain link list. Quản lý tin/Tin nhắn/Tin đã lưu don't
+						    move in here: BottomNav and the header icon row
+						    already carry them, this drawer is identity only. */}
 						<div className="px-4">
 							<div className="flex items-center gap-3 rounded-2xl bg-muted px-4 py-3.5">
 								<span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-card">

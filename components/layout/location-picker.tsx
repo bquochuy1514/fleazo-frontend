@@ -1,12 +1,12 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Check, ChevronDown, MapPin } from 'lucide-react';
+import { ChevronDown, MapPin } from 'lucide-react';
 import {
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
-} from '@/components/ui/popover';
+	Picker,
+	PickerEmpty,
+	PickerOption,
+} from '@/components/ui/picker';
 import type { Province } from '@/lib/locations';
 import { cn } from '@/lib/utils';
 
@@ -29,18 +29,24 @@ const norm = (s: string) =>
 		.replace(/đ/gi, 'd')
 		.toLowerCase();
 
-// Left segment of the header's search pill — not a control of its own. It has
-// no border, no radius and no background of its own: the pill around it
-// supplies all three, so the two read as one object (same rule the hero's
-// search field follows).
 export function LocationPicker({
 	provinces,
 	value,
 	onChange,
+	onDark = false,
+	variant = 'chip',
 }: {
 	provinces: Province[];
 	value: number | null;
 	onChange: (code: number | null) => void;
+	// The pill this sits in loses its background over the hero photo, so the
+	// segment has to invert with it. `chip` only — `row` never sits on a photo.
+	onDark?: boolean;
+	// `chip` is a segment of the header's search pill and owns no border,
+	// radius or background of its own — the pill supplies all three so the two
+	// read as one object. `row` is a standalone full-width control for a sheet,
+	// where a 145px chip is both a small target and visibly adrift.
+	variant?: 'chip' | 'row';
 }) {
 	const [open, setOpen] = useState(false);
 	const [query, setQuery] = useState('');
@@ -57,98 +63,112 @@ export function LocationPicker({
 	const pick = (code: number | null) => {
 		onChange(code);
 		setOpen(false);
-		setQuery('');
 	};
 
-	return (
-		<Popover open={open} onOpenChange={setOpen}>
-			<PopoverTrigger asChild>
-				<button
-					type="button"
-					aria-label={`Khu vực: ${label}. Đổi khu vực`}
-					// Fixed cap, not width-to-content: letting the chip grow with
-					// the chosen name would resize the text field every time you
-					// switch province. truncate is the backstop for the few
-					// names still long after the prefix comes off.
-					className="flex h-full max-w-[10.5rem] shrink-0 items-center gap-1.5 pr-3 pl-4 text-sm font-medium text-fz-ink transition-colors outline-none hover:text-fz-ink/70 focus-visible:text-fz-ink/70"
-				>
+	const triggerLabel = `Khu vực: ${label}. Đổi khu vực`;
+
+	const trigger =
+		variant === 'row' ? (
+			<button
+				type="button"
+				aria-label={triggerLabel}
+				// Height comes from padding with min-h as the floor, not from a
+				// fixed h-*: a single height utility is one class away from
+				// collapsing this to a hairline, and padding alone already
+				// clears the 44px touch minimum.
+				className="flex min-h-13 w-full items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3 text-left transition-colors hover:bg-muted"
+			>
+				<span className="flex min-w-0 items-center gap-2.5">
 					<MapPin className="size-4 shrink-0 text-muted-foreground" />
-					<span className="truncate">{label}</span>
-					<ChevronDown
-						className={cn(
-							'size-3.5 shrink-0 text-muted-foreground transition-transform duration-200 motion-reduce:transition-none',
-							open && 'rotate-180',
-						)}
-					/>
-				</button>
-			</PopoverTrigger>
-
-			<PopoverContent className="w-72">
-				{provinces.length === 0 ? (
-					// The province list is third-party (see lib/locations.ts).
-					// Say so, rather than showing an empty menu that just looks
-					// broken.
-					<p className="px-3 py-6 text-center text-sm text-muted-foreground">
-						Chưa tải được danh sách khu vực. Thử lại sau nhé.
-					</p>
-				) : (
-					<>
-						<input
-							type="text"
-							value={query}
-							onChange={(e) => setQuery(e.target.value)}
-							placeholder="Tìm tỉnh, thành phố…"
-							aria-label="Tìm tỉnh, thành phố"
-							className="mb-1 h-10 w-full rounded-full border border-input bg-transparent px-4 text-sm outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/40"
-						/>
-						<div className="max-h-72 overflow-y-auto overscroll-contain">
-							<Option
-								label={ALL_PROVINCES_LABEL}
-								active={value === null}
-								onSelect={() => pick(null)}
-							/>
-							{matches.map((p) => (
-								<Option
-									key={p.code}
-									label={shortName(p.name)}
-									active={p.code === value}
-									onSelect={() => pick(p.code)}
-								/>
-							))}
-							{matches.length === 0 && (
-								<p className="px-3 py-6 text-center text-sm text-muted-foreground">
-									Không tìm thấy khu vực nào.
-								</p>
-							)}
-						</div>
-					</>
+					<span className="truncate text-[15px] font-medium text-fz-ink">
+						{label}
+					</span>
+				</span>
+				<ChevronDown className="size-4 shrink-0 text-muted-foreground" />
+			</button>
+		) : (
+			<button
+				type="button"
+				aria-label={triggerLabel}
+				// Fixed cap, not width-to-content: letting the chip grow with
+				// the chosen name would resize the text field every time you
+				// switch province. truncate is the backstop for the few names
+				// still long after the prefix comes off.
+				className={cn(
+					'flex h-full max-w-[10.5rem] shrink-0 items-center gap-1.5 pr-3 pl-4 text-sm font-medium transition-colors duration-300 ease-out outline-none motion-reduce:transition-none',
+					onDark
+						? 'text-white hover:text-white/75 focus-visible:text-white/75'
+						: 'text-fz-ink hover:text-fz-ink/70 focus-visible:text-fz-ink/70',
 				)}
-			</PopoverContent>
-		</Popover>
-	);
-}
+			>
+				<MapPin
+					className={cn(
+						'size-4 shrink-0 transition-colors duration-300 ease-out motion-reduce:transition-none',
+						onDark ? 'text-white/70' : 'text-muted-foreground',
+					)}
+				/>
+				<span className="truncate">{label}</span>
+				{/* Two different durations on purpose: the colour rides the
+				    header's 300ms flip, the rotation is a 200ms response to
+				    your own click and must not feel that slow. */}
+				<ChevronDown
+					className={cn(
+						'size-3.5 shrink-0 transition-[transform,color] duration-200 motion-reduce:transition-none',
+						onDark ? 'text-white/70' : 'text-muted-foreground',
+						open && 'rotate-180',
+					)}
+				/>
+			</button>
+		);
 
-function Option({
-	label,
-	active,
-	onSelect,
-}: {
-	label: string;
-	active: boolean;
-	onSelect: () => void;
-}) {
 	return (
-		<button
-			type="button"
-			onClick={onSelect}
-			// A checkmark carries the selected state, not colour on its own.
-			className={cn(
-				'flex w-full items-center justify-between gap-2 rounded-full px-4 py-2.5 text-left text-sm transition-colors outline-none hover:bg-muted focus-visible:bg-muted',
-				active ? 'font-semibold text-fz-ink' : 'text-fz-ink/80',
-			)}
+		<Picker
+			open={open}
+			onOpenChange={(next) => {
+				setOpen(next);
+				// Cleared on close, not on pick: a filtered list that empties
+				// itself the moment you choose looks like the choice failed.
+				if (!next) setQuery('');
+			}}
+			trigger={trigger}
+			title="Chọn khu vực"
+			search={
+				provinces.length > 0
+					? {
+							value: query,
+							onChange: setQuery,
+							placeholder: 'Tìm tỉnh, thành phố…',
+							label: 'Tìm tỉnh, thành phố',
+						}
+					: undefined
+			}
 		>
-			<span className="truncate">{label}</span>
-			{active && <Check className="size-4 shrink-0 text-fz-ink" />}
-		</button>
+			{provinces.length === 0 ? (
+				// The province list is third-party (see lib/locations.ts). Say
+				// so, rather than showing an empty menu that just looks broken.
+				<PickerEmpty>
+					Chưa tải được danh sách khu vực. Thử lại sau nhé.
+				</PickerEmpty>
+			) : (
+				<>
+					<PickerOption
+						label={ALL_PROVINCES_LABEL}
+						selected={value === null}
+						onSelect={() => pick(null)}
+					/>
+					{matches.map((p) => (
+						<PickerOption
+							key={p.code}
+							label={shortName(p.name)}
+							selected={p.code === value}
+							onSelect={() => pick(p.code)}
+						/>
+					))}
+					{matches.length === 0 && (
+						<PickerEmpty>Không tìm thấy khu vực nào.</PickerEmpty>
+					)}
+				</>
+			)}
+		</Picker>
 	);
 }

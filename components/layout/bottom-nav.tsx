@@ -2,12 +2,12 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, LayoutGrid, MessageCircle, User, Plus } from 'lucide-react';
+import { ClipboardList, Home, MessageCircle, User, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const NAV_ITEMS = [
 	{ href: '/', label: 'Trang chủ', icon: Home },
-	{ href: '/danh-muc', label: 'Danh mục', icon: LayoutGrid },
+	{ href: '/quan-ly-tin', label: 'Quản lý tin', icon: ClipboardList },
 	{ href: '/tin-nhan', label: 'Tin nhắn', icon: MessageCircle },
 	{ href: '/ca-nhan', label: 'Cá nhân', icon: User },
 ] as const;
@@ -16,6 +16,16 @@ const NAV_ITEMS = [
 // Active state uses ink weight rather than the moss accent, which is reserved
 // for prices and the save toggle. No auth state yet: "Cá nhân" is a plain icon
 // (no avatar) and "Tin nhắn" carries no unread badge.
+//
+// "Quản lý tin", "Tin nhắn", "Đăng tin" and "Cá nhân" are all sign-in-only —
+// there's no session state here to branch on, so each just points at its real
+// route and leans on the (planned) ProtectedGuard/proxy.ts to redirect a
+// signed-out tap to /dang-nhap. Deliberate: a guest sees the full tab bar
+// rather than a crippled one, and discovers what exists before being asked to
+// sign in for it. There is no "Danh mục" tab — with no cart/wishlist funnel to
+// browse toward, category discovery lives on the homepage instead (chips below
+// the hero) and inside search's own sidebar filter, not as a fifth destination
+// here.
 export function BottomNav() {
 	const pathname = usePathname();
 
