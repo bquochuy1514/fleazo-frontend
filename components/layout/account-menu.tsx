@@ -25,12 +25,17 @@ import { useAuth } from '@/hooks/use-auth';
 import { cn } from '@/lib/utils';
 
 // Same recipe as PickerOption (components/ui/picker.tsx) — rounded-full,
-// generous padding, plain hover:bg-muted with an actual transition. The
-// dropdown-menu.tsx primitive's own default (rounded-md, tight px-1.5 py-1,
-// no transition at all) is what made this menu feel like a stock shadcn
-// kit sitting next to a component that got real design attention.
+// plain hover:bg-muted with an actual transition. The dropdown-menu.tsx
+// primitive's own default (rounded-md, tight px-1.5 py-1, no transition at
+// all) is what made this menu feel like a stock shadcn kit sitting next to a
+// component that got real design attention.
+// py-1.5, not Picker's own py-2.5/py-3.5 — this is a mouse-only desktop
+// dropdown (the Sheet in header.tsx is the touch-target-sized mobile
+// equivalent), so it doesn't owe every row the 44px floor a tap target
+// does. At 7 items + 3 group labels + the identity card, py-2.5 stacked up
+// into a noticeably tall menu for what it shows.
 const ITEM =
-	'cursor-pointer gap-2.5 rounded-full px-3 py-2.5 transition-colors duration-200 hover:bg-muted focus:bg-muted';
+	'cursor-pointer gap-2.5 rounded-full px-3 py-1.5 transition-colors duration-200 hover:bg-muted focus:bg-muted';
 // Same shape, danger-tinted hover instead of neutral — for "Đăng xuất" only.
 const ITEM_DANGER = cn(
 	ITEM,
@@ -86,13 +91,16 @@ export function AccountMenu() {
 			</DropdownMenuTrigger>
 
 			<DropdownMenuContent align="end" sideOffset={12} className="w-64">
-				{/* Filled card, not a bare label row — same rounded-2xl/
-				    bg-muted treatment the mobile Sheet's own guest panel
-				    already uses (see header.tsx), reused here rather than
-				    invented fresh so the identity block reads as this
-				    product's own idiom instead of a stock shadcn dropdown
-				    header. */}
-				<DropdownMenuLabel className="mb-1 flex items-center gap-3 rounded-2xl bg-muted px-4 py-3.5">
+				{/* Filled card, not a bare label row — same bg-muted identity
+				    treatment the mobile Sheet's own guest panel already uses
+				    (see header.tsx). rounded-lg, not that panel's
+				    rounded-2xl: this card sits INSIDE DropdownMenuContent's
+				    own rounded-lg shell with only ~4px of padding around it
+				    (p-1 on the content), so a bigger radius than its
+				    container read as a mismatched, competing curve rather
+				    than a nested one — a child's corner should read as equal
+				    to or tighter than its parent's, never looser. */}
+				<DropdownMenuLabel className="mb-1 flex items-center gap-3 rounded-lg bg-muted px-3.5 py-3">
 					<Image
 						src={user.avatar}
 						alt={user.fullName}
@@ -124,8 +132,8 @@ export function AccountMenu() {
 				    boundaries that actually carry meaning (who you are,
 				    then the destructive exit), so those are the only ones
 				    that stay. */}
-				<DropdownMenuGroup className="mt-2">
-					<DropdownMenuLabel className="px-2 pt-1 pb-0.5 text-[11px] font-semibold tracking-wide text-muted-foreground/70 uppercase">
+				<DropdownMenuGroup className="mt-1">
+					<DropdownMenuLabel className="px-2 pt-0.5 pb-0.5 text-[11px] font-semibold tracking-wide text-muted-foreground/70 uppercase">
 						Tài khoản
 					</DropdownMenuLabel>
 					<DropdownMenuItem asChild className={ITEM}>
@@ -142,8 +150,8 @@ export function AccountMenu() {
 					</DropdownMenuItem>
 				</DropdownMenuGroup>
 
-				<DropdownMenuGroup className="mt-2">
-					<DropdownMenuLabel className="px-2 pt-1 pb-0.5 text-[11px] font-semibold tracking-wide text-muted-foreground/70 uppercase">
+				<DropdownMenuGroup className="mt-1">
+					<DropdownMenuLabel className="px-2 pt-0.5 pb-0.5 text-[11px] font-semibold tracking-wide text-muted-foreground/70 uppercase">
 						Hoạt động
 					</DropdownMenuLabel>
 					<DropdownMenuItem asChild className={ITEM}>
@@ -170,8 +178,8 @@ export function AccountMenu() {
 				    the backend's UserRole enum — same assumption fleazo-frontend
 				    makes for this same check. */}
 				{user.role === 'ADMIN' && (
-					<DropdownMenuGroup className="mt-2">
-						<DropdownMenuLabel className="px-2 pt-1 pb-0.5 text-[11px] font-semibold tracking-wide text-muted-foreground/70 uppercase">
+					<DropdownMenuGroup className="mt-1">
+						<DropdownMenuLabel className="px-2 pt-0.5 pb-0.5 text-[11px] font-semibold tracking-wide text-muted-foreground/70 uppercase">
 							Quản trị
 						</DropdownMenuLabel>
 						<DropdownMenuItem asChild className={ITEM}>
@@ -183,7 +191,7 @@ export function AccountMenu() {
 					</DropdownMenuGroup>
 				)}
 
-				<DropdownMenuSeparator className="my-1.5" />
+				<DropdownMenuSeparator className="my-1" />
 
 				<DropdownMenuItem
 					variant="destructive"

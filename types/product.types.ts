@@ -11,6 +11,13 @@ export const PRODUCT_CONDITION_LABELS: Record<ProductCondition, string> = {
 	POOR: 'Cũ',
 };
 
+// Response shape of POST /products/listing-assistant/suggest (fleazo-ai)
+export type ListingSuggestion = {
+	title: string;
+	description: string;
+	categoryId: number;
+};
+
 export type ProductStatus =
 	| 'DRAFT'
 	| 'PENDING'
@@ -53,4 +60,27 @@ export type Product = {
 	sellerId: number;
 	createdAt: string;
 	updatedAt: string;
+};
+
+// Public seller info attached to GET /products/:id only — mirrors the
+// `select` in ProductsService.findOne (fleazo-backend). No email/address:
+// that endpoint deliberately exposes only what a buyer needs to decide
+// whether to reach out.
+export type ProductSeller = {
+	id: number;
+	fullName: string;
+	avatar: string;
+	phone: string;
+	avgRating: number;
+	responseRate: number;
+	university: { id: number; name: string } | null;
+};
+
+// GET /products/:id's actual shape: the list endpoint's Product plus
+// `seller` and the viewer-specific `isSaved` (false for a signed-out
+// viewer — see ProductsService.findOne). `category.parent` is also only
+// ever populated here, not on the list endpoint.
+export type ProductDetail = Product & {
+	seller: ProductSeller;
+	isSaved: boolean;
 };

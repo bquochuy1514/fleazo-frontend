@@ -26,7 +26,7 @@ export default async function MainLayout({
 			<Header provinces={provinces} />
 			<main className="flex-1">
 				{children}
-				<div className="h-[1000px]"></div>
+				<div className="h-[500px]"></div>
 			</main>
 			<Footer />
 			<BottomNav />

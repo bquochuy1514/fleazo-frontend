@@ -52,6 +52,10 @@ export function Picker({
 	title,
 	search,
 	children,
+	// w-72 fits a province/category name; long Vietnamese university names
+	// truncate past readability at that width (see components/form/
+	// complete-profile-modal.tsx), so callers with wider content can override.
+	popoverClassName = 'w-72',
 }: {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
@@ -61,6 +65,7 @@ export function Picker({
 	/** Omit to render a picker with no filter field. */
 	search?: Search;
 	children: React.ReactNode;
+	popoverClassName?: string;
 }) {
 	const isDesktop = useMediaQuery(DESKTOP);
 
@@ -68,13 +73,33 @@ export function Picker({
 		return (
 			<Popover open={open} onOpenChange={onOpenChange}>
 				<PopoverTrigger asChild>{trigger}</PopoverTrigger>
-				<PopoverContent className="w-72">
+				{/* Radix flips this above the trigger when there's more room
+				    there (e.g. a trigger near the bottom of a tall Dialog)
+				    and exposes exactly how much room it found as this CSS
+				    var. Capping only the LIST to it was still wrong: the var
+				    is the budget for the whole popover, and the search field
+				    + padding above the list eat into that budget too, so the
+				    list alone could still ask for more than what's actually
+				    left and get clipped at the top. Capping the flex
+				    container instead, with the search field shrink-0 and the
+				    list flex-1, means the list is whatever's left over —
+				    never more. 24rem covers the search field's ~48px; 18rem
+				    stays the list's own cap the rest of the time (see
+				    min-h-0: a flex child's default min-height is auto, i.e.
+				    its content size, which would keep it from shrinking
+				    below the list's natural height and defeat the flex-1). */}
+				<PopoverContent
+					className={cn(
+						'flex max-h-[min(24rem,var(--radix-popover-content-available-height,24rem))] flex-col',
+						popoverClassName,
+					)}
+				>
 					{search && (
-						<div className="mb-1">
+						<div className="mb-1 shrink-0">
 							<SearchField {...search} />
 						</div>
 					)}
-					<PickerList open={open} className="max-h-72">
+					<PickerList open={open} className="min-h-0 flex-1 max-h-72">
 						{children}
 					</PickerList>
 				</PopoverContent>
@@ -245,8 +270,22 @@ function PickerList({
 		// overscroll-contain stops a flick at either end from scrolling whatever
 		// is behind the panel. No flex sizing here on purpose — every caller
 		// passes an explicit max-height instead.
+		//
+		// onWheel/onTouchMove stopPropagation: when this Picker opens inside a
+		// modal Radix Dialog (e.g. components/form/complete-profile-modal.tsx),
+		// the Dialog's own scroll lock (react-remove-scroll) listens for wheel/
+		// touch on the page and blocks them everywhere except its own content
+		// ref — this list is portalled to a separate root, so it was never on
+		// that allowlist and wheel-scrolling it silently did nothing (dragging
+		// the scrollbar thumb still worked, since that isn't a wheel event).
+		// Stopping propagation here keeps the event from ever reaching that
+		// document-level listener, so the browser just scrolls this list
+		// natively. Cheaper and less risky than turning the Dialog non-modal,
+		// which also drops its dim overlay entirely, not just the lock.
 		<div
 			ref={ref}
+			onWheel={(e) => e.stopPropagation()}
+			onTouchMove={(e) => e.stopPropagation()}
 			className={cn(
 				'relative overflow-y-auto overscroll-contain',
 				className,

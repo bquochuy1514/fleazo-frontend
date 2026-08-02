@@ -26,16 +26,33 @@ function GoogleIcon({ className }: { className?: string }) {
 	);
 }
 
+// Exported so (auth)/google-callback/page.tsx reads/clears the same key.
+export const POST_LOGIN_NEXT_KEY = 'fz:post-login-next';
+
 // A real navigation (<a>, not next/link, not a click handler doing a fetch):
 // this has to leave the app entirely for Google's consent screen and come
 // back via a server redirect, which only a full navigation can do. The loop
-// closes at the planned (auth)/google-callback route.
-export function GoogleAuthButton() {
+// closes at (auth)/google-callback.
+export function GoogleAuthButton({
+	// Where ProtectedGuard sent the visitor to /dang-nhap from, if anywhere —
+	// same value the email/password form reads off the URL. This round trip
+	// leaves the app entirely (backend → Google → back to /google-callback),
+	// so it can't just ride along as a query param the way it does for that
+	// form; sessionStorage survives the trip instead, since it's scoped to
+	// this tab and Google returns to the same one. google-callback reads it
+	// back and clears it.
+	next,
+}: {
+	next?: string | null;
+}) {
 	const googleLoginUrl = `${process.env.NEXT_PUBLIC_API_URL}/auth/google/login`;
 
 	return (
 		<a
 			href={googleLoginUrl}
+			onClick={() => {
+				if (next) sessionStorage.setItem(POST_LOGIN_NEXT_KEY, next);
+			}}
 			className={cn(
 				buttonVariants({ variant: 'outline' }),
 				'h-11 w-full gap-2.5 text-[15px]',

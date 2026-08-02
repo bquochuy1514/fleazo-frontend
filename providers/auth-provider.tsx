@@ -8,7 +8,6 @@ import {
 	getStoredAccessToken,
 	registerAuthFailureHandler,
 } from '@/lib/api';
-import { clearSessionFlag } from '@/lib/session-flag';
 import type { User } from '@/types/user.types';
 
 type AuthContextValue = {
@@ -17,11 +16,17 @@ type AuthContextValue = {
 	login: (accessToken: string) => Promise<void>;
 	logout: () => Promise<void>;
 	// Set true at the start of logout(), before setUser(null); cleared again
-	// by the next successful login() — never reset by the guard itself (that
-	// re-triggers its own effect and defeats the flag, see git history). Lets
-	// (protected)/layout.tsx's guard tell "user just logged out" apart from
-	// "session genuinely stale/missing" and skip its own /dang-nhap redirect,
-	// since logout() already navigates home itself. See (protected)/layout.tsx.
+	// once logout()'s own router.push('/') has fired (or by the next
+	// successful login(), as a backstop) — never reset by the guard itself
+	// (that re-triggers its own effect and defeats the flag, see git
+	// history). Lets a route guard (ProtectedGuard, (protected)/layout.tsx)
+	// tell "user just logged out, mid-navigation" apart from "session
+	// genuinely stale/missing" and skip its own /dang-nhap redirect for that
+	// one transient tick, since logout() is already navigating home itself.
+	// Must not outlive that tick: a guard mounted fresh on a LATER page visit
+	// (as a still-signed-out guest, no login() in between) reads the same
+	// flag, and a stuck `true` would make it skip redirecting forever — the
+	// exact bug that shipped once here.
 	isLoggingOut: boolean;
 };
 
@@ -66,7 +71,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 				localStorage.removeItem('refresh_token');
 				sessionStorage.removeItem('access_token');
 				sessionStorage.removeItem('refresh_token');
-				clearSessionFlag();
 			}
 			setUser(profile);
 			setIsLoading(false);
@@ -101,9 +105,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		sessionStorage.removeItem('access_token');
 		sessionStorage.removeItem('refresh_token');
 
-		clearSessionFlag();
 		setUser(null);
 		router.push('/');
+		// The one transient race this flag exists for is over — router.push
+		// has been issued, so any guard that re-renders from here on is
+		// looking at a genuinely-signed-out visitor, not a mid-logout one.
+		setIsLoggingOut(false);
 	};
 
 	// Registers this provider's own logout as api.ts's 401-exhausted-refresh

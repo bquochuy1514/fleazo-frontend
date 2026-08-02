@@ -71,7 +71,9 @@ export function BottomNav() {
 						active={pathname === item.href}
 						// Only "Cá nhân" ever gets an avatar — the other slots
 						// keep their lucide icon regardless of auth state.
-						avatar={item.href === '/ca-nhan' ? user?.avatar : undefined}
+						avatar={
+							item.href === '/ca-nhan' ? user?.avatar : undefined
+						}
 					/>
 				))}
 			</div>
@@ -106,10 +108,10 @@ function NavLink({
 					<Image
 						src={avatar}
 						alt=""
-						width={20}
-						height={20}
+						width={22}
+						height={22}
 						className={cn(
-							'size-5 rounded-full object-cover ring-1',
+							'size-6 rounded-full object-cover ring-1',
 							active ? 'ring-fz-ink' : 'ring-border',
 						)}
 					/>

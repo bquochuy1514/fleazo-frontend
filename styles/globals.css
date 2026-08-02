@@ -65,7 +65,11 @@
 	/* ============================= */
 	--color-ink: #211f1c;
 	--color-paper: #f6f3ee;
-	--color-muted-warm: #8b857a;
+	/* #8b857a measured 3.31:1 on --color-paper — fails WCAG AA (4.5:1) for
+	   the body-size text --muted-foreground gets used on across the app
+	   (dang-nhap subtext, breadcrumbs, field labels, etc). #6f6a60 hits
+	   ~4.86:1 on paper and ~5.38:1 on white/card, same warm-gray hue. */
+	--color-muted-warm: #6f6a60;
 	--color-border-warm: #e4e0d8;
 	--color-moss: #5b6b4f;
 	--color-moss-soft: #e8ece1;
@@ -214,6 +218,24 @@
 	}
 }
 
+/* Every Radix Dialog/Sheet open (modal by default) injects its own
+   `body[data-scroll-locked] { margin-right: <scrollbar-width>px !important;
+   ... }` at runtime to keep content from shifting when it hides the native
+   scrollbar — the standard compensation for a page that does NOT already
+   reserve that space. `scrollbar-gutter: stable` (below, in @layer base)
+   already reserves it permanently, so the scrollbar's width never actually
+   changes when Radix hides it — Radix's own margin then becomes pure
+   double-compensation, visibly shoving body's content sideways by itself.
+   Deliberately OUTSIDE @layer base: Radix's <style> tag is unlayered, and
+   unlayered always beats a layered rule regardless of specificity or
+   !important — the identical rule inside @layer base above had no effect.
+   Out here, both are unlayered, so plain specificity applies: `html
+   body[...]` (0,1,2) beats Radix's own `body[...]` (0,1,1) regardless of
+   which one loaded last. */
+html body[data-scroll-locked] {
+	margin-right: 0 !important;
+}
+
 @layer base {
 	* {
 		@apply border-border outline-ring/50;
@@ -227,6 +249,14 @@
 	}
 	html {
 		@apply font-sans;
+		/* Reserves the scrollbar's own width permanently, instead of only
+		   while content is actually tall enough to scroll. Without this, the
+		   moment ANY overlay (a Radix Dialog/Sheet, even briefly, or a page
+		   short enough to not need its own scrollbar) removes the page
+		   scrollbar, the viewport widens by its ~15px and everything anchored
+		   to the right edge — the fixed Header pill included — visibly jumps.
+		   Reserving it unconditionally means that width never changes. */
+		scrollbar-gutter: stable;
 	}
 
 	/* Prices and other tabular numbers */
