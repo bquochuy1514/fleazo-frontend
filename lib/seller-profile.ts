@@ -1,9 +1,7 @@
 import type { User } from '@/types/user.types';
 
-// Mirrors the backend's seller-profile gate so the "complete your profile"
-// modal can show instantly without an API round trip — a UX precheck only,
-// the backend still enforces this server-side either way. universityId isn't
-// included — not every seller is a university student.
+// Mirrors the backend's seller-profile gate for an instant UX precheck;
+// backend still enforces server-side. universityId excluded (not required).
 export type MissingSellerField = 'phone' | 'address' | 'password';
 
 export function getMissingSellerFields(user: User): MissingSellerField[] {

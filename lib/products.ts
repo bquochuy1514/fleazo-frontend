@@ -5,8 +5,7 @@ import type {
 	ProductDetail,
 } from '@/types/product.types';
 
-// Field names must match CreateProductDto exactly (fleazo-backend
-// src/modules/products/dto/create-product.dto.ts) — reused to type
+// Must match CreateProductDto field names exactly — used to type
 // ApiErrorResponse<ProductField> for field-level errors on dang-tin.
 export type ProductField =
 	| 'title'
@@ -66,9 +65,7 @@ export async function createDraft(
 }
 
 // Plain text/image edits only (PATCH /products/:id) — never changes status.
-// deleteImageIds is the only image instruction sent; imagesOrder is
-// deliberately omitted, so the backend falls back to its own default order
-// (remaining existing images, then new uploads in upload order).
+// imagesOrder is omitted on purpose; backend defaults to its own order.
 export async function updateProduct(
 	id: number,
 	payload: ProductFormPayload,
@@ -83,12 +80,9 @@ export async function updateProduct(
 	return data;
 }
 
-// quan-ly-tin (not built yet) hands the full Product object to dang-tin's
-// edit mode through sessionStorage ahead of navigating here — avoids a
-// second fetch, and there's no "get one of my products regardless of
-// status" endpoint (GET /products/:id is ACTIVE-only). Only a reader exists
-// so far; add the writer (setEditProductCache) alongside quan-ly-tin once
-// that page is built.
+// quan-ly-tin (not built yet) will pass the full Product via sessionStorage
+// before navigating to edit mode — no "get my product regardless of status"
+// endpoint exists (GET /products/:id is ACTIVE-only). Reader only for now.
 const EDIT_CACHE_KEY = 'fz:edit-product';
 
 export function getEditProductCache(id: number): Product | null {
@@ -111,8 +105,7 @@ export type PaginatedProducts = {
 };
 
 export type ProductQuery = {
-	// A parent category id aggregates every child's listings server-side —
-	// see ProductsService.findAll. A leaf/child id filters to just that one.
+	// A parent category id aggregates every child's listings; a leaf id filters to just that one.
 	categoryId?: number;
 	provinceCode?: number;
 	wardCode?: number;
@@ -124,8 +117,7 @@ export type ProductQuery = {
 	limit?: number;
 };
 
-// Public listing (GET /products) — ACTIVE-only, newest first. Used by the
-// homepage's "Tin mới đăng" section.
+// Public listing (GET /products) — ACTIVE-only, newest first.
 export async function getProducts(
 	query: ProductQuery = {},
 ): Promise<PaginatedProducts> {
@@ -135,16 +127,14 @@ export async function getProducts(
 	return data;
 }
 
-// Public detail (GET /products/:id) — ACTIVE-only, includes `seller` and the
-// viewer-specific `isSaved`. Throws (404) for a missing/non-ACTIVE product;
-// callers on a page route should catch that and call notFound().
+// Public detail (GET /products/:id) — ACTIVE-only. Throws 404 for
+// missing/non-ACTIVE products; page routes should catch and call notFound().
 export async function getProduct(id: number): Promise<ProductDetail> {
 	const { data } = await api.get<ProductDetail>(`/products/${id}`);
 	return data;
 }
 
-// Bookmark ("Lưu tin") a listing — distinct from createDraft's "Lưu nháp",
-// an unrelated concept (an unpublished listing vs. a buyer's saved list).
+// Bookmark ("Lưu tin") — distinct from createDraft's "Lưu nháp" (unpublished listing vs. saved list).
 export async function saveProduct(id: number): Promise<void> {
 	await api.post(`/products/${id}/save`);
 }

@@ -9,13 +9,7 @@ export type ExistingImage = { id: number; url: string };
 
 type ImageUploaderProps = {
 	onChange?: (items: ImageItem[]) => void;
-	// Edit mode only — pre-existing Cloudinary images already on the product,
-	// rendered first (in their saved order) so "Ảnh bìa" still lands on the
-	// true first image. Removing one only updates local state; the caller
-	// reads the remaining ids back via onExistingImagesChange to build
-	// deleteImageIds. Final order on save is simply "remaining existing +
-	// new uploads", which is exactly what the backend does on its own when
-	// imagesOrder is omitted — no reordering UI needed.
+	// Edit mode: pre-existing images, rendered first so "Ảnh bìa" stays on the true first image.
 	initialImages?: ExistingImage[];
 	onExistingImagesChange?: (remainingIds: number[]) => void;
 };

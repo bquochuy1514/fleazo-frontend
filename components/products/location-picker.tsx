@@ -25,10 +25,7 @@ const EMPTY_VALUE: LocationValue = {
 	wardName: '',
 };
 
-// The dataset returns full administrative names — "Thành phố Hà Nội",
-// "Phường Bến Nghé". Trimmed for the trigger label only; the raw name is
-// still what's sent to the backend (see LocationValue below), matching what
-// `fleazo-frontend` (v1) stored — the shortening is a display-only change.
+// Trims full admin prefixes for display only; raw name is still sent to the backend.
 const shortName = (name: string) =>
 	name.replace(/^(Thành phố|Tỉnh|Phường|Xã|Đặc khu)\s+/i, '');
 
@@ -39,22 +36,15 @@ const norm = (s: string) =>
 		.replace(/đ/gi, 'd')
 		.toLowerCase();
 
-// Ward-level (depth=2) picker for the listing form — a different data need
-// than the header's province-only chip (components/layout/location-picker.tsx),
-// which only goes to depth=1 server-side. No backend location endpoint
-// exists, so this reads the same third-party dataset — but server-fetched
-// and cached once (lib/locations.ts → getProvincesWithWards, revalidated
-// daily) and passed down as a prop, rather than each mount of this
-// component re-fetching it client-side.
+// Ward-level (depth=2) picker for the listing form. Data is fetched/cached
+// once server-side (getProvincesWithWards) and passed down as a prop.
 export function LocationPicker({
 	provinces,
 	value,
 	onChange,
 }: {
 	provinces: ProvinceWithWards[];
-	// Externally-set default (e.g. the seller's saved address, or the product
-	// being edited) — resolved once the list loads. Only applies until the
-	// seller picks manually.
+	// Externally-set default, resolved once the list loads; overridden by manual picks.
 	value?: { provinceCode: number | null; wardCode: number | null } | null;
 	onChange?: (value: LocationValue) => void;
 }) {
@@ -66,9 +56,7 @@ export function LocationPicker({
 	const [wardOpen, setWardOpen] = useState(false);
 	const [wardQuery, setWardQuery] = useState('');
 
-	// Applies only while nothing's been picked locally yet (`!province`) —
-	// once the seller touches the province picker (including clearing it),
-	// this stops re-applying.
+	// Only applies while nothing's been picked locally yet.
 	useEffect(() => {
 		if (!value?.provinceCode || provinces.length === 0 || province) return;
 		const found = provinces.find((p) => p.code === value.provinceCode);
@@ -218,12 +206,8 @@ export function LocationPicker({
 	);
 }
 
-// forwardRef + ...rest, not just the four props this actually renders with:
-// Picker passes this to `<PopoverTrigger asChild>`/`<SheetTrigger asChild>`,
-// which is a Radix Slot — it clones onClick/ref/aria-expanded/data-state
-// etc. onto whatever element `asChild` wraps. A component that destructures
-// only its own props and drops the rest silently eats that onClick, so the
-// trigger renders but never opens anything.
+// Must forward ref + ...rest: Picker uses `asChild` (Radix Slot) to clone
+// onClick/aria props onto this button; dropping rest props breaks opening.
 const Trigger = React.forwardRef<
 	HTMLButtonElement,
 	React.ComponentProps<'button'> & {
@@ -241,11 +225,7 @@ const Trigger = React.forwardRef<
 			type="button"
 			disabled={disabled}
 			aria-label={label}
-			// h-11/rounded-lg — matches Input's own height/radius exactly, so
-			// this reads as one field among Địa chỉ chi tiết and the other
-			// h-11 fields around it, not a taller "card" control (that
-			// min-h-13/rounded-2xl row style belongs to the header's own
-			// province chip, a different, more spacious context).
+			// h-11/rounded-lg matches Input's height/radius for the form fields around it.
 			className={cn(
 				'flex h-11 w-full items-center justify-between gap-3 rounded-lg border border-input bg-transparent px-2.5 text-left transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50',
 				className,

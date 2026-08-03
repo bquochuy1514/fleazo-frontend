@@ -1,8 +1,7 @@
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-// Official Google "G" mark paths — not redrawn or recolored, see AGENTS.md
-// backend → Auth Flow and the brand-asset rule in the design checklist.
+// Official Google "G" mark paths — not redrawn or recolored (brand-asset rule).
 function GoogleIcon({ className }: { className?: string }) {
 	return (
 		<svg viewBox="0 0 20 20" className={className} aria-hidden="true">
@@ -29,18 +28,12 @@ function GoogleIcon({ className }: { className?: string }) {
 // Exported so (auth)/google-callback/page.tsx reads/clears the same key.
 export const POST_LOGIN_NEXT_KEY = 'fz:post-login-next';
 
-// A real navigation (<a>, not next/link, not a click handler doing a fetch):
-// this has to leave the app entirely for Google's consent screen and come
-// back via a server redirect, which only a full navigation can do. The loop
-// closes at (auth)/google-callback.
+// Real navigation (<a>, not next/link): must leave the app for Google's
+// consent screen and return via server redirect. Closes at (auth)/google-callback.
 export function GoogleAuthButton({
-	// Where ProtectedGuard sent the visitor to /dang-nhap from, if anywhere —
-	// same value the email/password form reads off the URL. This round trip
-	// leaves the app entirely (backend → Google → back to /google-callback),
-	// so it can't just ride along as a query param the way it does for that
-	// form; sessionStorage survives the trip instead, since it's scoped to
-	// this tab and Google returns to the same one. google-callback reads it
-	// back and clears it.
+	// Where ProtectedGuard sent the visitor to /dang-nhap from, if anywhere.
+	// Stored in sessionStorage (not a query param) since this round trip
+	// leaves the app for Google and back; google-callback reads/clears it.
 	next,
 }: {
 	next?: string | null;

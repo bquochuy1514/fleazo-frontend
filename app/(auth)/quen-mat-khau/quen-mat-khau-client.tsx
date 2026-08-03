@@ -33,8 +33,7 @@ export function ForgotPasswordPageClient() {
 	const [loading, setLoading] = useState(false);
 	const scrollFormToTop = useAuthFormScrollTop();
 
-	// Same iOS keyboard-scroll race as dang-nhap/page.tsx — see that file's
-	// comment for the full explanation.
+	// Same iOS keyboard-scroll race as the login form.
 	useEffect(() => {
 		if (!errors.message && !errors.errors && !actionBanner) return;
 		scrollFormToTop();

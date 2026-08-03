@@ -2,11 +2,7 @@
 
 import { Toaster as Sonner, type ToasterProps } from 'sonner';
 
-// Simplified from fleazo-frontend's version, which drives `theme` off
-// next-themes — that package isn't installed here (v2's dark mode is plain
-// `prefers-color-scheme` in globals.css, no runtime toggle to sync yet).
-// theme="system" alone already follows the OS setting; re-add next-themes
-// here if this repo ever grows a manual light/dark switch.
+// theme="system" follows prefers-color-scheme; no next-themes here yet (no manual toggle).
 function Toaster(props: ToasterProps) {
 	return (
 		<Sonner

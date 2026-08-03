@@ -7,9 +7,8 @@ export const api = axios.create({
 
 export { isAxiosError };
 
-// Returns the full ApiErrorResponse (incl. errorCode) so callers can branch
-// on the return value directly — reading it back off state right after
-// setErrors would still see the old value, since setState isn't synchronous.
+// Returns the full ApiErrorResponse so callers can branch on the return
+// value directly, rather than reading stale state right after setErrors.
 export function parseApiError<TFields extends string = string>(
 	err: unknown,
 ): ApiErrorResponse<TFields> {
@@ -37,9 +36,8 @@ export function getStoredAccessToken(): string | null {
 	);
 }
 
-// Refresh token lives in localStorage (remember-me checked) OR
-// sessionStorage (not checked). Returns which Storage actually has it, so
-// refreshAccessToken() writes the new tokens back to that same one.
+// Refresh token lives in localStorage (remember-me) or sessionStorage.
+// Returns whichever has it, so the new tokens get written back to the same one.
 function getRefreshTokenStorage(): Storage | null {
 	if (typeof window === 'undefined') return null;
 	if (localStorage.getItem('refresh_token')) return localStorage;
@@ -47,9 +45,8 @@ function getRefreshTokenStorage(): Storage | null {
 	return null;
 }
 
-// Request interceptor — attaches the access token to every call, unless the
-// caller already set Authorization by hand (the one exception: the refresh
-// call below needs to send the REFRESH token instead, in the same header).
+// Attaches the access token to every call, unless Authorization is already
+// set (refresh call below sends the refresh token instead).
 api.interceptors.request.use((config) => {
 	if (!config.headers.Authorization) {
 		const token = getStoredAccessToken();
@@ -60,9 +57,8 @@ api.interceptors.request.use((config) => {
 	return config;
 });
 
-// Registered once by AuthProvider on mount (its own `logout`) — api.ts is a
-// plain module, not a React component/hook, so it can't call useAuth()
-// itself; this is the hook the response interceptor calls into instead.
+// Set by AuthProvider on mount — api.ts can't call useAuth() itself (not a
+// component/hook), so the interceptor calls this instead.
 type AuthFailureHandler = () => void;
 let authFailureHandler: AuthFailureHandler | null = null;
 
@@ -70,9 +66,8 @@ export function registerAuthFailureHandler(handler: AuthFailureHandler) {
 	authFailureHandler = handler;
 }
 
-// 401s here are never "access token expired" — login/register failures are
-// normal (wrong password), and a 401 from refresh/logout themselves must
-// never trigger another refresh attempt (would recurse).
+// 401s here aren't token expiry — login/register 401s are normal (wrong
+// password), and refresh/logout 401s must not trigger another refresh (recursion).
 const AUTH_EXEMPT_PATHS = [
 	'/auth/login',
 	'/auth/register',
@@ -84,8 +79,7 @@ type RetriableRequestConfig = InternalAxiosRequestConfig & {
 	_retried?: boolean;
 };
 
-// Dedup concurrent 401s during a page with several parallel requests — only
-// one actually calls /auth/refresh; the rest await the same promise.
+// Dedup concurrent 401s — only one call hits /auth/refresh, rest await it.
 let refreshPromise: Promise<string | null> | null = null;
 
 async function refreshAccessToken(): Promise<string | null> {
@@ -127,14 +121,12 @@ api.interceptors.response.use(
 			return Promise.reject(error);
 		}
 
-		// Never had a token attached in the first place — not a session
-		// expiry, just an unauthenticated call that isn't allowed
+		// No token was attached — unauthenticated call, not a session expiry
 		if (!originalRequest.headers?.Authorization) {
 			return Promise.reject(error);
 		}
 
-		// Already retried once with a refreshed token and still 401ing —
-		// the session is genuinely dead, stop here
+		// Already retried with a refreshed token and still 401ing — session is dead
 		if (originalRequest._retried) {
 			authFailureHandler?.();
 			return Promise.reject(error);

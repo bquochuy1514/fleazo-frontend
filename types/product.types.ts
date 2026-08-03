@@ -35,10 +35,7 @@ export type ProductImage = {
 	order: number;
 };
 
-// Confirmed against ProductsService.findAll (fleazo-backend
-// src/modules/products/products.service.ts) — `include: { category: true,
-// images: true }`. No `seller` field here — that only appears on
-// GET /products/:id (findOne), not this list endpoint.
+// List shape: includes category + images, no `seller` (that's detail-only).
 export type Product = {
 	id: number;
 	title: string;
@@ -62,10 +59,8 @@ export type Product = {
 	updatedAt: string;
 };
 
-// Public seller info attached to GET /products/:id only — mirrors the
-// `select` in ProductsService.findOne (fleazo-backend). No email/address:
-// that endpoint deliberately exposes only what a buyer needs to decide
-// whether to reach out.
+// Public seller info attached to GET /products/:id only. No email/address —
+// only what a buyer needs to decide whether to reach out.
 export type ProductSeller = {
 	id: number;
 	fullName: string;
@@ -76,10 +71,8 @@ export type ProductSeller = {
 	university: { id: number; name: string } | null;
 };
 
-// GET /products/:id's actual shape: the list endpoint's Product plus
-// `seller` and the viewer-specific `isSaved` (false for a signed-out
-// viewer — see ProductsService.findOne). `category.parent` is also only
-// ever populated here, not on the list endpoint.
+// GET /products/:id shape: Product plus `seller` and viewer-specific
+// `isSaved` (false when signed out). `category.parent` only populated here.
 export type ProductDetail = Product & {
 	seller: ProductSeller;
 	isSaved: boolean;

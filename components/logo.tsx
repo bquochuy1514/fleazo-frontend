@@ -3,14 +3,10 @@ import { cn } from '@/lib/utils';
 
 const SRC = '/logo.png';
 
-// Icon only — no wordmark baked in (that's live text below). A flat,
-// single-tone silhouette (1024×1024, transparent background, no gradient/
-// shadow) so it works with `mask-image` + `bg-current`: mask only reads the
-// alpha channel, so a second opaque colour anywhere in the source (e.g. a
-// price-tag glyph drawn in white-on-black) would collapse to the same
-// currentColor as the rest of the shape and vanish — see the previous
-// asset's own history for exactly that failure. Replacing the mark means
-// replacing this file; no crop-box math to update since it's used whole.
+// Icon only, no baked-in wordmark. Flat single-tone silhouette (1024x1024,
+// transparent bg) so it works with `mask-image` + `bg-current` — mask only
+// reads alpha, so a second opaque colour in the source would collapse to
+// currentColor and vanish. Replacing the mark = replacing this file whole.
 const MARK_STYLE: React.CSSProperties & Record<string, string> = {
 	maskImage: `url(${SRC})`,
 	WebkitMaskImage: `url(${SRC})`,
@@ -35,12 +31,10 @@ export function Logo({
 }: {
 	size?: keyof typeof SIZES;
 	mark?: boolean;
-	// Lets the header collapse to a mark-only lockup on small screens without
-	// a second component — at 375px the full lockup shoves the search field
-	// off centre.
+	// Lets the header collapse to mark-only on small screens (full lockup
+	// shoves the search field off centre at 375px).
 	wordmarkClassName?: string;
-	// Goes on the link: a masked `bg-current` icon and plain text both pick
-	// up a colour set here (e.g. text-white) the same way, via currentColor.
+	// On the link — both icon and text pick up a colour set here via currentColor.
 	className?: string;
 }) {
 	const size_ = SIZES[size];

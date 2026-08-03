@@ -34,21 +34,17 @@ function GoogleCallbackHandler() {
 			return;
 		}
 
-		// No remember-me checkbox in the Google flow — always persist to
-		// localStorage, same as remember-me checked for email/password login.
+		// No remember-me checkbox in Google flow — always persist to localStorage.
 		localStorage.setItem('access_token', accessToken);
 		localStorage.setItem('refresh_token', refreshToken);
 
-		// Set by GoogleAuthButton right before it left the app — see that
-		// file's comment for why this can't just be a query param here the
-		// way the email/password form keeps `next`.
+		// Set by GoogleAuthButton before leaving the app.
 		const next = sessionStorage.getItem(POST_LOGIN_NEXT_KEY);
 		sessionStorage.removeItem(POST_LOGIN_NEXT_KEY);
 
 		auth.login(accessToken).then(() => {
 			if (message) toast.success(message);
-			// replace, not push — the current entry (this URL, tokens in the
-			// query string) gets swapped away rather than kept in history.
+			// replace: don't keep the token-bearing URL in history
 			router.replace(next ?? '/');
 		});
 		// eslint-disable-next-line react-hooks/exhaustive-deps

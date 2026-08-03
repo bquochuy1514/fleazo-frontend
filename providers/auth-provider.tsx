@@ -1,13 +1,15 @@
 'use client';
 
 import { createContext, useEffect, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import {
 	api,
 	getStoredAccessToken,
 	registerAuthFailureHandler,
 } from '@/lib/api';
+import { isProtectedPath } from '@/lib/protected-paths';
+import { clearSessionFlag } from '@/lib/session-flag';
 import type { User } from '@/types/user.types';
 
 type AuthContextValue = {
@@ -15,18 +17,9 @@ type AuthContextValue = {
 	isLoading: boolean;
 	login: (accessToken: string) => Promise<void>;
 	logout: () => Promise<void>;
-	// Set true at the start of logout(), before setUser(null); cleared again
-	// once logout()'s own router.push('/') has fired (or by the next
-	// successful login(), as a backstop) — never reset by the guard itself
-	// (that re-triggers its own effect and defeats the flag, see git
-	// history). Lets a route guard (ProtectedGuard, (protected)/layout.tsx)
-	// tell "user just logged out, mid-navigation" apart from "session
-	// genuinely stale/missing" and skip its own /dang-nhap redirect for that
-	// one transient tick, since logout() is already navigating home itself.
-	// Must not outlive that tick: a guard mounted fresh on a LATER page visit
-	// (as a still-signed-out guest, no login() in between) reads the same
-	// flag, and a stuck `true` would make it skip redirecting forever — the
-	// exact bug that shipped once here.
+	// Guards against a route-guard redirect race during logout: true while
+	// logout() is deciding whether to redirect, so the guard skips its own
+	// /dang-nhap redirect for that one tick instead of double-handling it.
 	isLoggingOut: boolean;
 };
 
@@ -34,9 +27,8 @@ export const AuthContext = createContext<AuthContextValue | undefined>(
 	undefined,
 );
 
-// No interceptor — token is attached by hand for this one call. Returns
-// null on any failure (expired/invalid token, network error): the caller
-// treats that as "not logged in", never throws further up.
+// Token attached by hand (no interceptor). Returns null on any failure —
+// caller treats that as "not logged in".
 async function fetchProfile(accessToken: string): Promise<User | null> {
 	try {
 		const { data } = await api.get<User>('/users/profile', {
@@ -52,10 +44,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 	const [user, setUser] = useState<User | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const router = useRouter();
+	const pathname = usePathname();
 	const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-	// On mount: if a token is already sitting in storage (returning visitor),
-	// fetch the profile once so refreshing the page doesn't log anyone out.
+	// Returning visitor: fetch profile once on mount so refresh doesn't log out.
 	useEffect(() => {
 		const token = getStoredAccessToken();
 
@@ -71,6 +63,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 				localStorage.removeItem('refresh_token');
 				sessionStorage.removeItem('access_token');
 				sessionStorage.removeItem('refresh_token');
+				clearSessionFlag();
 			}
 			setUser(profile);
 			setIsLoading(false);
@@ -104,20 +97,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		localStorage.removeItem('refresh_token');
 		sessionStorage.removeItem('access_token');
 		sessionStorage.removeItem('refresh_token');
+		clearSessionFlag();
 
 		setUser(null);
-		router.push('/');
-		// The one transient race this flag exists for is over — router.push
-		// has been issued, so any guard that re-renders from here on is
-		// looking at a genuinely-signed-out visitor, not a mid-logout one.
+		// Only bounce home from protected pages — public pages have nothing to guard.
+		if (isProtectedPath(pathname)) router.push('/');
 		setIsLoggingOut(false);
 	};
 
-	// Registers this provider's own logout as api.ts's 401-exhausted-refresh
-	// handler (see lib/api.ts) — api.ts is a plain module, can't call
-	// useAuth()/useRouter() itself, so it calls back into this instead. Kept
-	// behind a ref + one-time registration so the interceptor always calls
-	// the latest logout closure without re-registering on every render.
+	// Registers this logout as api.ts's 401-exhausted-refresh handler.
+	// Ref + one-time registration so the interceptor always calls the
+	// latest closure without re-registering every render.
 	const logoutRef = useRef(logout);
 
 	useEffect(() => {

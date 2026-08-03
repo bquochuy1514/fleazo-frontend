@@ -26,9 +26,7 @@ export function SaveButton({
 	const [pending, setPending] = useState(false);
 
 	const onClick = async () => {
-		// Public page, gated action — same /dang-nhap?next= round trip the
-		// rest of the app uses for a signed-out visitor hitting something
-		// identity-shaped (see AGENTS.md → Layout decisions).
+		// Gated action: redirect signed-out visitors through /dang-nhap?next=.
 		if (!user) {
 			router.push(
 				`/dang-nhap?next=${encodeURIComponent(`/san-pham/${productId}`)}`,
@@ -60,10 +58,7 @@ export function SaveButton({
 			aria-pressed={saved}
 			aria-label={saved ? 'Bỏ lưu tin' : 'Lưu tin'}
 			className={cn(
-				// Floating over the photo (see product-detail page), not an
-				// inline pill next to the price anymore — that read as too
-				// quiet to notice. size-11 (44px) meets the touch-target
-				// minimum on its own, no extra hit-area padding needed.
+				// size-11 (44px) meets touch-target minimum without extra padding.
 				'flex size-11 items-center justify-center rounded-full border border-border/60 bg-card shadow-md transition-transform hover:scale-105 active:scale-95',
 				className,
 			)}

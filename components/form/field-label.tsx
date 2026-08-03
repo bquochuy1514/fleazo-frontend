@@ -1,16 +1,11 @@
 import type { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-// Shared field label — icon is optional (dang-tin's fields have none,
-// complete-profile-modal's do) so both callers can share one component
-// instead of each keeping its own local copy.
+// Shared field label — icon optional, so both callers share one component.
 export function FieldLabel({
 	icon: Icon,
 	htmlFor,
-	// Required fields get a small rust `*` — unmarked means optional. Rust,
-	// not moss: this is a plain "required" convention, unrelated to the
-	// error-state meaning FieldError also uses rust for, and moss stays
-	// reserved for price tags/the save toggle (see AGENTS.md → Design System).
+	// Required fields get a small rust `*`; unmarked means optional.
 	required,
 	className,
 	children,

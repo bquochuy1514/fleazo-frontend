@@ -11,17 +11,14 @@ type ProductCardProps = {
 	title: string;
 	price: number | string;
 	imageUrl?: string;
-	// Optional: dang-tin's live preview renders this before the seller has
-	// picked a condition yet.
+	// Optional: live preview renders before a condition is picked.
 	condition?: ProductCondition;
 	categoryLabel?: string;
 	locationLabel?: string;
 	className?: string;
 };
 
-// Deliberately no rating (Fleazo reviews are seller-level only, not
-// per-listing — see backend AGENTS.md → Reviews) and no save button yet (no
-// auth wired up in this repo yet) — see AGENTS.md → Layout decisions.
+// No rating (reviews are seller-level, not per-listing) and no save button (auth not wired here yet).
 export function ProductCard({
 	title,
 	price,
@@ -32,9 +29,7 @@ export function ProductCard({
 	className,
 }: ProductCardProps) {
 	const isFresh = condition === 'NEW' || condition === 'LIKE_NEW';
-	// dang-tin's live preview passes a local blob: URL before the image has
-	// actually been uploaded — next/image's optimizer can't fetch those, only
-	// a real Cloudinary URL, so this one case falls back to a plain <img>.
+	// next/image can't optimize local blob: URLs (pre-upload preview) — fall back to plain <img>.
 	const isBlobPreview = imageUrl?.startsWith('blob:');
 
 	return (

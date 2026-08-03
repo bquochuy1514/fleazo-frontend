@@ -2,23 +2,12 @@
 
 import { useEffect } from 'react';
 
-// Freezes the page behind a full-screen overlay and — the part `overflow:
-// hidden` alone does not do — puts the reader back exactly where they were on
-// release.
-//
-// Two iOS Safari behaviours make the naive version fail, neither reproducible
-// in a desktop browser's device emulator:
-//
-//  1. `overflow: hidden` on <body> does not stop touch scrolling.
-//  2. Focusing a field scrolls the DOCUMENT to reveal it, even when the field
-//     sits inside a `position: fixed` overlay. A fixed element has no document
-//     position to scroll to, so Safari settles near the top — open an overlay,
-//     close it, and the page has moved. Repeat and it walks to the top.
-//
-// Pinning the body at a negative offset removes the scroll there was to make.
-//
-// Only needed for hand-rolled overlays: anything built on Radix's Dialog (our
-// Sheet, and Picker through it) already brings its own lock.
+// Locks body scroll and restores position on release. Uses fixed positioning
+// with a negative top offset, not `overflow: hidden`, because iOS Safari
+// still allows touch scroll with overflow hidden and drifts the page on
+// focus inside fixed overlays.
+// Only needed for hand-rolled overlays — Radix Dialog-based ones (Sheet,
+// Picker) already lock scroll themselves.
 export function useScrollLock(locked: boolean) {
 	useEffect(() => {
 		if (!locked) return;

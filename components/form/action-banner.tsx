@@ -2,13 +2,9 @@ import Link from 'next/link';
 import { AlertCircle, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-// Two tones only. 'error' is the one real use of --color-rust outside a form
-// field. 'neutral' is deliberately NOT moss-tinted even for a success message
-// ("Xác thực thành công!") — moss stays reserved for price tags and the save
-// toggle (see AGENTS.md → Design System); a green success banner here would
-// be exactly the "reach for the accent as a general-purpose color" the
-// palette rule warns against. Icon carries the distinction alongside color,
-// not color alone (WCAG 1.4.1).
+// Two tones only. 'neutral' is deliberately not moss-tinted even for success
+// messages — moss stays reserved for price tags/save toggle. Icon carries the
+// distinction alongside color, not color alone (WCAG 1.4.1).
 export function ActionBanner({
 	message,
 	tone = 'neutral',
@@ -28,11 +24,8 @@ export function ActionBanner({
 		<div
 			role={tone === 'error' ? 'alert' : 'status'}
 			className={cn(
-				// fz-rise: this only ever appears in response to something
-				// happening (a failed submit, a redirect after success) —
-				// motion here has an actual cause to point at, unlike a
-				// decorative flourish, so it earns the entrance the login
-				// form itself deliberately skips per-field.
+				// fz-rise: appears in response to an actual event (submit
+				// failure/success), not decorative.
 				'fz-rise flex items-start gap-2.5 rounded-2xl border px-4 py-3 text-sm',
 				tone === 'error'
 					? 'border-fz-danger/25 bg-fz-danger/10 text-fz-danger'

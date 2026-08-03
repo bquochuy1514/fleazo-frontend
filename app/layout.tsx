@@ -24,11 +24,8 @@ export const metadata: Metadata = {
 	},
 };
 
-// The browser default is `resizes-visual`: the on-screen keyboard slides over
-// the page without changing the layout viewport, which leaves anything pinned
-// to `bottom-0` — the picker sheet, any future one — sitting behind it. This
-// makes the keyboard take real space instead, so `dvh` and bottom-anchored
-// panels both see the room that's actually left.
+// Makes the on-screen keyboard take real layout space instead of sliding
+// over the page, so bottom-anchored panels aren't hidden behind it.
 export const viewport: Viewport = {
 	interactiveWidget: 'resizes-content',
 };

@@ -6,11 +6,7 @@ import { Check } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 
-// On the surface radius scale (rounded-md), not the pill scale — a checkbox
-// is a small binary control, not one of the system's tap targets that read
-// as buttons (see globals.css: "Pill = interactive, radius scale = surface").
-// Checked state is ink, matching --primary — moss stays reserved for price
-// tags and the save toggle, this isn't either.
+// rounded-md (surface scale), not the pill scale — checkbox isn't a button-like tap target.
 function Checkbox({
 	className,
 	...props

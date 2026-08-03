@@ -18,23 +18,11 @@ import {
 } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 
-// Hand-written, not `shadcn add`ed — don't expect the CLI to know about it.
+// Hand-written, not shadcn-generated.
 //
-// One control, two presentations: an anchored popover with a pointer, a bottom
-// sheet without one. A popover assumes things a phone doesn't have — a cursor
-// that hits a 38px row, no keyboard eating half the screen, and content near
-// the trigger because the eye is already there. On a phone the trigger sits at
-// the top, which is where the thumb reaches worst, and a popover anchored to it
-// puts a scrollable list inside another scrollable surface.
-//
-// The sheet answers all three: it's anchored to the bottom of the viewport
-// rather than to the trigger, so the keyboard pushes it instead of covering it;
-// it's full-width, so rows can be 52px; and it owns the only scroll region on
-// screen while it's open.
+// One control, two presentations: anchored popover on desktop, bottom sheet
+// on mobile (avoids a popover's scroll-in-scroll and thumb-reach issues).
 
-// Same cutover as the header search's inline-pill/sheet split. Keeping them on
-// one breakpoint is deliberate: a viewport should never get the desktop search
-// pill with the mobile picker, or the reverse.
 const DESKTOP = '(min-width: 768px)';
 
 type Search = {
@@ -52,9 +40,7 @@ export function Picker({
 	title,
 	search,
 	children,
-	// w-72 fits a province/category name; long Vietnamese university names
-	// truncate past readability at that width (see components/form/
-	// complete-profile-modal.tsx), so callers with wider content can override.
+	// w-72 fits most content; callers with wider content (e.g. long names) can override.
 	popoverClassName = 'w-72',
 }: {
 	open: boolean;
@@ -73,21 +59,9 @@ export function Picker({
 		return (
 			<Popover open={open} onOpenChange={onOpenChange}>
 				<PopoverTrigger asChild>{trigger}</PopoverTrigger>
-				{/* Radix flips this above the trigger when there's more room
-				    there (e.g. a trigger near the bottom of a tall Dialog)
-				    and exposes exactly how much room it found as this CSS
-				    var. Capping only the LIST to it was still wrong: the var
-				    is the budget for the whole popover, and the search field
-				    + padding above the list eat into that budget too, so the
-				    list alone could still ask for more than what's actually
-				    left and get clipped at the top. Capping the flex
-				    container instead, with the search field shrink-0 and the
-				    list flex-1, means the list is whatever's left over —
-				    never more. 24rem covers the search field's ~48px; 18rem
-				    stays the list's own cap the rest of the time (see
-				    min-h-0: a flex child's default min-height is auto, i.e.
-				    its content size, which would keep it from shrinking
-				    below the list's natural height and defeat the flex-1). */}
+				{/* Cap the flex container (not just the list) to Radix's available-height
+				    var, so the search field's own height is budgeted too. min-h-0 lets
+				    the list actually shrink instead of keeping its natural content height. */}
 				<PopoverContent
 					className={cn(
 						'flex max-h-[min(24rem,var(--radix-popover-content-available-height,24rem))] flex-col',
@@ -110,15 +84,9 @@ export function Picker({
 	return (
 		<Sheet open={open} onOpenChange={onOpenChange}>
 			<SheetTrigger asChild>{trigger}</SheetTrigger>
-			{/* p-0/gap-0 because this lays its own regions out: the header and
-			    filter stay put while only the list scrolls. A cap rather than a
-			    fixed height so a short list stays short — a picker with four
-			    options shouldn't claim most of the screen.
-			    svh, never dvh: Radix locks the page while this is open, and with
-			    the page unscrollable iOS keeps the URL bar retracted, which is
-			    the state dvh resolves LARGER in. The cap would then exceed the
-			    area actually on screen. svh is the bars-visible height, so it
-			    always fits. */}
+			{/* p-0/gap-0: header/filter stay fixed, only the list scrolls.
+			    svh not dvh: page is scroll-locked while open, so iOS keeps the URL
+			    bar retracted — dvh would resolve larger than what's actually visible. */}
 			<SheetContent
 				side="bottom"
 				showCloseButton={false}
@@ -149,21 +117,18 @@ export function Picker({
 					</div>
 				)}
 
-				{/* The safe-area pad matches BottomNav's — this sheet covers it,
-				    so it inherits the same home-indicator problem.
-				    The height cap is on the LIST, not left to it shrinking
-				    inside the sheet's cap: `flex-1` shrinking against a
-				    container whose height comes from max-height works in Blink
-				    and does not in WebKit, where the list keeps its full content
-				    height instead. A 34-province list then made the sheet ~1900px
-				    tall, anchored to bottom-0, so its top ran far off screen and
-				    overflow never engaged — nothing to scroll. Capping the
-				    scroller directly needs no shrinking from anyone.
-				    55svh + the fixed regions above stays under the sheet's own
-				    85svh cap. */}
+				{/* Height cap is on the LIST directly, not via flex-1 shrinking (WebKit
+				    ignores that against a max-height container, unlike Blink) — an
+				    uncapped list could blow the sheet's height past the viewport.
+				    min-h matches max-h only when there's a search field: otherwise a
+				    filtered-down list would shrink the whole sheet and drop the last
+				    row under the keyboard. */}
 				<PickerList
 					open={open}
-					className="max-h-[55svh] px-2 pb-[max(1rem,env(safe-area-inset-bottom))]"
+					className={cn(
+						'max-h-[55svh] px-2 pb-[max(1rem,env(safe-area-inset-bottom))]',
+						search && 'min-h-[55svh]',
+					)}
 				>
 					{children}
 				</PickerList>
@@ -172,9 +137,6 @@ export function Picker({
 	);
 }
 
-// A `PickerOption`'s two sizes are plain responsive classes rather than
-// anything read off the Picker: only one presentation is ever mounted, and the
-// breakpoint that decides which is the same one these classes switch on.
 export function PickerOption({
 	label,
 	selected,
@@ -212,14 +174,8 @@ export function PickerEmpty({ children }: { children: React.ReactNode }) {
 
 function SearchField({ value, onChange, placeholder, label }: Search) {
 	return (
-		// No autoFocus. On mobile that raises the keyboard the instant the sheet
-		// opens, covering the list the user came to look at — and most picks are
-		// made by scrolling, not typing. Tapping the field is the opt-in.
-		//
-		// text-base is 16px and must stay ≥16px at every width below md: iOS
-		// Safari zooms the whole page when a focused field is smaller, and it
-		// does not zoom back out. Step down only from md up, where there is no
-		// iOS to worry about.
+		// No autoFocus — avoids raising the keyboard immediately on mobile.
+		// text-base (16px) below md: smaller triggers iOS Safari's zoom-in, which doesn't undo itself.
 		<input
 			type="text"
 			value={value}
@@ -244,13 +200,9 @@ function PickerList({
 
 	React.useEffect(() => {
 		if (!open) return;
-		// Opening a 34-row list at the top hides the current choice more often
-		// than not. Scrolled by assigning scrollTop rather than calling
-		// scrollIntoView, which also walks up and scrolls ancestor scrollers —
-		// on desktop that means the page jumps behind an open popover.
-		//
-		// One frame late because the panel is still animating in on the tick
-		// this runs, and offsetTop inside a zero-height box is meaningless.
+		// Scroll to the current choice on open. scrollTop, not scrollIntoView —
+		// that also scrolls ancestor scrollers, jumping the page behind the popover.
+		// One frame late: the panel is still animating in, offsetTop isn't ready yet.
 		const frame = requestAnimationFrame(() => {
 			const list = ref.current;
 			const active = list?.querySelector<HTMLElement>(
@@ -266,22 +218,11 @@ function PickerList({
 	}, [open]);
 
 	return (
-		// relative so the options' offsetTop is measured against this box.
-		// overscroll-contain stops a flick at either end from scrolling whatever
-		// is behind the panel. No flex sizing here on purpose — every caller
-		// passes an explicit max-height instead.
-		//
-		// onWheel/onTouchMove stopPropagation: when this Picker opens inside a
-		// modal Radix Dialog (e.g. components/form/complete-profile-modal.tsx),
-		// the Dialog's own scroll lock (react-remove-scroll) listens for wheel/
-		// touch on the page and blocks them everywhere except its own content
-		// ref — this list is portalled to a separate root, so it was never on
-		// that allowlist and wheel-scrolling it silently did nothing (dragging
-		// the scrollbar thumb still worked, since that isn't a wheel event).
-		// Stopping propagation here keeps the event from ever reaching that
-		// document-level listener, so the browser just scrolls this list
-		// natively. Cheaper and less risky than turning the Dialog non-modal,
-		// which also drops its dim overlay entirely, not just the lock.
+		// relative: options' offsetTop is measured against this box.
+		// overscroll-contain: stops flick scroll from reaching whatever's behind the panel.
+		// stopPropagation on wheel/touch: when portalled inside a modal Radix Dialog, the
+		// Dialog's scroll lock blocks wheel/touch events outside its own content ref —
+		// this list isn't on that allowlist, so wheel-scroll silently did nothing without this.
 		<div
 			ref={ref}
 			onWheel={(e) => e.stopPropagation()}

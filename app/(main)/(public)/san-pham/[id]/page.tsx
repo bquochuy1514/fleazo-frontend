@@ -15,9 +15,8 @@ import { SectionHeader } from '@/components/form/section-header';
 
 type PageProps = { params: Promise<{ id: string }> };
 
-// Dedupes the fetch between generateMetadata and the page body — both need
-// the same product, but this repo's `api` is axios, not the built-in
-// `fetch`, so it doesn't get Next's automatic per-request memoization.
+// Dedupes the fetch between generateMetadata and the page body (axios isn't
+// auto-memoized like the built-in `fetch`).
 const getCachedProduct = cache(async (id: number) => {
 	try {
 		return await getProduct(id);
@@ -45,11 +44,7 @@ export async function generateMetadata({
 	};
 }
 
-// pt-24: (main)/layout.tsx renders no top padding of its own — only the
-// homepage's full-bleed hero can sit flush under the fixed Header,
-// everything else has to clear it itself. Same 96px clearance as
-// (header-only)/layout.tsx uses for dang-tin — same fixed Header in both
-// groups.
+// pt-24: clears the fixed Header, same as (header-only)/layout.tsx.
 export default async function ProductDetailPage({ params }: PageProps) {
 	const id = parseId((await params).id);
 	const product = id ? await getCachedProduct(id) : null;
@@ -141,11 +136,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
 								<dt className="shrink-0 text-muted-foreground">
 									{label}
 								</dt>
-								{/* No `truncate` — Khu vực can run long
-								    (address + ward + province), and cutting
-								    it off hid the one fact a buyer most
-								    needs whole. It wraps instead, still
-								    right-aligned. */}
+								{/* No `truncate` — Khu vực can run long, wraps instead. */}
 								<dd className="text-right font-medium text-fz-ink">
 									{value}
 								</dd>
@@ -180,11 +171,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
 					<section className="rounded-2xl border border-fz-accent/30 bg-fz-accent-soft/40 p-4">
 						<div className="flex items-start gap-2.5">
-							{/* text-fz-ink, not text-fz-accent — the moss
-							    accent is reserved for the price and the
-							    save/favorite active state only (see
-							    globals.css's own token comment); a
-							    decorative icon here isn't either. */}
+							{/* text-fz-ink: accent color is reserved for price/save state. */}
 							<ShieldCheck
 								aria-hidden
 								className="mt-0.5 size-4.5 shrink-0 text-fz-ink"

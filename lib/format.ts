@@ -3,9 +3,7 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/vi';
 
 dayjs.extend(relativeTime);
-// App-wide default — every user-facing string here is Vietnamese (see
-// AGENTS.md → Key Conventions), and nothing else in the codebase sets a
-// dayjs locale yet, so there's no other call site to conflict with.
+// App-wide default — all user-facing strings are Vietnamese.
 dayjs.locale('vi');
 
 // Format a VND price for display: 1500000 -> "1.500.000 ₫"

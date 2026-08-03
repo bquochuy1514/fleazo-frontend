@@ -26,9 +26,7 @@ export function RegisterPageClient() {
 	const [loading, setLoading] = useState(false);
 	const scrollFormToTop = useAuthFormScrollTop();
 
-	// Same iOS keyboard-scroll race as the login form — see that file's
-	// comment (dang-nhap/page.tsx) for the full explanation. Applies here
-	// too since this form can grow the same way (an error banner appearing).
+	// Same iOS keyboard-scroll race as the login form.
 	useEffect(() => {
 		if (!errors.message && !errors.errors) return;
 		scrollFormToTop();
@@ -47,9 +45,7 @@ export function RegisterPageClient() {
 		try {
 			await api.post('/auth/register', values);
 
-			// Registering doesn't return tokens — the account needs OTP
-			// verification before it can log in. Carry the email over so
-			// verify-account doesn't have to ask for it again.
+			// No tokens returned — account needs OTP verification first.
 			router.push(
 				`/xac-thuc-tai-khoan?email=${encodeURIComponent(String(values.email))}`,
 			);
@@ -82,9 +78,6 @@ export function RegisterPageClient() {
 				<span className="h-px flex-1 bg-border" aria-hidden />
 			</div>
 
-			{/* flex+gap, not space-y-4 — see dang-nhap/page.tsx's comment for
-			    why space-y's margin-based spacing loses to a touch-target
-			    padding trick elsewhere in this file. */}
 			<form
 				onSubmit={onSubmit}
 				noValidate
@@ -164,8 +157,6 @@ export function RegisterPageClient() {
 					</div>
 				</div>
 
-				{/* Same split as login: EMAIL_ALREADY_EXISTS gets a way out
-				    (straight to login) instead of a dead-end error. */}
 				{emailAlreadyExists ? (
 					<ActionBanner
 						tone="error"

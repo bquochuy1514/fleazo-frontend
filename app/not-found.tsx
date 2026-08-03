@@ -10,10 +10,8 @@ export const metadata: Metadata = {
 	title: 'Không tìm thấy trang — Fleazo',
 };
 
-// Global 404 (see AGENTS.md → Project Structure). Sits directly under the
-// root layout, not any route group, so unlike every other page it has to
-// render its own Header — none of the group layouts ((main), (header-only),
-// ...) wrap a route that doesn't exist.
+// Global 404, sits directly under the root layout (no route group), so it
+// renders its own Header unlike every other page.
 export default async function NotFound() {
 	const provinces = await getProvinces();
 
@@ -22,12 +20,7 @@ export default async function NotFound() {
 			<Header provinces={provinces} />
 
 			<main className="flex flex-1 flex-col items-center justify-center px-4 pt-24 pb-16 text-center">
-				{/* 612×408, landscape — a two-column text-beside-image split
-				    (the earlier draft) squashed this into a narrow, short
-				    strip. Stacked and centered lets it run wide instead,
-				    which is where its own "404" built out of dorm-room
-				    stuff (shelves, sneakers, a rice cooker, a skateboard)
-				    actually reads. */}
+				{/* Stacked and centered, not side-by-side, so the wide 612×408 art reads. */}
 				<div className="fz-rise w-full max-w-md sm:max-w-lg">
 					<Image
 						src="/not-found-illustration.png"

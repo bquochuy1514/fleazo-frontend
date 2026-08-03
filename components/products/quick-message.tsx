@@ -21,9 +21,7 @@ const SUGGESTIONS = [
 const CARD =
 	'rounded-2xl border border-border bg-card p-6 shadow-sm shadow-fz-ink/5';
 
-// Its own card, separate from SellerCard's "Nhắn tin" button (see that
-// file's comment) — a lower-commitment, secondary way to reach out that
-// doesn't compete with the primary action for visual weight.
+// Separate card from SellerCard's "Nhắn tin" — lower-commitment secondary action.
 export function QuickMessage({
 	sellerId,
 	sellerName,

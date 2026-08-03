@@ -56,11 +56,9 @@ export function CompleteProfileModal({
 }: {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
-	// Fires after the profile is saved successfully — caller decides what
-	// happens next (e.g. proceed with the listing submit it was gating).
+	// Fires after profile save succeeds; caller decides what happens next.
 	onCompleted?: () => void;
-	// Server-fetched/cached, same list dang-tin's own LocationPicker uses —
-	// see lib/locations.ts → getProvincesWithWards.
+	// Server-fetched/cached — see lib/locations.ts getProvincesWithWards.
 	provinces: ProvinceWithWards[];
 }) {
 	const { user, login } = useAuth();
@@ -68,9 +66,7 @@ export function CompleteProfileModal({
 	const missing = user ? getMissingSellerFields(user) : [];
 	const needs = (field: MissingSellerField) => missing.includes(field);
 
-	// University is never required to sell (see lib/seller-profile.ts) —
-	// offer it as an optional add whenever the seller hasn't set one yet,
-	// regardless of whether anything else in the gate is missing.
+	// University is never required to sell — offered whenever unset.
 	const showUniversity = !!user && !user.universityId;
 
 	const [location, setLocation] = useState<LocationValue>(EMPTY_LOCATION);
@@ -83,8 +79,7 @@ export function CompleteProfileModal({
 	const [errors, setErrors] = useState<ApiErrorResponse<ProfileFields>>({});
 	const [submitting, setSubmitting] = useState(false);
 
-	// Only fetch the (fairly large) university list once the modal is
-	// actually opened and it's actually relevant to show.
+	// Fetch the university list only once actually needed.
 	useEffect(() => {
 		if (!open || !showUniversity || universities.length > 0) return;
 		// queueMicrotask avoids react-hooks/set-state-in-effect
@@ -124,8 +119,7 @@ export function CompleteProfileModal({
 				const addressDetail = String(values.addressDetail ?? '').trim();
 				if (addressDetail) profileFields.addressDetail = addressDetail;
 			}
-			// Optional — included whenever picked, not gated on `needs()` since
-			// university is never part of the required gate.
+			// Optional — included whenever picked, not gated on `needs()`.
 			if (university) profileFields.universityId = university.id;
 
 			if (Object.keys(profileFields).length > 0) {
@@ -139,8 +133,7 @@ export function CompleteProfileModal({
 				});
 			}
 
-			// Refresh AuthContext's user so future gate checks see the updated
-			// profile — login() needs the raw token directly here.
+			// Refresh AuthContext's user so future gate checks see the update.
 			const token = getStoredAccessToken();
 			if (token) await login(token);
 			toast.success('Hoàn thiện hồ sơ thành công!');
@@ -156,17 +149,10 @@ export function CompleteProfileModal({
 
 	if (!user) return null;
 
-	// Phone (required, when missing) and university (optional, when unset)
-	// sit side by side when both render, each takes the full row alone when
-	// only one does.
+	// Phone and university sit side by side when both render, else full row.
 	const showPhoneUniversityRow = needs('phone') && showUniversity;
 
-	// Which of the three possible groups render at all — a seller missing
-	// everything sees all three stacked with nothing to tell them apart.
-	// Hairlines below mark those boundaries; only rendered between two
-	// groups that are BOTH actually showing; a seller missing only one
-	// thing sees no divider at all, since there's nothing to separate it
-	// from.
+	// Hairlines below only render between two groups that are both showing.
 	const showContactGroup = needs('phone') || showUniversity;
 	const showAddressGroup = needs('address');
 	const showPasswordGroup = needs('password');
@@ -379,8 +365,7 @@ export function CompleteProfileModal({
 						</div>
 					)}
 
-					{/* Sticky footer — keeps the submit button reachable even on
-					    a short viewport once an error grows the form. */}
+					{/* Sticky footer keeps submit reachable on short viewports. */}
 					<div className="sticky -bottom-4 -mx-4 -mb-4 border-t border-border bg-popover px-4 pt-4 pb-4">
 						<FieldError message={errors.message} />
 						<Button

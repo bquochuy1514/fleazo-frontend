@@ -6,19 +6,15 @@ import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 
 // Wraps a logged-in-only route group. Bounces a signed-out visitor to
-// /dang-nhap with `?next=` so login sends them back to what they tapped
-// (see AGENTS.md → Layout decisions, the sign-in-gate note) — not to the
-// homepage. Written once, reused by every group that needs it (see
-// AGENTS.md → Planned route-group structure).
+// /dang-nhap with `?next=` so login sends them back to what they tapped,
+// not the homepage.
 export function ProtectedGuard({ children }: { children: React.ReactNode }) {
 	const { user, isLoading, isLoggingOut } = useAuth();
 	const pathname = usePathname();
 	const router = useRouter();
 
 	useEffect(() => {
-		// logout() already navigates home itself — a guard-triggered redirect
-		// here would fight it mid-flight (see providers/auth-provider.tsx's
-		// isLoggingOut comment).
+		// logout() already navigates home itself — avoid fighting it mid-flight.
 		if (isLoading || user || isLoggingOut) return;
 		router.replace(`/dang-nhap?next=${encodeURIComponent(pathname)}`);
 	}, [isLoading, user, isLoggingOut, pathname, router]);

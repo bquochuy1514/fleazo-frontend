@@ -11,8 +11,7 @@ import {
 import { FieldError } from '@/components/form/field-error';
 import type { Category } from '@/types/category.types';
 
-// Vietnamese category names are matched with diacritics stripped, so "sach"
-// finds "Sách" — same convention as the header's province search.
+// Matches with diacritics stripped, so "sach" finds "Sách".
 const norm = (s: string) =>
 	s
 		.normalize('NFD')
@@ -21,10 +20,7 @@ const norm = (s: string) =>
 		.toLowerCase();
 
 type CategoryPickerProps = {
-	// Externally set the selected leaf category (e.g. from an AI suggestion) —
-	// resolved against the already-fetched tree to find its parent. Not a
-	// fully controlled value: only re-syncs when this changes, the seller's
-	// own manual pick afterward isn't overridden until it changes again.
+	// Externally set leaf category id (e.g. AI suggestion); resolved against the fetched tree.
 	value?: number | null;
 	onChange?: (value: {
 		categoryId: number | null;
@@ -62,8 +58,7 @@ export function CategoryPicker({
 		return null;
 	}, [parents, categoryId]);
 
-	// Sync from an externally-set leaf id (AI suggestion) once the tree is
-	// loaded — mirrors the pick flow so onChange still fires for the caller.
+	// Sync external leaf id once the tree loads.
 	useEffect(() => {
 		if (value == null || value === categoryId || categories.length === 0) {
 			return;

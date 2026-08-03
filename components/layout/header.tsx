@@ -37,12 +37,8 @@ const HERO_ROUTES: string[] = ['/'];
 
 const HEADER_CLEARANCE_PX = 80;
 
-// Same recipe as PickerOption (components/ui/picker.tsx) and AccountMenu's
-// own ITEM (account-menu.tsx, kept in sync with this file's Sheet content)
-// — rounded-full, generous padding, transition-colors. rounded-lg here
-// before was a different radius than the desktop dropdown's rounded-md AND
-// than Picker's rounded-full — three different corner radii for
-// conceptually the same "row in a list" element across the app.
+// Same recipe as PickerOption and AccountMenu's ITEM (account-menu.tsx, kept
+// in sync with this file's Sheet content) — rounded-full, transition-colors.
 const SHEET_ITEM =
 	'flex items-center gap-3 rounded-full px-3 py-3 text-sm text-fz-ink transition-colors duration-200 active:bg-muted';
 
@@ -56,10 +52,8 @@ export function Header({ provinces }: { provinces: Province[] }) {
 		if (!overHero) return;
 		const hero = document.querySelector('[data-hero]');
 		if (!hero) {
-			// The route claims a hero but the page didn't mark one. There's
-			// nothing to subscribe to, and staying bare would leave white text
-			// on the paper background — so fall back to the solid pill. Costs
-			// one extra render, but only on a page that's already misconfigured.
+			// Route claims a hero but page didn't mark one — fall back to solid
+			// pill rather than white text on the paper background.
 			// eslint-disable-next-line react-hooks/set-state-in-effect
 			setHeroPassed(true);
 			return;
@@ -74,8 +68,7 @@ export function Header({ provinces }: { provinces: Province[] }) {
 
 	const bare = overHero && !heroPassed;
 
-	// Ghost controls invert wholesale on the photo — their default hover fill
-	// is bg-muted, which is invisible against it.
+	// Ghost controls invert on the photo — default bg-muted hover is invisible there.
 	const ghostOnDark =
 		'text-white hover:bg-white/15 hover:text-white focus-visible:ring-white/50';
 
@@ -150,11 +143,8 @@ export function Header({ provinces }: { provinces: Province[] }) {
 					/>
 
 					<div className="flex items-center gap-2">
-						{/* Guest-only — once signed in this slot disappears
-						    rather than turning into anything, since the
-						    avatar takes the OPPOSITE side of "Đăng tin"
-						    (right, not left) instead of replacing this link
-						    in place. */}
+						{/* Guest-only — disappears once signed in; avatar renders
+						    on the opposite side of "Đăng tin", not in this slot. */}
 						{!user && !isLoading && (
 							<Link
 								href="/dang-nhap"
@@ -167,11 +157,8 @@ export function Header({ provinces }: { provinces: Province[] }) {
 								Đăng nhập
 							</Link>
 						)}
-						{/* The one primary action on the page, last in the row
-						    where the pill's own curve frames it. On the photo it
-						    inverts to a white chip — a solid chip rather than white
-						    text, so it stays legible over the bright part of the
-						    image. */}
+						{/* Primary action, last in the row. Inverts to a solid white
+						    chip on the photo for legibility over bright areas. */}
 						<Link
 							href="/dang-tin"
 							className={cn(
@@ -185,10 +172,8 @@ export function Header({ provinces }: { provinces: Province[] }) {
 							Đăng tin
 						</Link>
 
-						{/* Fixed-size placeholder while the session resolves
-						    (AuthProvider fetches the profile on first mount)
-						    — matches AccountMenu's own size-10 trigger
-						    exactly, so nothing jumps once auth state settles. */}
+						{/* Fixed-size placeholder while session resolves — matches
+						    AccountMenu's size-10 trigger so nothing jumps. */}
 						{isLoading ? (
 							<div className="size-10 shrink-0 animate-pulse rounded-full bg-muted" />
 						) : (
@@ -217,23 +202,14 @@ export function Header({ provinces }: { provinces: Province[] }) {
 							<SheetTitle>Tài khoản</SheetTitle>
 						</SheetHeader>
 
-						{/* min-h-0 is load-bearing: SheetContent is a flex
-						    column with a fixed h-full, and without it this
-						    child's default flex-basis (auto, i.e. its own
-						    content height) refuses to shrink below that,
-						    so overflow-y-auto never gets anything to
-						    actually scroll. Content here has grown to 6
-						    items across 3 sections (plus a 4th for admins)
-						    — confirmed it silently clips below the fold
-						    with no way to reach "Đăng xuất" on a landscape
-						    phone or anything shorter than ~600px tall. */}
+						{/* min-h-0 is load-bearing: without it this flex child's
+						    content-height basis blocks overflow-y-auto from
+						    scrolling, clipping "Đăng xuất" on short viewports. */}
 						<div className="min-h-0 flex-1 overflow-y-auto scrollbar-refined">
 							{user ? (
 							<div className="flex flex-col gap-1 px-4">
-								{/* Card, not a bare row — matches the guest
-								    panel's own rounded-2xl/bg-muted identity
-								    block below and AccountMenu's desktop
-								    dropdown (see that file's comment). */}
+								{/* Card matches the guest panel's rounded-2xl/bg-muted
+								    identity block below and AccountMenu's dropdown. */}
 								<div className="flex items-center gap-3 rounded-2xl bg-muted px-4 py-3.5">
 									<Image
 										src={user.avatar}
@@ -262,12 +238,8 @@ export function Header({ provinces }: { provinces: Province[] }) {
 									</Link>
 								</SheetClose>
 
-								{/* Sections separated by space, not another
-								    hairline — see account-menu.tsx's comment
-								    (this panel mirrors it): the identity card
-								    above and the rule before "Đăng xuất"
-								    below are the only boundaries that
-								    actually carry meaning. */}
+								{/* Sections separated by space, not hairlines —
+								    mirrors account-menu.tsx. */}
 								<div className="mt-2 px-2 pt-1 pb-0.5 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
 									Tài khoản
 								</div>

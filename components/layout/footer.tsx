@@ -14,9 +14,8 @@ const SUPPORT_LINKS = [
 	{ href: '/faq', label: 'Câu hỏi thường gặp' },
 ];
 
-// CTA band + link columns — no newsletter/email capture (no such backend
-// feature exists, see AGENTS.md → Layout decisions). The CTA is
-// seller-acquisition, not lead-gen.
+// CTA band + link columns — no newsletter/email capture (no backend feature
+// for it). CTA is seller-acquisition, not lead-gen.
 export function Footer() {
 	return (
 		<footer className="border-t border-border">
@@ -46,8 +45,7 @@ export function Footer() {
 			<div className="mx-auto max-w-6xl px-4 py-10">
 				<div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
 					<div className="col-span-2 sm:col-span-2">
-						{/* Full lockup at the larger size — the footer has the
-						    room the header doesn't. */}
+						{/* Full lockup at larger size — footer has room the header doesn't. */}
 						<Logo size="lg" />
 						<p className="mt-2 max-w-xs text-sm text-muted-foreground">
 							Chợ đồ cũ dành cho sinh viên — mua bán nhanh, gọn,
@@ -97,8 +95,7 @@ export function Footer() {
 						© {new Date().getFullYear()} Fleazo. Đã đăng ký bản
 						quyền.
 					</p>
-					{/* lucide-react no longer ships brand/social icons — plain
-					    text links instead of guessed logo marks. */}
+					{/* lucide-react no longer ships brand icons — plain text links. */}
 					<div className="flex items-center gap-4 text-xs">
 						<a
 							href="https://facebook.com"

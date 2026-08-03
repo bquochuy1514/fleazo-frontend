@@ -1,16 +1,13 @@
 import type { ReactNode } from 'react';
 import type { LucideIcon } from 'lucide-react';
 
-// Card-group header — echoes the hero's eyebrow (tracked uppercase label +
-// hairline, see app/(main)/(public)/page.tsx) rather than a generic bordered
-// heading, so the form still reads as Fleazo rather than a bare admin form.
+// Card-group header — echoes the homepage hero's eyebrow style rather than a
+// generic bordered heading.
 export function SectionHeader({
 	icon: Icon,
 	title,
 	action,
-	// Marks a whole section as required when it has no per-field FieldLabel
-	// of its own. A group with mixed-required sub-fields should leave this
-	// unmarked and put `required` on the specific field instead.
+	// Marks the whole section required when it has no per-field FieldLabel.
 	required,
 }: {
 	icon: LucideIcon;

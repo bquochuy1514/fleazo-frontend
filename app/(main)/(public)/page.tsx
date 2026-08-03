@@ -8,13 +8,9 @@ import {
 } from 'lucide-react';
 import { getCategories } from '@/lib/categories';
 
-// axios isn't tracked by Next's fetch cache, so without this the page renders
-// once at build time and never sees a new listing.
+// axios isn't tracked by Next's fetch cache — revalidate manually.
 export const revalidate = 60;
 
-// What Fleazo can actually promise. There's no escrow and no payment in the
-// product — money changes hands off-platform — so what's on offer is the
-// absence of a middleman and the fact that both sides are on the same campus.
 const TRUST = [
 	{ icon: Handshake, label: 'Không qua trung gian' },
 	{ icon: MessageCircle, label: 'Nhắn tin trực tiếp với người bán' },
@@ -27,39 +23,17 @@ export default async function Home() {
 	const categories = await getCategories();
 
 	return (
-		// data-hero: the Header watches this element to know when to stop
-		// being transparent (components/layout/header.tsx). Any page that
-		// grows a full-bleed hero needs the attribute AND an entry in that
-		// file's HERO_ROUTES.
+		// data-hero: Header watches this to know when to stop being transparent.
 		<section
 			data-hero
 			className="relative flex min-h-dvh items-center overflow-hidden"
 		>
-			{/* Art-directed pair, not one photo stretched to fit everything. A
-			    single crop can't look right on both a phone and a wide
-			    monitor: at the old 3:2 source, `cover` had to slice ~70% off
-			    the SIDES on a phone to fill its height, and `contain` left
-			    bare scrim bands down the sides of a wide desktop instead. Two
-			    purpose-cut files fix both — a 3:5 portrait crop and a ~16:9
-			    landscape crop, see AGENTS.md → Layout decisions for the crop
-			    math.
-			    Switched on `orientation`, not a width breakpoint: a portrait
-			    tablet (768px, same width as `md`) still needs the PORTRAIT
-			    crop, so any width-only cutover picks the wrong image for it.
-			    `priority` on both is deliberate, not an oversight — Next
-			    preloads a `priority` image unconditionally, before CSS
-			    resolves which one `hidden` applies to, so there's no way to
-			    preload only the visible one without hand-rolling the
-			    preload `<link>`. The extra request for the orientation NOT
-			    shown is the accepted cost.
-			    ⚠️ Expect a dev-only console warning ("sizes... but image is
-			    not rendered at full viewport width") on WHICHEVER of these
-			    two is currently `display: none` — Next's dev check measures
-			    every `fill` image regardless of CSS visibility, sees 0×0
-			    against `sizes="100vw"`, and can't tell "hidden on purpose by
-			    an orientation query" from "sizes is wrong". It flips to
-			    naming the other file the moment you rotate/resize. Harmless,
-			    doesn't appear in production — not a bug to chase. */}
+			{/* Two purpose-cut crops (portrait/landscape), switched on
+			    `orientation` not width, since a portrait tablet is `md`
+			    width too. `priority` on both: Next preloads it before CSS
+			    resolves which is hidden, so there's no way to preload just
+			    one. Dev-only console warning about sizes on the hidden one
+			    is expected and harmless (doesn't appear in prod). */}
 			<Image
 				src="/hero-image-mobile.png"
 				alt=""
@@ -100,10 +74,7 @@ export default async function Home() {
 
 					<p
 						style={{ animationDelay: '140ms' }}
-						// white/90, not /80: at /80 this measured 4.45:1 on a 375px
-						// viewport — 0.05 under AA. Raised here rather than by
-						// darkening the scrim, which would dim the photo for every
-						// breakpoint to fix one.
+						// white/90: /80 failed AA contrast at 375px.
 						className="fz-rise mt-5 max-w-xl text-base text-white/90 sm:text-lg"
 					>
 						Sách, laptop, xe đạp, quạt máy — mua bán ngay trong
@@ -118,10 +89,7 @@ export default async function Home() {
 							{categories
 								.slice(0, QUICK_PICKS)
 								.map((category) => (
-									// font-medium: these are the tier's
-									// actions, and at 400 they read as more
-									// prose in a column that already has two
-									// paragraphs of it.
+									// font-medium so these read as actions, not prose.
 									<Link
 										key={category.id}
 										href={`/tim-kiem?categoryId=${category.id}`}
@@ -133,16 +101,9 @@ export default async function Home() {
 						</div>
 					)}
 
-					{/* Demoted on three axes at once — a hairline above it, a
-					    step down to 13px, and a narrower measure than the
-					    tiers above. Spacing alone wasn't separating it from
-					    the chips, which sat at the same 14px weight 400. */}
-					{/* One per line below sm, a wrapping row above it. Left to
-					    flex-wrap on a phone the break lands wherever the
-					    viewport happens to put it — 375px gives 2+1, 430px
-					    gives 1+2, and the odd one out reads as a mistake
-					    rather than a list. Stacked, every width looks
-					    deliberate. */}
+					{/* Demoted via hairline + smaller size, not spacing alone.
+					    Stacked below sm so flex-wrap can't produce an
+					    odd-looking line break at arbitrary widths. */}
 					<ul
 						style={{ animationDelay: '280ms' }}
 						className="fz-rise mt-14 flex max-w-xl flex-col gap-y-3 border-t border-white/15 pt-6 sm:flex-row sm:flex-wrap sm:gap-x-6 sm:gap-y-2.5"
@@ -163,11 +124,8 @@ export default async function Home() {
 				</div>
 			</div>
 
-			{/* The hero is a full viewport tall with nothing peeking below it,
-			    so nothing else says the page continues. Text as well as an
-			    arrow: the arrow says "there's more", the label says what more
-			    there is. Hidden below md, where BottomNav owns the bottom of
-			    the screen and the gesture to scroll is instinctive anyway. */}
+			{/* Hints there's more below the full-viewport hero. Hidden below
+			    md, where BottomNav owns that space. */}
 			<a
 				href="#danh-muc"
 				style={{ animationDelay: '420ms' }}

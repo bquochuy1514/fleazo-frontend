@@ -9,20 +9,20 @@ import {
 } from '@/components/layout/location-picker';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useAuth } from '@/hooks/use-auth';
 import { useScrollLock } from '@/hooks/use-scroll-lock';
 import type { Province } from '@/lib/locations';
 import {
 	getProvinceServerSnapshot,
 	getProvinceSnapshot,
+	resolveProvinceCode,
 	setSavedProvince,
 	subscribeToProvince,
 } from '@/lib/province-store';
 import { cn } from '@/lib/utils';
 
 const PLACEHOLDER = 'Tìm sách, laptop, xe đạp…';
-// The trigger button is ~145px wide once the logo and the account button have
-// taken their share, which leaves room for about eleven characters. The full
-// placeholder goes in the sheet, where the field is 233px.
+// Trigger button is ~145px wide (~11 chars); full placeholder goes in the sheet.
 const TRIGGER_HINT = 'Tìm đồ cũ…';
 
 export function HeaderSearch({
@@ -40,26 +40,22 @@ export function HeaderSearch({
 		getProvinceSnapshot,
 		getProvinceServerSnapshot,
 	);
-	const provinceCode = saved === null ? null : Number(saved);
+	// Signed-out/server snapshot both read `user` as null, which
+	// resolveProvinceCode treats as "no province" (falls back to Toàn quốc).
+	const { user } = useAuth();
+	const provinceCode = resolveProvinceCode(saved, user?.provinceCode);
 
 	const [sheetOpen, setSheetOpen] = useState(false);
 	const sheetInputRef = useRef<HTMLInputElement>(null);
 
-	// This overlay is hand-rolled rather than a Radix Dialog, so the page
-	// behind it is still live and still scrollable — including to iOS, which
-	// will scroll it out from under the reader the moment the field takes
-	// focus.
+	// Hand-rolled overlay (not Radix Dialog) — page behind stays scrollable,
+	// which iOS needs since it can scroll content out from under focus.
 	useScrollLock(sheetOpen);
 
 	useEffect(() => {
 		if (!sheetOpen) return;
-		// Explicit focus rather than the autoFocus attribute: the field is
-		// mounted by a state flip, and React's autoFocus is unreliable on
-		// nodes that appear that way.
-		//
-		// preventScroll because the field is inside a fixed overlay: it is
-		// already fully visible, so every scroll the browser performs to
-		// "reveal" it is pure damage.
+		// Explicit focus, not autoFocus — unreliable on nodes mounted via state
+		// flip. preventScroll: field is already visible inside the fixed overlay.
 		sheetInputRef.current?.focus({ preventScroll: true });
 		const onKeyDown = (e: KeyboardEvent) => {
 			if (e.key === 'Escape') setSheetOpen(false);
@@ -74,30 +70,20 @@ export function HeaderSearch({
 
 	return (
 		<div className={cn('min-w-0', className)}>
-			{/* ── Desktop: one pill holding two things — where you're looking
-			    and what you're looking for. Not two controls side by side: a
-			    marketplace search reads as a sentence, and the hairline is the
-			    only thing separating the halves. */}
-			{/* The glass skin is tied to `bare` alone — scroll position, nothing
-			    else. Focusing the field used to flip it back to the opaque
-			    surface for legibility while typing; that made the pill change
-			    twice for two unrelated reasons and read as a glitch. Contrast
-			    while typing on the photo is carried by the header's own scrim
-			    plus the field's backdrop-blur instead. */}
+			{/* Desktop: one pill combining location + search, separated by a hairline. */}
+			{/* Glass skin tied to `bare` (scroll position) only — no focus-flip
+			    to opaque, which used to make the pill change for two unrelated
+			    reasons. Contrast while typing comes from the header scrim +
+			    backdrop-blur instead. */}
 			<form
 				action="/tim-kiem"
 				role="search"
 				className={cn(
-					// duration-300 ease-out, not the default 150ms: this pill sits
-					// INSIDE the header's own pill, and the two flip on the same
-					// scroll event. At different speeds you see the field finish
-					// first and the surround catch up — the one artifact that
-					// gives away that they're separate elements.
+					// duration-300 ease-out matches the header's own pill transition
+					// so both flip on scroll at the same speed.
 					'hidden h-11 w-full max-w-md items-center rounded-full border pr-1 transition-colors duration-300 ease-out focus-within:ring-1 motion-reduce:transition-none md:flex',
-					// The ring colour has to switch with the skin. Now that the
-					// pill no longer goes opaque on focus, this ring IS the focus
-					// signal over the photo — and the default dark ring is close
-					// to invisible there.
+					// Ring colour switches with the skin — it's the focus signal
+					// over the photo, where the default dark ring is near invisible.
 					bare
 						? 'border-white/25 bg-white/10 backdrop-blur-sm focus-within:border-white/70 focus-within:ring-white/70'
 						: 'border-border bg-card focus-within:border-ring focus-within:ring-ring/45',
@@ -135,9 +121,7 @@ export function HeaderSearch({
 					)}
 				/>
 				{provinceField}
-				{/* Inverts to a white chip on the photo, the same move the
-				    Đăng tin CTA makes — the two read as a pair marking the
-				    header's two real actions. */}
+				{/* Inverts to a white chip on the photo, same as the Đăng tin CTA. */}
 				<Button
 					type="submit"
 					size="icon"
@@ -152,15 +136,9 @@ export function HeaderSearch({
 				</Button>
 			</form>
 
-			{/* ── Below md, a full-screen sheet instead. Inline, the same pill
-			    leaves the text field ~19px at 640px and ~100px at 375px once
-			    the logo and the location segment have taken their share — a
-			    field that narrow can't even show its own placeholder. The
-			    cutover is md, not sm, because the inline version only stops
-			    being cramped somewhere around 750px. A different layout for
-			    small screens, not the desktop one squeezed. */}
-			{/* No focus-flip here — tapping opens the sheet, which has its own
-			    opaque surface, so nothing is ever typed against the photo. */}
+			{/* Below md: full-screen sheet instead — inline pill leaves too
+			    little room for the text field once logo + location take theirs.
+			    Cutover at md since inline only stops being cramped near 750px. */}
 			<button
 				type="button"
 				onClick={() => setSheetOpen(true)}
@@ -188,14 +166,9 @@ export function HeaderSearch({
 				</span>
 			</button>
 
-			{/* Portalled to <body>, not left where it sits in the tree. Once the
-			    header leaves the hero its pill gets backdrop-blur-md, and an
-			    element with a backdrop-filter becomes the containing block for
-			    its `position: fixed` descendants — `inset-0` then resolves
-			    against the PILL. The overlay shrank to the pill's own 397×62 box
-			    and read as a stray panel under the search field. Nothing about
-			    this overlay is wrong; it just cannot be rendered inside a
-			    filtered ancestor. */}
+			{/* Portalled to <body>: header pill gets backdrop-blur-md once past
+			    the hero, and a backdrop-filter ancestor becomes the containing
+			    block for `position: fixed` descendants, breaking `inset-0`. */}
 			{sheetOpen &&
 				createPortal(
 					<div
@@ -233,9 +206,7 @@ export function HeaderSearch({
 						</Button>
 					</div>
 
-					{/* The location choice moves in here, where it has room to
-					    be a labelled control instead of a 135px segment eating
-					    the text field. */}
+					{/* Location choice gets room to be a labelled control here. */}
 					<div className="px-4 pt-6">
 						<p className="text-xs font-medium tracking-[0.12em] text-muted-foreground uppercase">
 							Khu vực

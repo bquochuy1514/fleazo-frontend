@@ -14,22 +14,14 @@ const NAV_ITEMS = [
 	{ href: '/ca-nhan', label: 'Cá nhân', icon: User },
 ] as const;
 
-// Mobile-only tab bar — the header keeps the desktop "Đăng tin" CTA instead.
-// Active state uses ink weight rather than the moss accent, which is reserved
-// for prices and the save toggle. "Cá nhân" swaps its icon for the signed-in
-// user's avatar (see NavLink's `avatar` prop), matching Header's own
-// AccountMenu; "Tin nhắn" still carries no unread badge — that needs a
-// message count this repo doesn't fetch anywhere yet, unrelated to auth.
-//
-// "Quản lý tin", "Tin nhắn", "Đăng tin" and "Cá nhân" are all sign-in-only —
-// there's no session state here to branch on, so each just points at its real
-// route and leans on the (planned) ProtectedGuard/proxy.ts to redirect a
-// signed-out tap to /dang-nhap. Deliberate: a guest sees the full tab bar
-// rather than a crippled one, and discovers what exists before being asked to
-// sign in for it. There is no "Danh mục" tab — with no cart/wishlist funnel to
-// browse toward, category discovery lives on the homepage instead (chips below
-// the hero) and inside search's own sidebar filter, not as a fifth destination
-// here.
+// Mobile-only tab bar; desktop keeps the header's "Đăng tin" CTA instead.
+// Active state uses ink weight, not the moss accent (reserved for prices/save
+// toggle). "Cá nhân" swaps its icon for the user's avatar when signed in.
+// "Tin nhắn" has no unread badge yet — no message count fetched anywhere.
+// Sign-in-only routes still render for guests (discoverability); a signed-out
+// tap relies on ProtectedGuard/proxy.ts to redirect to /dang-nhap.
+// No "Danh mục" tab — category discovery lives on the homepage and in
+// search's sidebar filter instead.
 export function BottomNav() {
 	const pathname = usePathname();
 	const { user } = useAuth();
@@ -48,9 +40,8 @@ export function BottomNav() {
 					/>
 				))}
 
-				{/* Raised action, not a regular tab. Its own grid column (rather
-				    than flex spacing) keeps it centred no matter how long the
-				    neighbouring labels get. */}
+				{/* Raised action, own grid column keeps it centred regardless
+				    of neighbouring label length. */}
 				<Link
 					href="/dang-tin"
 					aria-label="Đăng tin"
@@ -69,8 +60,7 @@ export function BottomNav() {
 						key={item.href}
 						item={item}
 						active={pathname === item.href}
-						// Only "Cá nhân" ever gets an avatar — the other slots
-						// keep their lucide icon regardless of auth state.
+						// Only "Cá nhân" ever gets an avatar.
 						avatar={
 							item.href === '/ca-nhan' ? user?.avatar : undefined
 						}
@@ -102,7 +92,7 @@ function NavLink({
 					: 'text-muted-foreground hover:text-fz-ink',
 			)}
 		>
-			{/* Fixed-height slot keeps every label on the same baseline. */}
+			{/* Fixed-height slot keeps labels on the same baseline. */}
 			<span className="flex h-7 items-center justify-center">
 				{avatar ? (
 					<Image

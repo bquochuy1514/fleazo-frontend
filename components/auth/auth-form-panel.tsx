@@ -7,20 +7,15 @@ import { cn } from '@/lib/utils';
 
 const ScrollTopContext = createContext<(() => void) | null>(null);
 
-// Any (auth) page can pull this to force its own scroll region back to the
-// top — see the call site in dang-nhap/page.tsx for why that's needed.
-// Returns a no-op outside the provider rather than throwing: a page that
-// hasn't wired up the effect yet shouldn't crash for it.
+// Lets an (auth) page force its scroll region back to top. No-op outside the
+// provider so an unwired page doesn't crash.
 export function useAuthFormScrollTop() {
 	return useContext(ScrollTopContext) ?? (() => {});
 }
 
-// The one scroll region on an (auth) page — everything outside it (the
-// AuthVisual photo panel, the floating card's own frame) is pinned by
-// (auth)/layout.tsx's `h-svh` shell and never moves. Split out of that
-// layout, which is a Server Component, because owning the ref + the
-// scroll-to-top function both require a client boundary; keeping it this
-// small means the rest of the layout doesn't have to become one too.
+// The one scroll region on an (auth) page; rest is pinned by (auth)/layout.tsx.
+// Split into its own client component so the ref/scroll-to-top logic doesn't
+// force the whole (Server) layout to become client too.
 export function AuthFormPanel({
 	children,
 	className,
@@ -31,10 +26,7 @@ export function AuthFormPanel({
 	const ref = useRef<HTMLDivElement>(null);
 	const pathname = usePathname();
 
-	// Stable identity via useCallback — a page consuming this through
-	// `useAuthFormScrollTop` puts it in a `useEffect` dependency array, and a
-	// function that's a new reference every render would fire that effect on
-	// every render too, not just when its actual trigger changes.
+	// useCallback for a stable identity — consumers put this in an effect dep array.
 	const scrollToTop = useCallback(() => {
 		const reduceMotion = window.matchMedia(
 			'(prefers-reduced-motion: reduce)',
@@ -54,42 +46,21 @@ export function AuthFormPanel({
 					className,
 				)}
 			>
-				{/* my-auto, not justify-center on the scroll container above —
-				    justify-content centers by pushing HALF of any overflow
-				    into negative scroll territory, which a scrollable element
-				    can never reach: once an error banner pushes this taller
-				    than the viewport, scrollTo({top:0}) lands partway through
-				    the h1 instead of above it, with no way to scroll further
-				    up to see the rest (reported: heading permanently clipped
-				    after a failed submit). Auto margins center the same way
-				    when there's slack but collapse to 0 the instant content
-				    overflows, so the true top always stays reachable. */}
-				{/* fz-rise once on entrance, same primitive the homepage hero
-				    uses — reused rather than a second bespoke animation, so
-				    the whole site shares one motion language. Applied to
-				    this one wrapper (logo + content together) as a single
-				    unit, not per-field like the hero's stagger: a login
-				    form is a task, not a story to reveal line by line —
-				    staggering every label/input would read as the generic
-				    "AOS fade-up on everything" pattern this is deliberately
-				    avoiding, not as polish.
-				    key={pathname}: without it, switching between /dang-nhap
-				    and /dang-ky is a CLIENT navigation within this same
-				    layout — React patches this div's children in place
-				    rather than recreating it, so the CSS animation (which
-				    only plays on the element's own mount) fires once for
-				    whichever auth page loads first in the session and never
-				    again for the other. Keying by route forces a fresh node
-				    — and therefore a fresh entrance — on every switch. */}
+				{/* my-auto, not justify-center: justify-content can push overflow
+				    into unreachable negative scroll, clipping the top when
+				    content grows taller than the viewport. Auto margins collapse
+				    to 0 on overflow instead, keeping true top reachable. */}
+				{/* fz-rise once on entrance, applied to the whole wrapper (not
+				    per-field) — a login form isn't a story to reveal line by line.
+				    key={pathname} forces remount on route switch so the CSS
+				    entrance animation replays (client nav would otherwise patch
+				    children in place and skip it). */}
 				<div
 					key={pathname}
 					className="fz-rise my-auto flex w-full flex-col items-center"
 				>
-					{/* Stands in for AuthVisual's photo-panel logo, which no
-					    longer renders on mobile (see that file's comment) —
-					    without this, a mobile visitor would see no Fleazo
-					    mark anywhere on the screen. md:hidden because the
-					    photo panel's own logo takes over from `md` up. */}
+					{/* Stands in for AuthVisual's logo, which doesn't render on
+					    mobile. md:hidden once the photo panel takes over. */}
 					<div className="mb-6 shrink-0 md:hidden">
 						<Logo size="lg" />
 					</div>

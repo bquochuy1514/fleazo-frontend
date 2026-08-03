@@ -6,7 +6,6 @@ export interface Category {
 	createdAt: string;
 	updatedAt: string;
 	children?: Category[];
-	// Only present on GET /products/:id — the leaf category's parent, for
-	// a "Danh mục cha/Danh mục con" line on the detail page.
+	// Only present on GET /products/:id — leaf category's parent.
 	parent?: Category | null;
 }

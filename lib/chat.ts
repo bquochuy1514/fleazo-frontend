@@ -8,9 +8,8 @@ type Conversation = {
 	updatedAt: string;
 };
 
-// Find-or-create — the backend returns the existing conversation if this
-// pair already has one (see ChatService.findOrCreateConversation), so this
-// is always safe to call before sending a first message.
+// Find-or-create: backend returns the existing conversation if this pair
+// already has one, so safe to call before every first message.
 export async function createConversation(
 	recipientId: number,
 ): Promise<Conversation> {

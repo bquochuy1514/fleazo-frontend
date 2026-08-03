@@ -1,8 +1,5 @@
-// Shape returned by GET /users/profile (handleGetProfile in users.service.ts)
-// — full User model minus password/hashedRefreshToken/codeOtp/
-// codeOtpExpiration/isOtpVerified. Dates arrive as ISO strings over JSON.
-// Reused anywhere a user entity is displayed — profile, chat participant,
-// product seller info, admin panel, review author — not auth-specific.
+// Shape returned by GET /users/profile — sensitive fields (password,
+// tokens, OTP) omitted. Reused anywhere a user entity is displayed.
 export type User = {
 	id: number;
 	email: string;

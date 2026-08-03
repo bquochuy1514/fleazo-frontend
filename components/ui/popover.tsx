@@ -27,11 +27,7 @@ function PopoverContent({
 	className,
 	align = 'start',
 	sideOffset = 8,
-	// Radix's own collision-avoidance (flipping side, shrinking via
-	// --radix-popover-content-available-height/width) otherwise lets the
-	// content butt right up against the viewport edge — it avoids
-	// overlapping the trigger, not touching the browser chrome. This keeps a
-	// visible gutter on every side once it's had to flip/shift.
+	// Keeps a gutter from the viewport edge once Radix flips/shifts the content.
 	collisionPadding = 12,
 	...props
 }: React.ComponentProps<typeof PopoverPrimitive.Content>) {

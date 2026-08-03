@@ -2,16 +2,10 @@
 
 import { useCallback, useSyncExternalStore } from 'react';
 
-// A CSS media query read from JS, for the cases where the two branches can't
-// both be in the DOM — a Popover and a Dialog rendering the same list would
-// duplicate its content for screen readers, so one of them has to not exist.
-// Prefer plain responsive classes over this hook whenever hiding one branch
-// with CSS is actually acceptable.
-//
-// Server and hydration both answer `false`; the real value lands on the first
-// commit after. That's what keeps it hydration-safe, and it means **the
-// `false` branch must be the one that survives being server-rendered** — treat
-// `false` as "not known yet", not as "definitely no match".
+// Use only when both branches can't coexist in the DOM (e.g. duplicate a11y
+// content). Prefer CSS-based responsive hiding otherwise.
+// SSR/hydration always return false; treat false as "not known yet", and
+// make sure the false branch is the one safe to server-render.
 export function useMediaQuery(query: string): boolean {
 	const subscribe = useCallback(
 		(onStoreChange: () => void) => {

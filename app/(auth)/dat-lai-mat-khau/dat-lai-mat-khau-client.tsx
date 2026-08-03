@@ -11,10 +11,7 @@ import { api, parseApiError } from '@/lib/api';
 import type { ApiErrorResponse } from '@/types/api.types';
 import { cn } from '@/lib/utils';
 
-// Field names assumed to match ResetPasswordDto (fleazo-backend/reset-password.dto.ts).
-// handleResetPassword only destructures email/password — confirmPassword
-// isn't read there either, same as RegisterDto's confirmPassword (only
-// used by class-validator's @Match, never touched in service logic).
+// Must match backend ResetPasswordDto field names.
 type ResetPasswordFields = 'email' | 'password' | 'confirmPassword';
 
 const PILL_INPUT = 'h-11 rounded-full px-4 text-base md:text-[15px]';
@@ -39,8 +36,7 @@ function ResetPasswordForm() {
 	const [loading, setLoading] = useState(false);
 	const scrollFormToTop = useAuthFormScrollTop();
 
-	// Same iOS keyboard-scroll race as dang-nhap/page.tsx — see that file's
-	// comment for the full explanation.
+	// Same iOS keyboard-scroll race as the login form.
 	useEffect(() => {
 		if (!errors.message && !errors.errors) return;
 		scrollFormToTop();

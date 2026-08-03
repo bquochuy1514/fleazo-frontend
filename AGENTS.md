@@ -1,5 +1,10 @@
 # Fleazo Frontend v2 — AGENTS.md
 
+> **This file is not going in the public repo** (portfolio project — recruiters get the
+> code, not the diary). Source comments must never point here. When you touch code that
+> has a comment referencing this file, delete that reference; keep the reasoning only if
+> it's short and stated inline. New comments: short, in-code, no "see AGENTS.md".
+
 > **Repo:** `fleazo-frontend-v2` — full rewrite of the customer-facing web app, replacing
 > `fleazo-frontend` (kept around read-only for reference, not deleted).
 > Backend is unchanged: `fleazo-backend` (NestJS + Prisma + PostgreSQL). **Read

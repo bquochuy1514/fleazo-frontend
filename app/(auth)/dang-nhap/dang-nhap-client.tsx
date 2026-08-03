@@ -34,10 +34,7 @@ function LoginForm() {
 	const auth = useAuth();
 	const router = useRouter();
 	const searchParams = useSearchParams();
-	// Where to land after a successful login — set by ProtectedGuard
-	// (components/auth/protected-guard.tsx) when it bounces a signed-out
-	// visitor here from a route that needs a session. Falls back to home for
-	// a plain, un-redirected visit to /dang-nhap.
+	// Set by ProtectedGuard when redirecting a signed-out visitor here.
 	const next = searchParams.get('next');
 	const successMessage =
 		searchParams.get('verified') === 'true'
@@ -61,10 +58,7 @@ function LoginForm() {
 
 	const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
-		// Force the keyboard to start dismissing right away rather than
-		// hoping the default tap-to-blur happens promptly on iOS — the more
-		// deterministic that timing is, the less room there is for the race
-		// the effect above is guarding against.
+		// Blur early to dismiss the iOS keyboard deterministically.
 		(document.activeElement as HTMLElement | null)?.blur();
 		setLoading(true);
 		setErrors({});
@@ -74,10 +68,7 @@ function LoginForm() {
 		try {
 			const { data } = await api.post('/auth/login', values);
 
-			// Remember me decides WHICH storage gets the tokens — lib/api.ts's
-			// refresh-token lookup checks localStorage first, then
-			// sessionStorage, and writes back to whichever one it found them
-			// in. This is the other half of that contract.
+			// lib/api.ts's refresh lookup checks localStorage then sessionStorage.
 			const storage = rememberMe ? localStorage : sessionStorage;
 			storage.setItem('access_token', data.access_token);
 			storage.setItem('refresh_token', data.refresh_token);
@@ -153,11 +144,7 @@ function LoginForm() {
 						>
 							Mật khẩu
 						</label>
-						{/* py-3 -my-3: grows the tap target to the 44px touch
-						    minimum without pushing the label/field below it
-						    down — the padding adds hit area, the matching
-						    negative margin cancels the extra visual space it
-						    would otherwise take. */}
+						{/* py-3 -my-3: 44px touch target without extra layout space. */}
 						<Link
 							href="/quen-mat-khau"
 							tabIndex={-1}
@@ -177,9 +164,7 @@ function LoginForm() {
 					<FieldError message={errors.errors?.password} />
 				</div>
 
-				{/* Same -my-3/py-3 hit-area trick as "Quên mật khẩu?" above —
-				    the 20px line of text/checkbox was under half the 44px
-				    touch minimum. */}
+				{/* Same touch-target trick as "Quên mật khẩu?" above. */}
 				<label className="-my-3 flex w-fit items-center gap-2.5 py-3 text-sm text-fz-ink">
 					<Checkbox
 						checked={rememberMe}
@@ -190,11 +175,8 @@ function LoginForm() {
 					Ghi nhớ đăng nhập
 				</label>
 
-				{/* INVALID_CREDENTIALS deliberately doesn't say which of email/
-				    password was wrong (see backend AGENTS.md → Auth Flow) — so
-				    this renders as one banner above the button, never attached
-				    to a specific field. ACCOUNT_NOT_VERIFIED swaps it for a
-				    banner with a way out instead of a dead end. */}
+				{/* INVALID_CREDENTIALS doesn't specify which field was wrong,
+				    so it's shown as one banner, not attached to a field. */}
 				{unverifiedEmail ? (
 					<ActionBanner
 						tone="error"

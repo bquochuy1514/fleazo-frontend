@@ -45,8 +45,7 @@ function VerifyForgotOtpForm() {
 	} | null>(null);
 	const scrollFormToTop = useAuthFormScrollTop();
 
-	// Same iOS keyboard-scroll race as dang-nhap/page.tsx — see that file's
-	// comment for the full explanation.
+	// Same iOS keyboard-scroll race as the login form.
 	useEffect(() => {
 		if (!errors.message && !errors.errors) return;
 		scrollFormToTop();

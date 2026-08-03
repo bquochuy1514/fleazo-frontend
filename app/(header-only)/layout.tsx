@@ -13,7 +13,7 @@ export default async function HeaderOnlyLayout({
 }: Readonly<{
 	children: React.ReactNode;
 }>) {
-	// Same cached server fetch the (main) layout uses — see its comment.
+	// Same cached server fetch the (main) layout uses.
 	const provinces = await getProvinces();
 
 	return (

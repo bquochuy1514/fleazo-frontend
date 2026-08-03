@@ -1,10 +1,6 @@
-// Logged-in pages that still want the full marketplace chrome from (main)
-// above (ca-nhan, quan-ly-tin) — browsing-adjacent enough that BottomNav
-// wayfinding still helps.
+// Logged-in pages that still want full marketplace chrome from (main).
 //
-// ⚠️ No pages live here yet. Before the first one lands, wrap `children` in a
-// ProtectedGuard — written ONCE here, never re-checked per page. That guard
-// needs AuthProvider, which doesn't exist in this repo yet.
+// TODO: wrap `children` in a ProtectedGuard once AuthProvider exists.
 export default function ProtectedLayout({
 	children,
 }: Readonly<{

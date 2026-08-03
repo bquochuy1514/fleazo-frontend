@@ -59,11 +59,7 @@ const EMPTY_LOCATION: LocationValue = {
 	wardName: '',
 };
 
-// p-6, not the secondary cluster's p-4 — the size step itself is part of
-// the hierarchy (see AGENTS.md hero comment: gaps *between* tiers carry
-// meaning, spacing everything evenly turns N blocks into N equal things).
-// This is the tier a buyer's eye actually needs first: what it is and what
-// it looks like.
+// p-6 vs secondary's p-4: size step signals hierarchy (primary tier first).
 const CARD_PRIMARY =
 	'rounded-2xl border border-border bg-card p-6 shadow-sm shadow-fz-ink/5';
 const CARD_SECONDARY =
@@ -87,9 +83,7 @@ function DangTinRoute({ provinces }: { provinces: ProvinceWithWards[] }) {
 	const searchParams = useSearchParams();
 	const editId = searchParams.get('edit');
 
-	// Remounts on editId change — the same route serves both create and edit
-	// mode, so without this React would reuse the instance and carry over
-	// stale form state from a previous edit.
+	// Remounts on editId change to avoid carrying over stale form state.
 	return (
 		<DangTinForm
 			key={editId ?? 'create'}
@@ -109,10 +103,8 @@ function DangTinForm({
 	const router = useRouter();
 	const { user } = useAuth();
 
-	// Edit mode: ?edit=<id> + getEditProductCache (sessionStorage, set by
-	// quan-ly-tin's "Sửa" — not built yet, so edit mode has no real entry
-	// point until that page exists) hands off the product data without a
-	// second fetch.
+	// Edit mode: ?edit=<id> + getEditProductCache (sessionStorage) hands off
+	// product data without a second fetch.
 	const isEditMode = editId !== null;
 	const [editProduct, setEditProduct] = useState<Product | null>(null);
 	const [isLoadingEdit, setIsLoadingEdit] = useState(isEditMode);
@@ -149,9 +141,7 @@ function DangTinForm({
 	const previewImageUrl =
 		remainingExistingImages[0]?.url ?? images[0]?.previewUrl;
 
-	// Load the product being edited once, from the sessionStorage handoff —
-	// no dependency on `editId` changing mid-session, this only ever runs on
-	// mount for a given page load.
+	// Load the edited product once from the sessionStorage handoff, on mount.
 	useEffect(() => {
 		if (!isEditMode) return;
 		const id = Number(editId);
@@ -336,16 +326,12 @@ function DangTinForm({
 			</p>
 
 			<form className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3 lg:items-start">
-				{/* One fz-rise per COLUMN, not per card — seven individually
-				    staggered cards is the "AOS-fade-up" look this system is
-				    trying not to be. Two waves is the whole entrance. */}
+				{/* fz-rise per column, not per card, to avoid an "AOS-fade-up" look. */}
 				<div
 					style={{ animationDelay: '80ms' }}
 					className="fz-rise space-y-10 lg:col-span-2"
 				>
-					{/* Primary tier: what it is. Tighter internal spacing —
-					    these three read as one flow (photo → AI assist →
-					    title/description), not separate topics. */}
+					{/* Primary tier: photo, AI assist, title/description read as one flow. */}
 					<div className="space-y-4">
 						<section className={CARD_PRIMARY}>
 							<SectionHeader
@@ -384,9 +370,7 @@ function DangTinForm({
 							<FieldError message={errors.message} />
 						</section>
 
-						{/* Its own card, not tucked into Mô tả's section — it fills
-						    Tiêu đề + Mô tả + Danh mục at once. Hidden in edit mode
-						    to avoid overwriting reviewed content. */}
+						{/* Hidden in edit mode to avoid overwriting reviewed content. */}
 						{!isEditMode && (
 							<section className="flex flex-col items-start gap-3 rounded-2xl border border-fz-accent/30 bg-fz-accent-soft/40 p-5 sm:flex-row sm:items-center sm:justify-between">
 								<div className="flex items-start gap-3">
@@ -472,11 +456,7 @@ function DangTinForm({
 						</section>
 					</div>
 
-					{/* Secondary tier: metadata about the thing above, not the
-					    thing itself — smaller cards (CARD_SECONDARY), tighter
-					    internal gap, separated from the primary tier by the
-					    bigger space-y-10 on the wrapping column rather than
-					    an even space-y-6 running through everything. */}
+					{/* Secondary tier: metadata, smaller cards, separated by space-y-10 above. */}
 					<div className="space-y-4">
 						<section className={CARD_SECONDARY}>
 							<SectionHeader
@@ -620,12 +600,7 @@ function DangTinForm({
 						</div>
 					</section>
 
-					{/* Last in the sidebar — seller sees the finished preview
-					    after filling everything in. Renders the actual
-					    ProductCard buyers will see, not a mockup — the same
-					    "no middleman, what you see is what's there" promise
-					    the homepage hero makes. CARD_PRIMARY here, not
-					    _SECONDARY: this is the payoff card, not metadata. */}
+					{/* Renders the actual ProductCard, not a mockup. CARD_PRIMARY: payoff card. */}
 					<section className={CARD_PRIMARY}>
 						<SectionHeader icon={Eye} title="Xem trước" />
 						<div className="mx-auto max-w-56">
