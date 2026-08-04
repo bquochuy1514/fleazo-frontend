@@ -235,7 +235,8 @@ export function SavedListingsClient() {
 											return (
 												<ListingCard
 													key={product.id}
-													id={product.id}
+											id={product.id}
+											sellerId={product.sellerId}
 													title={product.title}
 													price={product.price}
 													imageUrl={firstImageUrl(

@@ -69,6 +69,9 @@ export type Product = {
 	// includes a valid bearer token; it is false for signed-out visitors.
 	isSaved?: boolean;
 	sellerId: number;
+	// Public lists expose this minimal seller attribute so the browse experience
+	// can identify listings from the viewer's university without exposing a profile.
+	sellerUniversityId?: number | null;
 	createdAt: string;
 	updatedAt: string;
 };

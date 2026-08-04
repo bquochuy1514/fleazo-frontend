@@ -213,6 +213,7 @@ export function LatestListings({
 					>
 						<ListingCard
 							id={product.id}
+							sellerId={product.sellerId}
 							title={product.title}
 							price={product.price}
 							imageUrl={firstImageUrl(product)}

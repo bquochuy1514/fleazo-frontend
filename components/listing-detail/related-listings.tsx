@@ -130,6 +130,7 @@ export function RelatedListings({
 					<ScrollReveal key={relatedProduct.id} delay={(i % 5) * 70}>
 						<ListingCard
 							id={relatedProduct.id}
+							sellerId={relatedProduct.sellerId}
 							title={relatedProduct.title}
 							price={relatedProduct.price}
 							imageUrl={firstImageUrl(relatedProduct)}

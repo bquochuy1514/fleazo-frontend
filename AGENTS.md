@@ -23,8 +23,8 @@ Write it down when it is:
 
 - a product or domain decision plus the constraint behind it ("no cart exists, so the
   card's second action is Liên hệ, not Buy Now")
-- a rule that binds future work ("search lives only in the header — don't add a second
-  one to a hero")
+- a rule that binds future work ("search belongs in the marketplace chrome — don't add
+  decorative search controls to the homepage hero")
 - a trap in a tool or dependency that costs real time to rediscover
 - where something lives, and what is or isn't built yet
 
@@ -196,10 +196,10 @@ shadcn's own semantic `--primary` maps to ink (not moss) for this reason — see
   so the hero photo shows through around and behind it. Two consequences: the hero starts
   at viewport top, header included, and the header occupies **no flow space**, so any
   page without its own full-bleed hero must add top padding to clear it.
-- **Search lives in the header on every page, hero included.** No second search pill in a
-  hero — search is the marketplace's primary action and can't be the control that
-  disappears on the screen everybody lands on. The hero's category chips are the
-  alternative way in for someone who doesn't know what to type.
+- **Search lives in the header on every page, hero included.** `/tim-kiem` additionally
+  has its own large results-context field because it is the dedicated browse workspace;
+  the homepage hero must not gain a second search pill. The hero's category chips remain
+  the alternative way in for someone who doesn't know what to type.
 - **Hero photo is two art-directed crops, not one image stretched to fit every
   viewport** — `hero-image-mobile.png` (960×1600, 3:5) and `hero-image-desktop.png`
   (2400×1351, ~16:9), both `object-cover`, swapped with a CSS `orientation` media query
@@ -297,6 +297,7 @@ components/
 │   └── footer.tsx       # Đăng-tin CTA band + link columns + copyright
 ├── home/                # Homepage-only sections: category shelf, latest listings,
 │                        #   community banner and handoff steps.
+├── search/              # Shared /tim-kiem UI: masthead, filter rail/sheet, grid and pagination.
 ├── listings/            # Reusable UI for a marketplace listing (card + save action).
 ├── listing-detail/      # Components owned by /san-pham/[id].
 ├── listing-form/        # Reusable controls for creating or editing a listing.

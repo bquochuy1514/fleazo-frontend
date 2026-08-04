@@ -42,11 +42,17 @@ export function LocationPicker({
 	provinces,
 	value,
 	onChange,
+	notifyOnInitialValue = true,
+	pickerPresentation = 'auto',
 }: {
 	provinces: ProvinceWithWards[];
 	// Externally-set default, resolved once the list loads; overridden by manual picks.
 	value?: { provinceCode: number | null; wardCode: number | null } | null;
 	onChange?: (value: LocationValue) => void;
+	/** Search URL state already owns its values, so it can opt out of the initial callback. */
+	notifyOnInitialValue?: boolean;
+	/** Avoid a nested bottom sheet when the picker lives inside another Sheet. */
+	pickerPresentation?: 'auto' | 'popover';
 }) {
 	const [province, setProvince] = useState<ProvinceWithWards | null>(null);
 	const [ward, setWard] = useState<Ward | null>(null);
@@ -69,12 +75,14 @@ export function LocationPicker({
 		queueMicrotask(() => {
 			setProvince(found);
 			setWard(foundWard);
-			onChange?.({
-				provinceCode: found.code,
-				provinceName: found.name,
-				wardCode: foundWard?.code ?? null,
-				wardName: foundWard?.name ?? '',
-			});
+			if (notifyOnInitialValue) {
+				onChange?.({
+					provinceCode: found.code,
+					provinceName: found.name,
+					wardCode: foundWard?.code ?? null,
+					wardName: foundWard?.name ?? '',
+				});
+			}
 		});
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [value?.provinceCode, value?.wardCode, provinces, province]);
@@ -133,6 +141,7 @@ export function LocationPicker({
 						disabled={provinces.length === 0}
 					/>
 				}
+				presentation={pickerPresentation}
 				title="Chọn tỉnh/thành phố"
 				search={
 					provinces.length > 0
@@ -177,6 +186,7 @@ export function LocationPicker({
 						disabled={!province}
 					/>
 				}
+				presentation={pickerPresentation}
 				title="Chọn phường/xã"
 				search={
 					(province?.wards.length ?? 0) > 0

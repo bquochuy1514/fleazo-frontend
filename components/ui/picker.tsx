@@ -40,6 +40,7 @@ export function Picker({
 	title,
 	search,
 	children,
+	presentation = 'auto',
 	// w-72 fits most content; callers with wider content (e.g. long names) can override.
 	popoverClassName = 'w-72',
 }: {
@@ -52,10 +53,12 @@ export function Picker({
 	search?: Search;
 	children: React.ReactNode;
 	popoverClassName?: string;
+	/** Force an anchored list when a picker is rendered inside another Sheet. */
+	presentation?: 'auto' | 'popover';
 }) {
 	const isDesktop = useMediaQuery(DESKTOP);
 
-	if (isDesktop) {
+	if (presentation === 'popover' || isDesktop) {
 		return (
 			<Popover open={open} onOpenChange={onOpenChange}>
 				<PopoverTrigger asChild>{trigger}</PopoverTrigger>

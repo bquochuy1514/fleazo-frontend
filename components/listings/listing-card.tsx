@@ -38,6 +38,7 @@ type ListingCardProps = {
 	// Only present for a real listing — the dang-tin live preview has no id
 	// yet, so Link/SaveButton stay off until one exists.
 	id?: number;
+	sellerId?: number;
 	saveCount?: number;
 	initialSaved?: boolean;
 	onUnsaveRequested?: () => void;
@@ -56,6 +57,7 @@ export function ListingCard({
 	locationLabel,
 	className,
 	id,
+	sellerId,
 	saveCount,
 	initialSaved = false,
 	onUnsaveRequested,
@@ -146,10 +148,11 @@ export function ListingCard({
 					<SaveButton
 						key={`${id}-${initialSaved}-${saveCount ?? 0}`}
 						productId={id}
+						sellerId={sellerId}
 						initialSaved={initialSaved}
 						initialCount={saveCount ?? 0}
 						onUnsaveRequested={onUnsaveRequested}
-						className="absolute top-2 right-2"
+						className="absolute top-1 right-1"
 					/>
 				)}
 			</div>

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Heart } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
@@ -10,29 +9,32 @@ import { cn } from '@/lib/utils';
 
 export function SaveButton({
 	productId,
+	sellerId,
 	initialSaved,
 	initialCount,
 	className,
 	onUnsaveRequested,
 }: {
 	productId: number;
+	sellerId?: number;
 	initialSaved: boolean;
 	initialCount: number;
 	className?: string;
 	onUnsaveRequested?: () => void;
 }) {
 	const { user } = useAuth();
-	const router = useRouter();
 	const [saved, setSaved] = useState(initialSaved);
 	const [count, setCount] = useState(initialCount);
 	const [pending, setPending] = useState(false);
+	const isOwnListing = sellerId !== undefined && user?.id === sellerId;
+
+	// Legacy self-saves may still exist from before the server-side guard.
+	// Keep the control only for removing that old record.
+	if (isOwnListing && !saved) return null;
 
 	const onClick = async () => {
-		// Gated action: redirect signed-out visitors through /dang-nhap?next=.
 		if (!user) {
-			router.push(
-				`/dang-nhap?next=${encodeURIComponent(`/san-pham/${productId}`)}`,
-			);
+			toast.error('Đăng nhập để lưu tin.');
 			return;
 		}
 		if (pending) return;
@@ -71,21 +73,29 @@ export function SaveButton({
 		<button
 			type="button"
 			onClick={onClick}
+			disabled={pending}
 			aria-pressed={saved}
 			aria-label={saved ? 'Bỏ lưu tin' : 'Lưu tin'}
 			className={cn(
-				// size-11 (44px) meets touch-target minimum without extra padding.
-				'flex size-11 items-center justify-center rounded-full border border-border/60 bg-card shadow-md transition-transform hover:scale-105 active:scale-95',
+				// The button stays a 44px target, while the visible control is lighter on small cards.
+				'group/save relative flex size-11 items-center justify-center rounded-full outline-none transition-transform hover:scale-105 focus-visible:ring-3 focus-visible:ring-ring/50 active:scale-95 disabled:cursor-wait',
 				className,
 			)}
 		>
-			<Heart
+			<span
 				aria-hidden
 				className={cn(
-					'size-5',
-					saved ? 'fill-fz-accent text-fz-accent' : 'text-fz-ink',
+					'flex size-8 items-center justify-center rounded-full border border-border/70 bg-card/95 shadow-sm backdrop-blur-sm transition-colors group-hover/save:border-fz-ink/30',
+					saved && 'border-fz-accent/25 bg-fz-accent-soft',
 				)}
-			/>
+			>
+				<Heart
+					className={cn(
+						'size-4',
+						saved ? 'fill-fz-accent text-fz-accent' : 'text-fz-ink',
+					)}
+				/>
+			</span>
 			{count > 0 && (
 				<span className="sr-only">{count} lượt lưu</span>
 			)}

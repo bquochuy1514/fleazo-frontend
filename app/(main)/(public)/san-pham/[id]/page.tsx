@@ -115,6 +115,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
 					<div className="absolute top-3 right-3 z-10">
 						<SaveButton
 							productId={product.id}
+							sellerId={product.sellerId}
 							initialSaved={product.isSaved}
 							initialCount={product.saveCount}
 						/>

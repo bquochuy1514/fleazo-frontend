@@ -30,6 +30,7 @@ export function LocationPicker({
 	onChange,
 	onDark = false,
 	variant = 'chip',
+	presentation = 'auto',
 }: {
 	provinces: Province[];
 	value: number | null;
@@ -40,6 +41,9 @@ export function LocationPicker({
 	// `chip`: segment of the header pill, no own border/radius/background.
 	// `row`: standalone full-width control for a sheet.
 	variant?: 'chip' | 'row';
+	// Search's mobile filter is already a Sheet; an anchored picker avoids
+	// nesting a second modal sheet inside it.
+	presentation?: 'auto' | 'popover';
 }) {
 	const [open, setOpen] = useState(false);
 	const [query, setQuery] = useState('');
@@ -119,6 +123,7 @@ export function LocationPicker({
 			}}
 			trigger={trigger}
 			title="Chọn khu vực"
+			presentation={presentation}
 			search={
 				provinces.length > 0
 					? {
