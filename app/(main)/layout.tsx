@@ -2,6 +2,7 @@ import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { BottomNav } from '@/components/layout/bottom-nav';
 import { getProvinces } from '@/lib/locations';
+import { getCategories } from '@/lib/categories';
 
 // Marketplace shell with full chrome; (header-only)/(bare) groups have less.
 //
@@ -14,16 +15,16 @@ export default async function MainLayout({
 }: Readonly<{
 	children: React.ReactNode;
 }>) {
-	const provinces = await getProvinces();
+	const [provinces, categories] = await Promise.all([
+		getProvinces(),
+		getCategories(),
+	]);
 
 	return (
 		<div className="flex min-h-full flex-1 flex-col pb-16 md:pb-0">
 			<Header provinces={provinces} />
-			<main className="flex-1">
-				{children}
-				<div className="h-[500px]"></div>
-			</main>
-			<Footer />
+			<main className="flex-1">{children}</main>
+			<Footer categories={categories} />
 			<BottomNav />
 		</div>
 	);

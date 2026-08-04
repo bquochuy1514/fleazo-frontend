@@ -60,7 +60,6 @@ export function BottomNav() {
 						key={item.href}
 						item={item}
 						active={pathname === item.href}
-						// Only "Cá nhân" ever gets an avatar.
 						avatar={
 							item.href === '/ca-nhan' ? user?.avatar : undefined
 						}

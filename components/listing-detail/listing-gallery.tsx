@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils';
 import type { ProductImage } from '@/types/product.types';
 
 // Sorted once by the caller; order=0 is the cover.
-export function ProductGallery({
+export function ListingGallery({
 	images,
 	title,
 }: {
@@ -81,7 +81,7 @@ export function ProductGallery({
 						fill
 						priority
 						sizes="(min-width: 1024px) 60vw, 100vw"
-						className="object-cover"
+						className="object-contain"
 					/>
 				</button>
 			</div>

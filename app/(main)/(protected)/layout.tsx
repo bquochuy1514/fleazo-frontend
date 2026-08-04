@@ -1,10 +1,11 @@
+import { ProtectedGuard } from '@/components/auth/protected-guard';
+
 // Logged-in pages that still want full marketplace chrome from (main).
-//
-// TODO: wrap `children` in a ProtectedGuard once AuthProvider exists.
+// Keep PROTECTED_PATHS (lib/protected-paths.ts) in sync with what lands here.
 export default function ProtectedLayout({
 	children,
 }: Readonly<{
 	children: React.ReactNode;
 }>) {
-	return <>{children}</>;
+	return <ProtectedGuard>{children}</ProtectedGuard>;
 }

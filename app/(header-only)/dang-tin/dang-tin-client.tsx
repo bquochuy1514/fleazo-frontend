@@ -19,17 +19,17 @@ import { Button } from '@/components/ui/button';
 import {
 	ImageUploader,
 	type ImageItem,
-} from '@/components/products/image-uploader';
-import { CategoryPicker } from '@/components/products/category-picker';
+} from '@/components/listing-form/image-uploader';
+import { CategoryPicker } from '@/components/listing-form/category-picker';
 import {
 	LocationPicker,
 	type LocationValue,
-} from '@/components/products/location-picker';
+} from '@/components/location/location-picker';
 import { CompleteProfileModal } from '@/components/form/complete-profile-modal';
 import { FieldError } from '@/components/form/field-error';
 import { FieldLabel } from '@/components/form/field-label';
 import { SectionHeader } from '@/components/form/section-header';
-import { ProductCard } from '@/components/products/product-card';
+import { ListingCard } from '@/components/listings/listing-card';
 import { useAuth } from '@/hooks/use-auth';
 import { parseApiError } from '@/lib/api';
 import type { ProvinceWithWards } from '@/lib/locations';
@@ -600,11 +600,11 @@ function DangTinForm({
 						</div>
 					</section>
 
-					{/* Renders the actual ProductCard, not a mockup. CARD_PRIMARY: payoff card. */}
+					{/* Renders the actual ListingCard, not a mockup. CARD_PRIMARY: payoff card. */}
 					<section className={CARD_PRIMARY}>
 						<SectionHeader icon={Eye} title="Xem trước" />
 						<div className="mx-auto max-w-56">
-							<ProductCard
+							<ListingCard
 								title={title || 'Tên sản phẩm của bạn'}
 								price={price || 0}
 								imageUrl={previewImageUrl}

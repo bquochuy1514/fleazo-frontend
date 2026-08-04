@@ -25,10 +25,14 @@ const AUTH_PATHS = [
 // only decides which page to show first.
 export function proxy(request: NextRequest) {
 	const hasSession = request.cookies.get('fz_session')?.value === '1';
-	const { pathname } = request.nextUrl;
+	const { pathname, search } = request.nextUrl;
 
 	if (isProtectedPath(pathname) && !hasSession) {
-		return NextResponse.redirect(new URL('/dang-nhap', request.url));
+		// ?next= so dang-nhap-client.tsx sends the visitor back to what they
+		// tapped instead of home — same contract as ProtectedGuard's redirect.
+		const loginUrl = new URL('/dang-nhap', request.url);
+		loginUrl.searchParams.set('next', pathname + search);
+		return NextResponse.redirect(loginUrl);
 	}
 	if (AUTH_PATHS.some((p) => pathname.startsWith(p)) && hasSession) {
 		return NextResponse.redirect(new URL('/', request.url));

@@ -296,10 +296,12 @@ components/
 │   ├── location-picker.tsx# Province chip, shared by header search and its sheet
 │   ├── bottom-nav.tsx   # Mobile-only tab bar (md:hidden) — desktop keeps the header CTA
 │   └── footer.tsx       # Đăng-tin CTA band + link columns + copyright
-└── products/
-    └── product-card.tsx # Trimmed card: condition+location badge, price pill — no
-                         #   rating, no save button (no auth yet). Not rendered anywhere
-                         #   yet — Home has no listings section.
+├── home/                # Homepage-only sections: category shelf, latest listings,
+│                        #   community banner and handoff steps.
+├── listings/            # Reusable UI for a marketplace listing (card + save action).
+├── listing-detail/      # Components owned by /san-pham/[id].
+├── listing-form/        # Reusable controls for creating or editing a listing.
+└── location/            # Location control shared by listing and profile forms.
 
 hooks/
 ├── use-media-query.ts   # For the cases where both branches can't be in the DOM at once
@@ -341,8 +343,16 @@ public/
 
 `providers/` doesn't exist yet — create only when the first real need shows up
 (matches `fleazo-frontend`'s "no empty placeholder folders" rule), not preemptively. No
-`AuthProvider`/`useAuth` yet either — Header/ProductCard are built for a guest viewer
+`AuthProvider`/`useAuth` yet either — Header/ListingCard are built for a guest viewer
 only; wire real auth state in before adding anything that needs a logged-in user.
+
+### Component ownership
+
+- Components used only by one route live in that route's private `_components/` folder.
+  `/quan-ly-tin/_components` owns its rows, tabs, status badge, and skeleton.
+- `components/listings` is for reusable listing UI; `listing-detail` and `listing-form`
+  are page/task-specific feature groups. Do not recreate a broad `components/products`
+  catch-all folder.
 
 > ⚠️ Keep this tree in sync whenever a folder is added or moved under the project root.
 
@@ -459,11 +469,11 @@ readable client-side, grouped under a named `# ===` section, added to both files
 - ✅ Done — route-group split: `(auth)`/`(main)`/`(header-only)`/`(bare)` layouts exist,
   chrome moved out of the root layout into `(main)/layout.tsx`
 - ✅ Done — `Header` (floating pill, always-on search, province picker), `BottomNav`,
-  `Footer`, `Logo`, `ProductCard`
+  `Footer`, `Logo`, `ListingCard`
 - ✅ Done — Home hero: photo + three content tiers + category chips from live data,
   measured for AA contrast at 375/1280/1920
 - 🚧 Home is **hero only** — the category grid and "Tin mới đăng" sections are agreed
-  (see Layout decisions) but not built. `ProductCard` is therefore unused so far.
+  (see Layout decisions) but not built. `ListingCard` is therefore unused so far.
 - 📋 Not started — every page inside the four route groups, `proxy.ts` guards,
   `ProtectedGuard`, and auth state in the UI. Don't begin unasked.
 - ⚠️ Known debt — a temporary `h-[1000px]` spacer in `(main)/layout.tsx`; the hero's

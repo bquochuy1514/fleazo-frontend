@@ -20,3 +20,8 @@ export function formatPrice(price: number | string): string {
 export function timeAgo(dateString: string): string {
 	return dayjs(dateString).fromNow();
 }
+
+// Thousands-grouped count for display: 1234 -> "1.234"
+export function formatCount(count: number): string {
+	return new Intl.NumberFormat('vi-VN').format(count);
+}

@@ -47,23 +47,62 @@ export function Header({ provinces }: { provinces: Province[] }) {
 	const pathname = usePathname();
 	const overHero = HERO_ROUTES.includes(pathname);
 	const [heroPassed, setHeroPassed] = useState(false);
+	// Remount-to-restart trick: bumping the key forces the Heart icon's
+	// `fz-pulse` animation to play again even if two saves land back to back.
+	const [pulseKey, setPulseKey] = useState(0);
+
+	useEffect(() => {
+		const onSaved = () => setPulseKey((k) => k + 1);
+		window.addEventListener('fz:saved', onSaved);
+		return () => window.removeEventListener('fz:saved', onSaved);
+	}, []);
 
 	useEffect(() => {
 		if (!overHero) return;
-		const hero = document.querySelector('[data-hero]');
-		if (!hero) {
+		const heroes = Array.from(document.querySelectorAll<HTMLElement>('[data-hero]'));
+		if (heroes.length === 0) {
 			// Route claims a hero but page didn't mark one — fall back to solid
 			// pill rather than white text on the paper background.
 			// eslint-disable-next-line react-hooks/set-state-in-effect
 			setHeroPassed(true);
 			return;
 		}
-		const io = new IntersectionObserver(
-			([entry]) => setHeroPassed(!entry.isIntersecting),
-			{ rootMargin: `-${HEADER_CLEARANCE_PX}px 0px 0px 0px` },
-		);
-		io.observe(hero);
-		return () => io.disconnect();
+		let frame: number | null = null;
+		let previousValue: boolean | null = null;
+
+		const updateHeaderSurface = () => {
+			frame = null;
+
+			// A hero must cover the line immediately below the header. Merely being
+			// visible elsewhere in the viewport (for example the next banner) must
+			// not switch the header back to its transparent treatment.
+			const headerIsOverPhoto = heroes.some((hero) => {
+				const rect = hero.getBoundingClientRect();
+				return rect.top <= HEADER_CLEARANCE_PX && rect.bottom > HEADER_CLEARANCE_PX;
+			});
+			const nextHeroPassed = !headerIsOverPhoto;
+
+			if (nextHeroPassed !== previousValue) {
+				previousValue = nextHeroPassed;
+				setHeroPassed(nextHeroPassed);
+			}
+		};
+
+		const scheduleUpdate = () => {
+			if (frame === null) {
+				frame = window.requestAnimationFrame(updateHeaderSurface);
+			}
+		};
+
+		updateHeaderSurface();
+		window.addEventListener('scroll', scheduleUpdate, { passive: true });
+		window.addEventListener('resize', scheduleUpdate);
+
+		return () => {
+			window.removeEventListener('scroll', scheduleUpdate);
+			window.removeEventListener('resize', scheduleUpdate);
+			if (frame !== null) window.cancelAnimationFrame(frame);
+		};
 	}, [overHero, pathname]);
 
 	const bare = overHero && !heroPassed;
@@ -93,7 +132,10 @@ export function Header({ provinces }: { provinces: Province[] }) {
 				<Logo
 					wordmarkClassName="hidden md:block"
 					className={cn(
-						'mr-auto ml-1 transition-colors duration-300 motion-reduce:transition-none sm:ml-1.5',
+						// Same "fade it slightly" idiom as the default button
+						// (`hover:bg-primary/80`) — opacity dim, not a bg tint
+						// like the ghost icon buttons beside it.
+						'mr-auto ml-1 transition-opacity duration-300 hover:opacity-80 motion-reduce:transition-none sm:ml-1.5',
 						bare && 'text-white',
 					)}
 				/>
@@ -116,7 +158,7 @@ export function Header({ provinces }: { provinces: Province[] }) {
 								bare && ghostOnDark,
 							)}
 						>
-							<Heart className="size-[18px]" />
+							<Heart key={pulseKey} className={cn('size-[18px]', pulseKey > 0 && 'fz-pulse')} />
 						</Link>
 						<Link
 							href="/tin-nhan"

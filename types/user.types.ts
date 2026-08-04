@@ -13,6 +13,7 @@ export type User = {
 	wardName: string | null;
 	addressDetail: string | null;
 	universityId: number | null;
+	university: { id: number; name: string } | null;
 	isActive: boolean;
 	isBanned: boolean;
 	avgRating: number;

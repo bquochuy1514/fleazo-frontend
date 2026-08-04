@@ -9,7 +9,7 @@ import {
 	registerAuthFailureHandler,
 } from '@/lib/api';
 import { isProtectedPath } from '@/lib/protected-paths';
-import { clearSessionFlag } from '@/lib/session-flag';
+import { clearSessionFlag, setSessionFlag } from '@/lib/session-flag';
 import type { User } from '@/types/user.types';
 
 type AuthContextValue = {
@@ -56,6 +56,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 			queueMicrotask(() => setIsLoading(false));
 			return;
 		}
+
+		// Set as soon as a token is seen, not after fetchProfile resolves —
+		// a Link prefetch (e.g. BottomNav's Đăng tin) can fire before that
+		// network round trip finishes and get proxy.ts's signed-out redirect.
+		setSessionFlag(!!localStorage.getItem('access_token'));
 
 		fetchProfile(token).then((profile) => {
 			if (!profile) {

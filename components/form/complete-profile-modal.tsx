@@ -12,7 +12,7 @@ import {
 import {
 	LocationPicker,
 	type LocationValue,
-} from '@/components/products/location-picker';
+} from '@/components/location/location-picker';
 import type { ProvinceWithWards } from '@/lib/locations';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';

@@ -1,6 +1,7 @@
 import Image from 'next/image';
-import { AuthVisual } from '@/components/auth/auth-visual';
 import { AuthFormPanel } from '@/components/auth/auth-form-panel';
+import { AuthVisual } from '@/components/auth/auth-visual';
+import { GuestOnlyGuard } from '@/components/auth/guest-only-guard';
 
 // Auth screens: no marketplace chrome, AuthVisual is the only branding.
 //
@@ -13,9 +14,6 @@ import { AuthFormPanel } from '@/components/auth/auth-form-panel';
 // From `md`: photo reused as a backdrop, tinted (not blurred) since
 // backdrop-filter creates an unwanted containing block for fixed descendants.
 // Same photo as AuthVisual — keep both in sync if swapped.
-//
-// TODO: wrap `children` in a GuestOnlyGuard once AuthProvider exists, so
-// logged-in visitors get bounced away from these pages.
 export default function AuthLayout({
 	children,
 }: Readonly<{
@@ -37,7 +35,9 @@ export default function AuthLayout({
 
 			{/* h-full: fills the fixed-height shell instead of growing past it. */}
 			<div className="flex h-full flex-col md:w-full md:max-w-6xl md:flex-row md:overflow-hidden md:rounded-4xl md:border md:border-white/10 md:bg-card md:shadow-2xl">
-				<AuthFormPanel>{children}</AuthFormPanel>
+				<AuthFormPanel>
+					<GuestOnlyGuard>{children}</GuestOnlyGuard>
+				</AuthFormPanel>
 
 				<AuthVisual />
 			</div>

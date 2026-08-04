@@ -13,6 +13,7 @@ import { ActionBanner } from '@/components/form/action-banner';
 import { GoogleAuthButton } from '@/components/auth/google-auth-button';
 import { useAuthFormScrollTop } from '@/components/auth/auth-form-panel';
 import { api, parseApiError } from '@/lib/api';
+import { setSessionFlag } from '@/lib/session-flag';
 import { useAuth } from '@/hooks/use-auth';
 import type { ApiErrorResponse } from '@/types/api.types';
 import { cn } from '@/lib/utils';
@@ -72,6 +73,7 @@ function LoginForm() {
 			const storage = rememberMe ? localStorage : sessionStorage;
 			storage.setItem('access_token', data.access_token);
 			storage.setItem('refresh_token', data.refresh_token);
+			setSessionFlag(rememberMe);
 			await auth.login(data.access_token);
 
 			toast.success(data.message);

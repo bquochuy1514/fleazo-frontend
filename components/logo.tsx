@@ -28,6 +28,7 @@ export function Logo({
 	mark = true,
 	wordmarkClassName,
 	className,
+	interactive = true,
 }: {
 	size?: keyof typeof SIZES;
 	mark?: boolean;
@@ -36,19 +37,15 @@ export function Logo({
 	wordmarkClassName?: string;
 	// On the link — both icon and text pick up a colour set here via currentColor.
 	className?: string;
+	// Footer's lockup is a brand mark, not a second "go home" nav item next
+	// to the real links below it — false renders a plain, unlinked div with
+	// no hover/cursor affordance at all instead of a Link.
+	interactive?: boolean;
 }) {
 	const size_ = SIZES[size];
 
-	return (
-		<Link
-			href="/"
-			aria-label="Fleazo — trang chủ"
-			className={cn(
-				'flex shrink-0 items-center text-fz-ink',
-				size_.gap,
-				className,
-			)}
-		>
+	const content = (
+		<>
 			{mark && (
 				<span
 					aria-hidden
@@ -66,6 +63,34 @@ export function Logo({
 			>
 				Fleazo
 			</span>
+		</>
+	);
+
+	if (!interactive) {
+		return (
+			<div
+				className={cn(
+					'flex shrink-0 items-center text-fz-ink',
+					size_.gap,
+					className,
+				)}
+			>
+				{content}
+			</div>
+		);
+	}
+
+	return (
+		<Link
+			href="/"
+			aria-label="Fleazo — trang chủ"
+			className={cn(
+				'flex shrink-0 items-center text-fz-ink',
+				size_.gap,
+				className,
+			)}
+		>
+			{content}
 		</Link>
 	);
 }

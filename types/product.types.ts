@@ -28,6 +28,17 @@ export type ProductStatus =
 	| 'BANNED'
 	| 'CANCELLED';
 
+export const PRODUCT_STATUS_LABELS: Record<ProductStatus, string> = {
+	DRAFT: 'Nháp',
+	PENDING: 'Chờ duyệt',
+	ACTIVE: 'Đang hiển thị',
+	REJECTED: 'Bị từ chối',
+	SOLD: 'Đã bán',
+	EXPIRED: 'Hết hạn',
+	BANNED: 'Bị khoá',
+	CANCELLED: 'Đã huỷ',
+};
+
 export type ProductImage = {
 	id: number;
 	url: string;
@@ -76,4 +87,18 @@ export type ProductSeller = {
 export type ProductDetail = Product & {
 	seller: ProductSeller;
 	isSaved: boolean;
+};
+
+// A pending edit staged against an ACTIVE listing — PATCH /products/:id doesn't
+// apply live edits, it queues them for moderation. Only the ref is returned by
+// GET /products/me, never the staged content itself.
+export type ProductRevisionRef = { id: number; updatedAt: string };
+
+// GET /products/me shape: Product plus the two seller-only moderation fields.
+// Kept off `Product` on purpose — the public GET /products never returns them,
+// so putting them there would either break every list caller (if required) or
+// misrepresent this endpoint (if optional).
+export type MyProduct = Product & {
+	rejectedReason: string | null;
+	revision: ProductRevisionRef | null;
 };

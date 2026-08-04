@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { POST_LOGIN_NEXT_KEY } from '@/components/auth/google-auth-button';
 import { useAuth } from '@/hooks/use-auth';
+import { setSessionFlag } from '@/lib/session-flag';
 
 // useSearchParams needs a Suspense boundary (Next build requirement).
 export function GoogleCallbackPageClient() {
@@ -37,6 +38,7 @@ function GoogleCallbackHandler() {
 		// No remember-me checkbox in Google flow — always persist to localStorage.
 		localStorage.setItem('access_token', accessToken);
 		localStorage.setItem('refresh_token', refreshToken);
+		setSessionFlag(true);
 
 		// Set by GoogleAuthButton before leaving the app.
 		const next = sessionStorage.getItem(POST_LOGIN_NEXT_KEY);

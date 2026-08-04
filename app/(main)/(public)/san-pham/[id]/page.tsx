@@ -4,14 +4,18 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ChevronRight, FileText, ShieldCheck } from 'lucide-react';
 import { isAxiosError } from '@/lib/api';
-import { getProduct, locationLabel } from '@/lib/products';
+import { getProduct, getRelatedProducts, locationLabel } from '@/lib/products';
 import { formatPrice, timeAgo } from '@/lib/format';
 import { PRODUCT_CONDITION_LABELS } from '@/types/product.types';
-import { ProductGallery } from '@/components/products/product-gallery';
-import { SaveButton } from '@/components/products/save-button';
-import { SellerCard } from '@/components/products/seller-card';
-import { QuickMessage } from '@/components/products/quick-message';
+import { ListingGallery } from '@/components/listing-detail/listing-gallery';
+import { SaveButton } from '@/components/listings/save-button';
+import { SellerCard } from '@/components/listing-detail/seller-card';
+import { QuickMessage } from '@/components/listing-detail/quick-message';
+import { RelatedListings } from '@/components/listing-detail/related-listings';
 import { SectionHeader } from '@/components/form/section-header';
+import { ScrollReveal } from '@/components/ui/scroll-reveal';
+
+const RELATED_LIMIT = 6;
 
 type PageProps = { params: Promise<{ id: string }> };
 
@@ -52,6 +56,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
 	const images = [...product.images].sort((a, b) => a.order - b.order);
 	const location = locationLabel(product);
+	const related = await getRelatedProducts(product, RELATED_LIMIT);
 
 	const facts: [string, string][] = [
 		['Tình trạng', PRODUCT_CONDITION_LABELS[product.condition]],
@@ -106,7 +111,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
 					style={{ animationDelay: '40ms' }}
 					className="fz-rise relative [grid-area:gallery]"
 				>
-					<ProductGallery images={images} title={product.title} />
+					<ListingGallery images={images} title={product.title} />
 					<div className="absolute top-3 right-3 z-10">
 						<SaveButton
 							productId={product.id}
@@ -185,6 +190,15 @@ export default async function ProductDetailPage({ params }: PageProps) {
 					</section>
 				</div>
 			</div>
+
+			<RelatedListings
+				related={related}
+				limit={RELATED_LIMIT}
+				productId={product.id}
+				categoryId={product.categoryId}
+				categoryName={product.category.name}
+				parentCategoryId={product.category.parent?.id}
+			/>
 		</div>
 	);
 }

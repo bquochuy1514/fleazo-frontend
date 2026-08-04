@@ -42,6 +42,16 @@ export function SaveButton({
 
 		try {
 			await (nextSaved ? saveProduct : unsaveProduct)(productId);
+			toast.success(
+				nextSaved
+					? 'Đã lưu tin — xem lại ở "Tin đã lưu".'
+					: 'Đã bỏ lưu tin.',
+			);
+			// Cues the Header's heart icon to beat once — a quiet stand-in
+			// for animating the card itself across the screen (see globals.css).
+			if (nextSaved) {
+				window.dispatchEvent(new Event('fz:saved'));
+			}
 		} catch {
 			setSaved(!nextSaved);
 			setCount((c) => c + (nextSaved ? -1 : 1));

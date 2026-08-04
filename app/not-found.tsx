@@ -5,6 +5,9 @@ import { Header } from '@/components/layout/header';
 import { buttonVariants } from '@/components/ui/button';
 import { getProvinces } from '@/lib/locations';
 import { cn } from '@/lib/utils';
+import { Footer } from '@/components/layout/footer';
+import { BottomNav } from '@/components/layout/bottom-nav';
+import { getCategories } from '@/lib/categories';
 
 export const metadata: Metadata = {
 	title: 'Không tìm thấy trang — Fleazo',
@@ -13,13 +16,16 @@ export const metadata: Metadata = {
 // Global 404, sits directly under the root layout (no route group), so it
 // renders its own Header unlike every other page.
 export default async function NotFound() {
-	const provinces = await getProvinces();
+	const [provinces, categories] = await Promise.all([
+		getProvinces(),
+		getCategories(),
+	]);
 
 	return (
-		<div className="flex min-h-full flex-1 flex-col">
+		<div className="flex min-h-full flex-1 flex-col pb-16 md:pb-0">
 			<Header provinces={provinces} />
 
-			<main className="flex flex-1 flex-col items-center justify-center px-4 pt-24 pb-16 text-center">
+			<main className="flex min-h-svh flex-1 flex-col items-center justify-center px-4 pt-24 pb-20 text-center">
 				{/* Stacked and centered, not side-by-side, so the wide 612×408 art reads. */}
 				<div className="fz-rise w-full max-w-md sm:max-w-lg">
 					<Image
@@ -57,6 +63,8 @@ export default async function NotFound() {
 					Về trang chủ
 				</Link>
 			</main>
+			<Footer categories={categories} />
+			<BottomNav />
 		</div>
 	);
 }
