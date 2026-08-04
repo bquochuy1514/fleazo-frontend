@@ -156,7 +156,7 @@ export function PickerOption({
 			data-selected={selected}
 			onClick={onSelect}
 			className={cn(
-				'flex w-full items-center justify-between gap-2 rounded-full px-4 py-3.5 text-left text-[15px] transition-colors outline-none hover:bg-muted focus-visible:bg-muted md:py-2.5 md:text-sm',
+				'flex w-full items-center justify-between gap-2 rounded-full px-4 py-3.5 text-left text-base transition-colors outline-none hover:bg-muted focus-visible:bg-muted md:py-2.5 md:text-sm',
 				selected ? 'font-semibold text-fz-ink' : 'text-fz-ink/80',
 			)}
 		>
@@ -178,14 +178,15 @@ export function PickerEmpty({ children }: { children: React.ReactNode }) {
 function SearchField({ value, onChange, placeholder, label }: Search) {
 	return (
 		// No autoFocus — avoids raising the keyboard immediately on mobile.
-		// text-base (16px) below md: smaller triggers iOS Safari's zoom-in, which doesn't undo itself.
+		// iOS Safari zooms focused fields below 16px, including in a landscape
+		// viewport where a phone can satisfy the md breakpoint.
 		<input
 			type="text"
 			value={value}
 			onChange={(e) => onChange(e.target.value)}
 			placeholder={placeholder}
 			aria-label={label}
-			className="h-11 w-full rounded-full border border-input bg-transparent px-4 text-base outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring md:h-10 md:text-sm"
+			className="h-11 w-full rounded-full border border-input bg-transparent px-4 text-base outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring md:h-10"
 		/>
 	);
 }

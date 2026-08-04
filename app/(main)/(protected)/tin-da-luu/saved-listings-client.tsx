@@ -5,18 +5,16 @@ import Link from 'next/link';
 import dayjs from 'dayjs';
 import { Heart, Loader2, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
-import { ListingCard } from '@/components/listings/listing-card';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { EmptyState } from '@/components/ui/empty-state';
 import {
-	firstImageUrl,
 	getSavedProducts,
-	locationLabel,
 	unsaveProduct,
 } from '@/lib/products';
 import { formatCount } from '@/lib/format';
 import type { SavedProduct } from '@/types/product.types';
+import { SavedListingItem } from './_components/saved-listing-item';
 
 const PAGE_LIMIT = 20;
 
@@ -38,17 +36,17 @@ function getShelfGroup(savedAt: string): ShelfGroup {
 
 function SavedListingsSkeleton() {
 	return (
-		<div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4 lg:grid-cols-5">
+		<div className="grid gap-x-8 lg:grid-cols-2">
 			{Array.from({ length: 8 }, (_, index) => (
 				<div
 					key={index}
-					className="overflow-hidden rounded-2xl border border-border bg-card sm:rounded-3xl"
+					className="flex gap-3 border-b border-border py-3.5 sm:gap-4 sm:py-4"
 				>
-					<div className="aspect-square animate-pulse bg-muted" />
-					<div className="space-y-3 p-3.5">
-						<div className="h-5 w-2/5 animate-pulse rounded bg-muted" />
+					<div className="h-25 w-[7.5rem] shrink-0 animate-pulse rounded-xl bg-muted sm:h-28 sm:w-36" />
+					<div className="flex-1 space-y-3 pt-1">
+						<div className="h-3 w-1/4 animate-pulse rounded bg-muted" />
 						<div className="h-4 w-4/5 animate-pulse rounded bg-muted" />
-						<div className="h-3 w-3/5 animate-pulse rounded bg-muted" />
+						<div className="h-4 w-2/5 animate-pulse rounded bg-muted" />
 					</div>
 				</div>
 			))}
@@ -229,37 +227,13 @@ export function SavedListingsClient() {
 											{formatCount(groupItems.length)} tin
 										</p>
 									</div>
-									<div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4 lg:grid-cols-5">
+									<div className="mt-2 grid gap-x-8 lg:mt-3 lg:grid-cols-2">
 										{groupItems.map((savedItem) => {
-											const { product } = savedItem;
 											return (
-												<ListingCard
-													key={product.id}
-											id={product.id}
-											sellerId={product.sellerId}
-													title={product.title}
-													price={product.price}
-													imageUrl={firstImageUrl(
-														product,
-													)}
-													condition={
-														product.condition
-													}
-													categoryLabel={
-														product.category.name
-													}
-													locationLabel={locationLabel(
-														product,
-													)}
-													saveCount={
-														product.saveCount
-													}
-													initialSaved
-													onUnsaveRequested={() =>
-														setPendingUnsave(
-															savedItem,
-														)
-													}
+												<SavedListingItem
+													key={savedItem.product.id}
+													item={savedItem}
+													onUnsaveRequested={setPendingUnsave}
 												/>
 											);
 										})}

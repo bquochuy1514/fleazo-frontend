@@ -27,6 +27,8 @@ export const metadata: Metadata = {
 // Makes the on-screen keyboard take real layout space instead of sliding
 // over the page, so bottom-anchored panels aren't hidden behind it.
 export const viewport: Viewport = {
+	width: 'device-width',
+	initialScale: 1,
 	interactiveWidget: 'resizes-content',
 };
 

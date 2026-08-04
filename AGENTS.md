@@ -275,7 +275,8 @@ app/                            # App Router — no src/ directory. Route groups
     │                           #   once for the header. ⚠️ still holds a temporary
     │                           #   h-[1000px] scroll spacer — delete when Home grows
     │                           #   its real sections.
-    ├── (protected)/layout.tsx  # Shell only — no ProtectedGuard yet, no pages
+    ├── (protected)/ca-nhan/    # Editable personal profile; private form and password dialog live in _components/.
+    ├── (protected)/layout.tsx  # Shared ProtectedGuard for logged-in marketplace pages.
     └── (public)/page.tsx       # Home — photo hero only so far. `revalidate = 60`.
 
 components/
@@ -318,7 +319,7 @@ lib/
 │                        #   from fleazo-frontend, same backend contract, unchanged)
 ├── categories.ts        # getCategories()
 ├── products.ts          # getProducts, firstImageUrl, locationLabel
-├── locations.ts         # getProvinces() — third-party list, no backend endpoint exists
+├── locations.ts         # getProvinces() — seeded locations via Fleazo backend
 ├── province-store.ts    # Client store backing the location picker
 └── format.ts            # formatPrice
 
@@ -349,7 +350,7 @@ only; wire real auth state in before adding anything that needs a logged-in user
 ### Component ownership
 
 - Components used only by one route live in that route's private `_components/` folder.
-  `/quan-ly-tin/_components` owns its rows, tabs, status badge, and skeleton.
+  `/quan-ly-tin/_components` owns seller rows/tabs; `/tin-da-luu/_components` owns its saved-record item.
 - `components/listings` is for reusable listing UI; `listing-detail` and `listing-form`
   are page/task-specific feature groups. Do not recreate a broad `components/products`
   catch-all folder.
@@ -470,6 +471,7 @@ readable client-side, grouped under a named `# ===` section, added to both files
   chrome moved out of the root layout into `(main)/layout.tsx`
 - ✅ Done — `Header` (floating pill, always-on search, province picker), `BottomNav`,
   `Footer`, `Logo`, `ListingCard`
+- ✅ Done — `/ca-nhan`: editable profile (avatar, contact, university, location and password)
 - ✅ Done — Home hero: photo + three content tiers + category chips from live data,
   measured for AA contrast at 375/1280/1920
 - 🚧 Home is **hero only** — the category grid and "Tin mới đăng" sections are agreed

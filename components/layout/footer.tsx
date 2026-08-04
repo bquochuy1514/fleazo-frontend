@@ -28,7 +28,7 @@ export function Footer({ categories = [] }: { categories?: Category[] }) {
 	const featuredCategories = categories.slice(0, FOOTER_CATEGORY_LIMIT);
 
 	return (
-		<footer className="border-t border-border">
+		<footer className="w-full border-t border-border">
 			<div className="relative overflow-hidden bg-fz-ink px-4 py-10">
 				{/* Decorative mark, not brand — huge, low-opacity, aria-hidden.
 				    Same mask-image trick as Logo (bg-current reads the mask's

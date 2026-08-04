@@ -246,7 +246,9 @@ const Trigger = React.forwardRef<
 				<Icon className="size-4 shrink-0 text-muted-foreground" />
 				<span
 					className={cn(
-						'truncate text-[15px]',
+						// 16px below md keeps iOS Safari from zooming the page when this
+						// form control opens its picker.
+						'truncate text-base md:text-sm',
 						placeholder
 							? 'text-muted-foreground'
 							: 'font-medium text-fz-ink',

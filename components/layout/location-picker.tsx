@@ -136,8 +136,7 @@ export function LocationPicker({
 			}
 		>
 			{provinces.length === 0 ? (
-				// Province list is third-party — say so rather than showing
-				// an empty menu.
+				// Keep the failure state explicit instead of rendering an empty menu.
 				<PickerEmpty>
 					Chưa tải được danh sách khu vực. Thử lại sau nhé.
 				</PickerEmpty>

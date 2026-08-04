@@ -2,6 +2,7 @@
 // wrapped in ProtectedGuard. Checked against pathname since route groups
 // like `(header-only)` never appear in the URL.
 export const PROTECTED_PATHS = [
+	'/ca-nhan',
 	'/dang-tin',
 	'/tin-nhan',
 	'/quan-ly-tin',

@@ -134,19 +134,20 @@ export function SearchResultsClient({
 			<SearchMasthead
 				filters={filters}
 				contextLabel={contextLabel}
-				toolbar={
-					result ? (
-						<SearchToolbar
-							total={result.total}
-							filters={filters}
-							categories={categories}
-							provinces={provinces}
-							onOpenFilters={() => setFilterSheetOpen(true)}
-							onClear={clearFilters}
-						/>
-					) : undefined
-				}
 			/>
+			{result && (
+				<div className="mt-3">
+					<SearchToolbar
+						total={result.total}
+						filters={filters}
+						categories={categories}
+						provinces={provinces}
+						onOpenFilters={() => setFilterSheetOpen(true)}
+						onClear={clearFilters}
+						onRemove={(patch) => navigate({ ...filters, ...patch, page: 1 })}
+					/>
+				</div>
+			)}
 
 			{result ? (
 				<>
