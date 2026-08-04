@@ -18,10 +18,7 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { ListingListSkeleton } from './_components/listing-row-skeleton';
-import {
-	ListingRow,
-	type RowActionKey,
-} from './_components/listing-row';
+import { ListingRow, type RowActionKey } from './_components/listing-row';
 import {
 	ListingStatusTabs,
 	tabLabel,
@@ -42,6 +39,12 @@ import {
 // Seller listing counts are small, so one unfiltered fetch powers every tab
 // count and both filters without a round trip per interaction.
 const FETCH_LIMIT = 100;
+
+// Empty panels fill the remaining first view after the page chrome. The page
+// itself extends 3rem beyond the viewport so the footer appears on the first
+// intentional scroll, rather than competing with an empty state on load.
+const EMPTY_STATE_CLASS =
+	'mt-6 min-h-[calc(100dvh-21rem)] justify-center sm:mt-8';
 
 const REVISION_WARNING_KEY = 'fz:hide-revision-warning';
 
@@ -106,8 +109,26 @@ export function QuanLyTinClient() {
 	}, []);
 
 	useEffect(() => {
-		void fetchProducts();
-	}, [fetchProducts]);
+		let cancelled = false;
+
+		const loadInitialProducts = async () => {
+			try {
+				const res = await getMyProducts({ limit: FETCH_LIMIT });
+				if (cancelled) return;
+				setProducts(res.data);
+				setTotal(res.total);
+			} catch (err) {
+				if (!cancelled) setLoadError(parseApiError(err).message ?? null);
+			} finally {
+				if (!cancelled) setIsLoading(false);
+			}
+		};
+
+		void loadInitialProducts();
+		return () => {
+			cancelled = true;
+		};
+	}, []);
 
 	// Debounced URL sync — the input is the source of truth while typing.
 	useEffect(() => {
@@ -134,7 +155,8 @@ export function QuanLyTinClient() {
 	const visibleProducts = useMemo(() => {
 		const needle = normalize(searchInput);
 		return products.filter((product) => {
-			if (activeTab !== 'ALL' && product.status !== activeTab) return false;
+			if (activeTab !== 'ALL' && product.status !== activeTab)
+				return false;
 			if (!needle) return true;
 			return normalize(product.title).includes(needle);
 		});
@@ -195,7 +217,8 @@ export function QuanLyTinClient() {
 				setConfirm(null);
 			} catch (err) {
 				toast.error(
-					parseApiError(err).message ?? 'Đã có lỗi xảy ra, vui lòng thử lại.',
+					parseApiError(err).message ??
+						'Đã có lỗi xảy ra, vui lòng thử lại.',
 				);
 				void fetchProducts();
 			} finally {
@@ -212,36 +235,33 @@ export function QuanLyTinClient() {
 		const { kind, product } = confirm;
 
 		if (kind === 'editActive') {
-			if (hideRevisionWarning) localStorage.setItem(REVISION_WARNING_KEY, '1');
+			if (hideRevisionWarning)
+				localStorage.setItem(REVISION_WARNING_KEY, '1');
 			setConfirm(null);
 			goToEdit(product);
 			return;
 		}
 		if (kind === 'publish')
-			return void runTransition(product, 'PENDING', 'Đã gửi tin đi duyệt.');
+			return void runTransition(
+				product,
+				'PENDING',
+				'Đã gửi tin đi duyệt.',
+			);
 		if (kind === 'markSold')
-			return void runTransition(product, 'SOLD', 'Đã đánh dấu tin là đã bán.');
+			return void runTransition(
+				product,
+				'SOLD',
+				'Đã đánh dấu tin là đã bán.',
+			);
 		return void runTransition(product, 'CANCELLED', 'Đã huỷ tin.');
 	}, [confirm, hideRevisionWarning, goToEdit, runTransition]);
 
 	return (
-		<div className="mx-auto max-w-6xl px-4 pt-24 pb-16 sm:px-6 sm:pt-28 sm:pb-20">
-			<div className="flex items-end justify-between gap-4">
+		<div className="mx-auto min-h-[calc(100dvh+3rem)] max-w-6xl px-4 pt-24 pb-16 sm:px-6 sm:pt-28 sm:pb-20">
+			<div>
 				<h1 className="font-heading text-3xl leading-none font-bold tracking-tight text-fz-ink sm:text-4xl">
 					Quản lý tin
 				</h1>
-				{/* Hidden on mobile — BottomNav already floats a "Đăng tin" FAB
-				    there; the empty state carries the CTA instead. */}
-				<Button
-					asChild
-					size="lg"
-					className="hidden h-11 shrink-0 px-5 sm:inline-flex"
-				>
-					<Link href="/dang-tin">
-						<Plus aria-hidden data-icon="inline-start" />
-						Đăng tin mới
-					</Link>
-				</Button>
 			</div>
 
 			<div className="mt-8 flex flex-col gap-4 sm:mt-10">
@@ -272,7 +292,7 @@ export function QuanLyTinClient() {
 				<ListingListSkeleton />
 			) : loadError ? (
 				<EmptyState
-					className="mt-6 sm:mt-8"
+					className={EMPTY_STATE_CLASS}
 					icon={TriangleAlert}
 					title="Không tải được danh sách tin"
 					description={loadError}
@@ -289,7 +309,7 @@ export function QuanLyTinClient() {
 				/>
 			) : products.length === 0 ? (
 				<EmptyState
-					className="mt-6 sm:mt-8"
+					className={EMPTY_STATE_CLASS}
 					icon={PackagePlus}
 					title="Bạn chưa có tin đăng nào"
 					description="Đăng tin đầu tiên và bắt đầu bán những món đồ bạn không dùng tới nữa."
@@ -305,7 +325,7 @@ export function QuanLyTinClient() {
 			) : visibleProducts.length === 0 ? (
 				searchInput ? (
 					<EmptyState
-						className="mt-6 sm:mt-8"
+						className={EMPTY_STATE_CLASS}
 						icon={SearchX}
 						title="Không tìm thấy tin nào"
 						description={
@@ -326,7 +346,7 @@ export function QuanLyTinClient() {
 					/>
 				) : (
 					<EmptyState
-						className="mt-6 sm:mt-8"
+						className={EMPTY_STATE_CLASS}
 						icon={Inbox}
 						title={`Chưa có tin nào ở mục "${tabLabel(activeTab)}"`}
 						description={
@@ -350,8 +370,8 @@ export function QuanLyTinClient() {
 					</ul>
 					{total > products.length && (
 						<p className="mt-6 text-center text-xs text-muted-foreground">
-							Đang hiển thị {products.length} tin gần nhất trong tổng số{' '}
-							{total} tin.
+							Đang hiển thị {products.length} tin gần nhất trong
+							tổng số {total} tin.
 						</p>
 					)}
 				</>
@@ -394,15 +414,15 @@ function confirmCopy(confirm: PendingConfirm | null) {
 			title: 'Thay đổi cần được duyệt lại',
 			description: (
 				<>
-					Tin này đang hiển thị công khai. Nội dung bạn sửa sẽ được gửi tới
-					quản trị viên để duyệt — trong lúc chờ, người mua vẫn thấy nội
-					dung cũ. Tin không bị gỡ xuống.
+					Tin này đang hiển thị công khai. Nội dung bạn sửa sẽ được
+					gửi tới quản trị viên để duyệt — trong lúc chờ, người mua
+					vẫn thấy nội dung cũ. Tin không bị gỡ xuống.
 					{product.revision && (
 						<>
 							{' '}
-							Tin này đã có một thay đổi đang chờ duyệt: nội dung trong
-							form là nội dung đang công khai, và thay đổi mới sẽ thay thế
-							thay đổi đang chờ.
+							Tin này đã có một thay đổi đang chờ duyệt: nội dung
+							trong form là nội dung đang công khai, và thay đổi
+							mới sẽ thay thế thay đổi đang chờ.
 						</>
 					)}
 				</>

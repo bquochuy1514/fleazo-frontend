@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowRight, ArrowUpRight } from 'lucide-react';
 import { ScrollReveal } from '@/components/ui/scroll-reveal';
 import { useAuth } from '@/hooks/use-auth';
 import { cn } from '@/lib/utils';
@@ -141,18 +141,41 @@ export function LatestListings({
 			    slot is the "Xem tất cả" action, which lives inline here instead
 			    of as a full-width bar under the grid. */}
 			<div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
-				<div className="max-w-md">
-					<p className="font-heading text-xs font-semibold tracking-[0.18em] text-fz-muted uppercase">
+				<div className="relative max-w-md">
+					<div className="flex items-center justify-between gap-3 sm:block">
+						<p className="font-heading text-xs font-semibold tracking-[0.18em] text-fz-muted uppercase">
 						Ngay lúc này
-					</p>
+						</p>
+						<Link
+							href={viewAllHref}
+							className="group -mr-2 inline-flex min-h-11 shrink-0 items-center gap-1 px-2 font-heading text-sm font-semibold text-fz-ink transition-colors hover:text-fz-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 sm:hidden"
+						>
+							Xem tất cả
+							<ArrowRight
+								aria-hidden
+								className="size-4 transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transition-none"
+							/>
+						</Link>
+					</div>
 					<h2 className="mt-2 font-heading text-3xl leading-none font-bold tracking-tight text-fz-ink sm:text-4xl">
 						{heading}
 					</h2>
 					<p className="mt-3 text-base leading-7 text-muted-foreground">
 						{subcopy}
 					</p>
+					{showNudge && (
+						<p className="mt-3 text-sm text-muted-foreground sm:hidden">
+							<Link
+								href="/ca-nhan"
+								className="underline underline-offset-2 hover:text-fz-ink"
+							>
+								Cập nhật trường/khu vực
+							</Link>{' '}
+							để xem tin gần bạn hơn.
+						</p>
+					)}
 				</div>
-				<div className="flex shrink-0 flex-col items-start gap-2 sm:items-end sm:text-right">
+				<div className="hidden shrink-0 flex-col items-end gap-2 text-right sm:flex">
 					<Link
 						href={viewAllHref}
 						className="group inline-flex min-h-11 items-center gap-1.5 rounded-full border border-border px-5 font-heading text-sm font-semibold tracking-tight text-fz-ink transition-colors hover:border-fz-ink focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"

@@ -138,7 +138,7 @@ export function ListingCard({
 						// readable rather than getting clipped with an ellipsis.
 						<div className="flex items-start gap-1">
 							<MapPin className="mt-0.5 size-3 shrink-0" />
-							<span>{locationLabel}</span>
+							<span className="line-clamp-2 min-h-8">{locationLabel}</span>
 						</div>
 					)}
 				</div>
@@ -149,7 +149,7 @@ export function ListingCard({
 	return (
 		<div
 			className={cn(
-				'group overflow-hidden rounded-2xl border border-border bg-card transition hover:shadow-md sm:rounded-3xl',
+				'group h-full overflow-hidden rounded-2xl border border-border bg-card transition hover:shadow-md sm:rounded-3xl',
 				className,
 			)}
 		>

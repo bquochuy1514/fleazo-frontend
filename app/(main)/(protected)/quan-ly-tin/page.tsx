@@ -14,7 +14,7 @@ export default function QuanLyTinPage() {
 	return (
 		<Suspense
 			fallback={
-				<div className="mx-auto max-w-6xl px-4 pt-24 pb-16 sm:px-6 sm:pt-28 sm:pb-20">
+				<div className="mx-auto min-h-[calc(100dvh+3rem)] max-w-6xl px-4 pt-24 pb-16 sm:px-6 sm:pt-28 sm:pb-20">
 					<ListingListSkeleton />
 				</div>
 			}
