@@ -81,6 +81,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		setIsLoggingOut(false);
 	};
 
+	// Keep the logout guard active until navigation has actually left a protected
+	// route. Clearing it inside logout() lets ProtectedGuard win the race and
+	// redirect to login before the home navigation completes.
+	useEffect(() => {
+		if (!isLoggingOut || isProtectedPath(pathname)) return;
+		queueMicrotask(() => setIsLoggingOut(false));
+	}, [isLoggingOut, pathname]);
+
 	const logout = async () => {
 		setIsLoggingOut(true);
 		const token = getStoredAccessToken();
@@ -106,8 +114,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 		setUser(null);
 		// Only bounce home from protected pages — public pages have nothing to guard.
-		if (isProtectedPath(pathname)) router.push('/');
-		setIsLoggingOut(false);
+		if (isProtectedPath(pathname)) router.replace('/');
 	};
 
 	// Registers this logout as api.ts's 401-exhausted-refresh handler.

@@ -6,7 +6,7 @@ import { ArrowUpRight } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { ScrollReveal } from '@/components/ui/scroll-reveal';
 import { ListingCard, type ProductMatchBadge } from '@/components/listings/listing-card';
-import { getProducts, firstImageUrl, locationLabel } from '@/lib/products';
+import { getProduct, getProducts, firstImageUrl, locationLabel } from '@/lib/products';
 import type { RelatedProductItem } from '@/lib/products';
 
 // Buffer per backfill query — the dataset can be small, so asking for just
@@ -44,7 +44,8 @@ export function RelatedListings({
 	const [items, setItems] = useState<RelatedProductItem[]>(ownFiltered);
 
 	useEffect(() => {
-		if (isLoading || !user || ownFiltered.length >= limit) {
+		if (isLoading) return;
+		if (!user) {
 			setItems(ownFiltered);
 			return;
 		}
@@ -52,7 +53,20 @@ export function RelatedListings({
 		let cancelled = false;
 
 		(async () => {
-			const merged = [...ownFiltered];
+			const details = await Promise.all(
+				ownFiltered.map(({ product }) =>
+					getProduct(product.id).catch(() => null),
+				),
+			);
+			const detailById = new Map(
+				details.filter((detail) => detail !== null).map((detail) => [detail.id, detail]),
+			);
+			const merged = ownFiltered.map((item) => {
+				const detail = detailById.get(item.product.id);
+				return detail
+					? { ...item, product: { ...item.product, isSaved: detail.isSaved } }
+					: item;
+			});
 			const seen = new Set<number>([
 				productId,
 				...related.map(({ product }) => product.id),
@@ -123,6 +137,7 @@ export function RelatedListings({
 							categoryLabel={relatedProduct.category?.name}
 							locationLabel={locationLabel(relatedProduct)}
 							saveCount={relatedProduct.saveCount}
+							initialSaved={relatedProduct.isSaved ?? false}
 							matchBadge={badge}
 						/>
 					</ScrollReveal>

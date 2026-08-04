@@ -13,11 +13,13 @@ export function SaveButton({
 	initialSaved,
 	initialCount,
 	className,
+	onUnsaveRequested,
 }: {
 	productId: number;
 	initialSaved: boolean;
 	initialCount: number;
 	className?: string;
+	onUnsaveRequested?: () => void;
 }) {
 	const { user } = useAuth();
 	const router = useRouter();
@@ -34,6 +36,10 @@ export function SaveButton({
 			return;
 		}
 		if (pending) return;
+		if (saved && onUnsaveRequested) {
+			onUnsaveRequested();
+			return;
+		}
 
 		const nextSaved = !saved;
 		setPending(true);

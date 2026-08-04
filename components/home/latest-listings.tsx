@@ -51,7 +51,6 @@ export function LatestListings({
 
 	useEffect(() => {
 		if (isLoading || !user) return;
-		if (!user.university && !user.provinceCode) return;
 
 		let cancelled = false;
 
@@ -90,7 +89,8 @@ export function LatestListings({
 			}
 
 			if (merged.length < FEED_LIMIT) {
-				addAll(initialProducts);
+				const res = await getProducts({ limit: FEED_LIMIT });
+				addAll(res.data);
 			}
 
 			if (cancelled) return;
@@ -220,6 +220,7 @@ export function LatestListings({
 							categoryLabel={product.category?.name}
 							locationLabel={getLocationLabel(product)}
 							saveCount={product.saveCount}
+							initialSaved={product.isSaved ?? false}
 							matchBadge={badge}
 						/>
 					</ScrollReveal>

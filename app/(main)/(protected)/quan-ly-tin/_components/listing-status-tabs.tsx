@@ -9,7 +9,7 @@ export type TabKey = ProductStatus | 'ALL';
 
 // Flip to true to show only "Tất cả" + non-empty + the current tab. EXPIRED and
 // BANNED read 0 forever until the backend grows flows that produce them.
-const HIDE_EMPTY_TABS = false;
+const HIDE_EMPTY_TABS = true;
 
 // Ordered by how often a seller needs them, not by the enum's order.
 const TAB_ORDER: TabKey[] = [
@@ -73,7 +73,7 @@ export function ListingStatusTabs({
 							href={hrefFor(key)}
 							aria-current={active ? 'page' : undefined}
 							className={cn(
-								'inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border px-4 font-heading text-sm font-semibold tracking-tight whitespace-nowrap transition-colors focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none',
+				'inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg border px-3.5 font-heading text-sm font-semibold tracking-tight whitespace-nowrap transition-colors focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none',
 								active
 									? // Ink, not moss — same rule BottomNav follows.
 										'border-transparent bg-fz-ink text-fz-paper'

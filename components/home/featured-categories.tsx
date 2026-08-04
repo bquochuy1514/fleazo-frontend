@@ -77,6 +77,9 @@ function CategoryTile({
 					src={category.image}
 					alt={category.name}
 					fill
+					// Keep category art on the browser's direct Cloudinary path. The
+					// optimizer can time out when several category images load together.
+					unoptimized
 					sizes="(min-width: 1024px) 45vw, (min-width: 640px) 55vw, 100vw"
 					className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.05] motion-reduce:transition-none"
 				/>
@@ -135,7 +138,7 @@ function CategoryTile({
 function AllCategoriesTile({ total }: { total: number }) {
 	return (
 		<Link
-			href="/tim-kiem"
+			href="/danh-muc"
 			className="group mt-4 flex items-center justify-between rounded-2xl border border-border px-5 py-4 transition-colors hover:border-fz-ink focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 sm:rounded-3xl sm:px-6 sm:py-5"
 		>
 			<span className="font-heading text-base font-semibold tracking-tight text-fz-ink sm:text-lg">

@@ -5,6 +5,7 @@ import { QuanLyTinClient } from './quan-ly-tin-client';
 
 export const metadata: Metadata = {
 	title: 'Quản lý tin — Fleazo',
+	description: 'Quản lý tin đăng trên Fleazo — chợ đồ cũ dành cho sinh viên.',
 };
 
 // Suspense is required, not optional: the client reads useSearchParams (the

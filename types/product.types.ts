@@ -65,6 +65,9 @@ export type Product = {
 	images: ProductImage[];
 	qualityScore: number;
 	saveCount: number;
+	// Public product lists receive this viewer-specific flag when the request
+	// includes a valid bearer token; it is false for signed-out visitors.
+	isSaved?: boolean;
 	sellerId: number;
 	createdAt: string;
 	updatedAt: string;
@@ -87,6 +90,13 @@ export type ProductSeller = {
 export type ProductDetail = Product & {
 	seller: ProductSeller;
 	isSaved: boolean;
+};
+
+// GET /products/saved keeps the bookmark's timestamp alongside the usual
+// public listing shape, so the client can group a user's saved shelf by time.
+export type SavedProduct = {
+	product: Product;
+	savedAt: string;
 };
 
 // A pending edit staged against an ACTIVE listing — PATCH /products/:id doesn't

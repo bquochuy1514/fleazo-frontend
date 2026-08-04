@@ -44,7 +44,7 @@ const FETCH_LIMIT = 100;
 // itself extends 3rem beyond the viewport so the footer appears on the first
 // intentional scroll, rather than competing with an empty state on load.
 const EMPTY_STATE_CLASS =
-	'mt-6 min-h-[calc(100dvh-21rem)] justify-center sm:mt-8';
+	'mt-6 min-h-[calc(100dvh-21rem)] justify-center rounded-none border-x-0 border-solid bg-transparent sm:mt-8 sm:rounded-none';
 
 const REVISION_WARNING_KEY = 'fz:hide-revision-warning';
 
@@ -229,6 +229,17 @@ export function QuanLyTinClient() {
 	);
 
 	const confirmProps = confirmCopy(confirm);
+	const sellerSummary = [
+		total === 0 ? 'Chưa có tin nào' : `${total} tin đang quản lý`,
+		counts.ACTIVE > 0 && `${counts.ACTIVE} đang hiển thị`,
+		counts.PENDING > 0 && `${counts.PENDING} chờ duyệt`,
+	]
+		.filter((part): part is string => Boolean(part))
+		.join(' · ');
+	const listLabel =
+		activeTab === 'ALL'
+			? 'Tất cả tin'
+			: tabLabel(activeTab);
 
 	const handleConfirm = useCallback(() => {
 		if (!confirm) return;
@@ -262,9 +273,12 @@ export function QuanLyTinClient() {
 				<h1 className="font-heading text-3xl leading-none font-bold tracking-tight text-fz-ink sm:text-4xl">
 					Quản lý tin
 				</h1>
+				<p className="mt-3 text-sm text-muted-foreground sm:text-base">
+					{sellerSummary}
+				</p>
 			</div>
 
-			<div className="mt-8 flex flex-col gap-4 sm:mt-10">
+			<div className="mt-8 flex flex-col gap-4 border-y border-border py-4 sm:mt-10 sm:flex-row sm:items-center sm:justify-between">
 				<div className="relative w-full sm:max-w-xs">
 					<Search
 						aria-hidden
@@ -287,6 +301,17 @@ export function QuanLyTinClient() {
 					showCounts={!isLoading && !loadError}
 				/>
 			</div>
+
+			{!isLoading && !loadError && products.length > 0 && (
+				<div className="mt-8 flex items-baseline justify-between border-b border-border pb-3 sm:mt-10">
+					<p className="font-heading text-xs font-semibold tracking-[0.16em] text-fz-muted uppercase">
+						{listLabel}
+					</p>
+					<p className="text-sm text-muted-foreground tabular-nums">
+						{visibleProducts.length} tin
+					</p>
+				</div>
+			)}
 
 			{isLoading ? (
 				<ListingListSkeleton />
@@ -358,7 +383,7 @@ export function QuanLyTinClient() {
 				)
 			) : (
 				<>
-					<ul className="mt-6 flex flex-col gap-3 sm:mt-8 sm:gap-4">
+					<ul className="mt-4 flex flex-col gap-3 sm:gap-0 sm:border-t sm:border-border">
 						{visibleProducts.map((product) => (
 							<ListingRow
 								key={product.id}

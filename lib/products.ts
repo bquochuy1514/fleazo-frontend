@@ -5,6 +5,7 @@ import type {
 	Product,
 	ProductCondition,
 	ProductDetail,
+	SavedProduct,
 	ProductStatus,
 } from '@/types/product.types';
 
@@ -206,6 +207,24 @@ export async function saveProduct(id: number): Promise<void> {
 
 export async function unsaveProduct(id: number): Promise<void> {
 	await api.delete(`/products/${id}/save`);
+}
+
+export type SavedProductQuery = {
+	page?: number;
+	limit?: number;
+};
+
+export type PaginatedSavedProducts = Omit<PaginatedProducts, 'data'> & {
+	data: SavedProduct[];
+};
+
+export async function getSavedProducts(
+	query: SavedProductQuery = {},
+): Promise<PaginatedSavedProducts> {
+	const { data } = await api.get<PaginatedSavedProducts>('/products/saved', {
+		params: query,
+	});
+	return data;
 }
 
 export type RelatedProductItem = { product: Product; badge?: ProductMatchBadge };

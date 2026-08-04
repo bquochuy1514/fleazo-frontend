@@ -39,6 +39,8 @@ type ListingCardProps = {
 	// yet, so Link/SaveButton stay off until one exists.
 	id?: number;
 	saveCount?: number;
+	initialSaved?: boolean;
+	onUnsaveRequested?: () => void;
 	// Why this card is showing up in a personalized feed — undefined for a
 	// plain newest-first listing (no badge).
 	matchBadge?: ProductMatchBadge;
@@ -55,6 +57,8 @@ export function ListingCard({
 	className,
 	id,
 	saveCount,
+	initialSaved = false,
+	onUnsaveRequested,
 	matchBadge,
 }: ListingCardProps) {
 	const isFresh = condition === 'NEW' || condition === 'LIKE_NEW';
@@ -163,10 +167,12 @@ export function ListingCard({
 				)}
 				{id !== undefined && (
 					<SaveButton
+						key={`${id}-${initialSaved}-${saveCount ?? 0}`}
 						productId={id}
-						initialSaved={false}
+						initialSaved={initialSaved}
 						initialCount={saveCount ?? 0}
-						className="absolute top-2 right-2 size-9"
+						onUnsaveRequested={onUnsaveRequested}
+						className="absolute top-2 right-2"
 					/>
 				)}
 			</div>

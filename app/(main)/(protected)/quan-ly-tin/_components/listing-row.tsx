@@ -96,6 +96,15 @@ const DEAD_END_NOTES: Partial<Record<ProductStatus, string>> = {
 // cancelled listing.
 const SHOWS_SAVE_COUNT: ProductStatus[] = ['ACTIVE', 'SOLD'];
 
+// Match the account menu's compact desktop dropdown treatment: the menu is
+// mouse-friendly, but items still have an obvious hover/focus state.
+const OVERFLOW_ITEM =
+	'cursor-pointer gap-2.5 rounded-full px-3 py-1.5 transition-colors duration-200 hover:bg-muted data-[highlighted]:bg-muted focus:bg-muted';
+const OVERFLOW_ITEM_DANGER = cn(
+	OVERFLOW_ITEM,
+	'hover:bg-destructive/10 data-[highlighted]:bg-destructive/10 focus:bg-destructive/10',
+);
+
 export function ListingRow({
 	product,
 	onAction,
@@ -124,9 +133,16 @@ export function ListingRow({
 		: [];
 
 	return (
-		<li className="rounded-2xl border border-border bg-card p-3 transition-colors hover:border-fz-ink/25 sm:rounded-3xl sm:p-4">
-			<div className="flex gap-3 sm:gap-4">
-				<div className="relative size-20 shrink-0 overflow-hidden rounded-xl bg-muted sm:size-28 sm:rounded-2xl">
+		<li className="rounded-2xl border border-border bg-card p-3 transition-colors hover:border-fz-ink/25 sm:rounded-none sm:border-x-0 sm:border-t-0 sm:bg-transparent sm:px-0 sm:py-5">
+			<div
+				className={cn(
+					'flex gap-3 sm:grid sm:items-center sm:gap-6',
+					actions.length > 0
+						? 'sm:grid-cols-[6rem_minmax(0,1fr)_10rem_10rem]'
+						: 'sm:grid-cols-[6rem_minmax(0,1fr)_10rem]',
+				)}
+			>
+				<div className="relative size-20 shrink-0 overflow-hidden rounded-xl bg-muted sm:size-24 sm:rounded-xl">
 					{imageUrl ? (
 						<Image
 							src={imageUrl}
@@ -164,7 +180,7 @@ export function ListingRow({
 						)}
 					</h2>
 
-					<p className="mt-1 font-heading text-base leading-none font-bold tabular-nums text-fz-accent sm:text-lg">
+					<p className="mt-1 font-heading text-base leading-none font-bold tabular-nums text-fz-accent sm:hidden">
 						{formatPrice(product.price)}
 					</p>
 
@@ -229,8 +245,19 @@ export function ListingRow({
 					)}
 				</div>
 
+				<div className="hidden min-w-0 text-right sm:block">
+					<p className="font-heading text-lg leading-none font-bold tabular-nums text-fz-accent">
+						{formatPrice(product.price)}
+					</p>
+					<p className="mt-2 text-xs text-muted-foreground">
+						{product.saveCount > 0
+							? `${formatCount(product.saveCount)} lượt lưu`
+							: `Đăng ${timeAgo(product.createdAt)}`}
+					</p>
+				</div>
+
 				{actions.length > 0 && (
-					<div className="ml-auto hidden shrink-0 flex-col items-stretch gap-2 sm:flex">
+					<div className="hidden shrink-0 flex-col items-stretch gap-2 sm:flex">
 						<RowActions
 							actions={inlineActions}
 							overflowActions={overflowActions}
@@ -290,7 +317,9 @@ function RowActions({
 						}
 						disabled={isPending}
 						onClick={() => onAction(action.key, product)}
-						className={cn(fullWidth ? 'h-11 flex-1' : 'justify-start')}
+						className={cn(
+							fullWidth ? 'h-11 flex-1' : 'justify-center text-center',
+						)}
 					>
 						{isPending ? (
 							<Loader2
@@ -314,7 +343,9 @@ function RowActions({
 							size={fullWidth ? 'icon' : 'lg'}
 							disabled={isPending}
 							aria-label="Thêm hành động"
-							className={cn(fullWidth ? 'size-11 shrink-0' : 'justify-start')}
+							className={cn(
+								fullWidth ? 'size-11 shrink-0' : 'justify-center text-center',
+							)}
 						>
 							<MoreVertical aria-hidden />
 							{!fullWidth && 'Thêm'}
@@ -322,7 +353,7 @@ function RowActions({
 					</DropdownMenuTrigger>
 					<DropdownMenuContent align="end">
 						{product.status === 'ACTIVE' && (
-							<DropdownMenuItem asChild>
+							<DropdownMenuItem asChild className={OVERFLOW_ITEM}>
 								<Link href={`/san-pham/${product.id}`}>
 									<ExternalLink aria-hidden />
 									Xem tin đăng
@@ -336,6 +367,11 @@ function RowActions({
 									key={action.key}
 									variant={action.destructive ? 'destructive' : 'default'}
 									onSelect={() => onAction(action.key, product)}
+									className={
+										action.destructive
+											? OVERFLOW_ITEM_DANGER
+											: OVERFLOW_ITEM
+									}
 								>
 									<Icon aria-hidden />
 									{action.label}
