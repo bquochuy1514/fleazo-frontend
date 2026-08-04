@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
@@ -88,8 +88,12 @@ export function QuanLyTinClient() {
 	const [isLoading, setIsLoading] = useState(true);
 	const [loadError, setLoadError] = useState<string | null>(null);
 	const [pendingId, setPendingId] = useState<number | null>(null);
+	const [recentlyUpdatedId, setRecentlyUpdatedId] = useState<number | null>(
+		null,
+	);
 	const [confirm, setConfirm] = useState<PendingConfirm | null>(null);
 	const [hideRevisionWarning, setHideRevisionWarning] = useState(false);
+	const updateMotionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 	// Local echo of ?q= so typing stays responsive while the URL lags behind.
 	const [searchInput, setSearchInput] = useState(urlQuery);
@@ -129,6 +133,13 @@ export function QuanLyTinClient() {
 			cancelled = true;
 		};
 	}, []);
+
+	useEffect(
+		() => () => {
+			if (updateMotionTimer.current) clearTimeout(updateMotionTimer.current);
+		},
+		[],
+	);
 
 	// Debounced URL sync — the input is the source of truth while typing.
 	useEffect(() => {
@@ -213,6 +224,17 @@ export function QuanLyTinClient() {
 						item.id === product.id ? { ...item, status } : item,
 					),
 				);
+				// The toast confirms every transition. When the row remains in the
+				// active filter, a quiet surface wash also confirms the exact record
+				// that changed without animating the entire list.
+				if (activeTab === 'ALL' || activeTab === status) {
+					if (updateMotionTimer.current)
+						clearTimeout(updateMotionTimer.current);
+					setRecentlyUpdatedId(product.id);
+					updateMotionTimer.current = setTimeout(() => {
+						setRecentlyUpdatedId(null);
+					}, 700);
+				}
 				toast.success(message);
 				setConfirm(null);
 			} catch (err) {
@@ -225,7 +247,7 @@ export function QuanLyTinClient() {
 				setPendingId(null);
 			}
 		},
-		[fetchProducts],
+		[activeTab, fetchProducts],
 	);
 
 	const confirmProps = confirmCopy(confirm);
@@ -270,7 +292,10 @@ export function QuanLyTinClient() {
 	return (
 		<div className="mx-auto min-h-[calc(100dvh+3rem)] max-w-6xl px-4 pt-24 pb-16 sm:px-6 sm:pt-28 sm:pb-20">
 			<div>
-				<h1 className="font-heading text-3xl leading-none font-bold tracking-tight text-fz-ink sm:text-4xl">
+				<p className="text-xs font-semibold tracking-[0.16em] text-fz-muted uppercase">
+					KHO TIN CỦA BẠN
+				</p>
+				<h1 className="mt-2 font-heading text-3xl leading-none font-bold tracking-tight text-fz-ink sm:text-4xl">
 					Quản lý tin
 				</h1>
 				<p className="mt-3 text-sm text-muted-foreground sm:text-base">
@@ -278,7 +303,7 @@ export function QuanLyTinClient() {
 				</p>
 			</div>
 
-			<div className="mt-8 flex flex-col gap-4 border-y border-border py-4 sm:mt-10 sm:flex-row sm:items-center sm:justify-between">
+			<div className="mt-8 flex flex-col gap-4 border-b border-border pb-4 sm:mt-10 sm:flex-row sm:items-center sm:justify-between">
 				<div className="relative w-full sm:max-w-xs">
 					<Search
 						aria-hidden
@@ -303,7 +328,7 @@ export function QuanLyTinClient() {
 			</div>
 
 			{!isLoading && !loadError && products.length > 0 && (
-				<div className="mt-8 flex items-baseline justify-between border-b border-border pb-3 sm:mt-10">
+				<div className="mt-8 flex items-baseline justify-between sm:mt-10">
 					<p className="font-heading text-xs font-semibold tracking-[0.16em] text-fz-muted uppercase">
 						{listLabel}
 					</p>
@@ -383,13 +408,14 @@ export function QuanLyTinClient() {
 				)
 			) : (
 				<>
-					<ul className="mt-4 flex flex-col gap-3 sm:gap-0 sm:border-t sm:border-border">
+					<ul className="mt-4 flex flex-col gap-3 sm:gap-0">
 						{visibleProducts.map((product) => (
 							<ListingRow
 								key={product.id}
 								product={product}
 								onAction={handleAction}
 								isPending={pendingId === product.id}
+								isRecentlyUpdated={recentlyUpdatedId === product.id}
 							/>
 						))}
 					</ul>

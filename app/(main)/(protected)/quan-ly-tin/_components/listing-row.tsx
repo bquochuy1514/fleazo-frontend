@@ -108,10 +108,12 @@ export function ListingRow({
 	product,
 	onAction,
 	isPending,
+	isRecentlyUpdated = false,
 }: {
 	product: MyProduct;
 	onAction: (action: RowActionKey, product: MyProduct) => void;
 	isPending: boolean;
+	isRecentlyUpdated?: boolean;
 }) {
 	const [reasonExpanded, setReasonExpanded] = useState(false);
 
@@ -132,7 +134,12 @@ export function ListingRow({
 		: [];
 
 	return (
-		<li className="rounded-2xl border border-border bg-card p-3 transition-colors hover:border-fz-ink/25 sm:rounded-none sm:border-x-0 sm:border-t-0 sm:bg-transparent sm:px-0 sm:py-5">
+		<li
+			className={cn(
+				'rounded-2xl border border-border bg-card p-3 transition-colors duration-200 hover:border-fz-ink/25 sm:rounded-none sm:border-x-0 sm:border-t-0 sm:bg-transparent sm:px-0 sm:py-5 sm:hover:bg-muted/35',
+				isRecentlyUpdated && 'fz-ledger-update',
+			)}
+		>
 			<div
 				className={cn(
 					'flex gap-3 sm:grid sm:items-center sm:gap-6',

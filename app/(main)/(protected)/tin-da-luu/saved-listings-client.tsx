@@ -204,17 +204,26 @@ export function SavedListingsClient() {
 					}
 				/>
 			) : (
-				<div className="mt-8 space-y-10 sm:mt-10 sm:space-y-12">
+				<div className="mt-8 space-y-9 sm:mt-10 sm:space-y-10">
 					{(Object.keys(GROUP_LABELS) as ShelfGroup[]).map(
-						(group) => {
+						(group, groupIndex) => {
 							const groupItems = groups[group];
 							if (groupItems.length === 0) return null;
+							const hasEarlierGroup = (
+								Object.keys(GROUP_LABELS) as ShelfGroup[]
+							)
+								.slice(0, groupIndex)
+								.some((previousGroup) => groups[previousGroup].length > 0);
 
 							return (
 								<section
 									key={group}
 									aria-labelledby={`saved-group-${group}`}
-									className="border-t border-border pt-4 sm:pt-5"
+									className={
+										hasEarlierGroup
+											? 'border-t border-border pt-4 sm:pt-5'
+											: 'pt-0'
+									}
 								>
 									<div className="flex items-baseline justify-between gap-4">
 										<h2

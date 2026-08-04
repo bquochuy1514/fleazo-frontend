@@ -1,8 +1,10 @@
 import Link from 'next/link';
-import { Heart, MapPin, Tag } from 'lucide-react';
+import { Heart, MapPin, MessageCircle, Tag } from 'lucide-react';
+import { buttonVariants } from '@/components/ui/button';
 import { ListingThumbnail } from '@/components/listings/listing-thumbnail';
 import { formatPrice } from '@/lib/format';
 import { firstImageUrl, locationLabel } from '@/lib/products';
+import { cn } from '@/lib/utils';
 import {
 	PRODUCT_CONDITION_LABELS,
 	type SavedProduct,
@@ -23,10 +25,10 @@ export function SavedListingItem({
 	const place = locationLabel(product);
 
 	return (
-		<article className="group relative flex min-w-0 gap-3 border-b border-border py-3.5 last:border-b-0 sm:gap-4 sm:py-4">
+		<article className="group relative flex min-w-0 gap-3 py-3.5 sm:gap-4 sm:py-4">
 			<Link
 				href={`/san-pham/${product.id}`}
-				className="relative h-25 w-[7.5rem] shrink-0 overflow-hidden rounded-xl bg-muted outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:h-28 sm:w-36"
+				className="relative min-h-28 w-[7.5rem] shrink-0 self-stretch overflow-hidden rounded-xl bg-muted outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:w-36"
 				aria-label={`Xem tin ${product.title}`}
 			>
 				<ListingThumbnail src={imageUrl} alt={product.title} />
@@ -35,10 +37,10 @@ export function SavedListingItem({
 				</span>
 			</Link>
 
-			<div className="flex min-w-0 flex-1 flex-col justify-center pr-11">
+			<div className="min-w-0 flex-1">
 				<Link
 					href={`/san-pham/${product.id}`}
-					className="line-clamp-2 font-heading text-base leading-5 font-semibold tracking-tight text-fz-ink outline-none transition-colors hover:text-fz-muted focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-ring"
+					className="line-clamp-2 min-h-10 font-heading text-base leading-5 font-semibold tracking-tight text-fz-ink outline-none transition-colors hover:text-fz-muted focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-ring"
 				>
 					{product.title}
 				</Link>
@@ -47,27 +49,43 @@ export function SavedListingItem({
 					{formatPrice(product.price)}
 				</p>
 
-				<div className="mt-auto flex min-w-0 items-center gap-3 pt-2 text-xs text-muted-foreground">
+				<div className="mt-2 flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
 					<div className="flex min-w-0 items-center gap-1.5">
 						<Tag aria-hidden className="size-3 shrink-0" />
 						<span className="truncate">{product.category.name}</span>
 					</div>
 					{place && (
-						<div className="flex min-w-0 items-center gap-1.5">
+						<>
+							<span aria-hidden className="text-border">·</span>
+							<div className="flex min-w-0 items-center gap-1.5">
 							<MapPin aria-hidden className="size-3 shrink-0" />
 							<span className="truncate">{place}</span>
 						</div>
+						</>
 					)}
 				</div>
+
+				<div className="mt-3 flex items-center gap-2">
+					<Link
+						href={`/tin-nhan?productId=${product.id}`}
+						className={cn(
+							buttonVariants({ variant: 'outline' }),
+							'min-h-11 px-3',
+						)}
+					>
+						<MessageCircle aria-hidden className="size-3.5" />
+						Liên hệ
+					</Link>
+					<button
+						type="button"
+						onClick={() => onUnsaveRequested(item)}
+						className="flex size-11 items-center justify-center rounded-full border border-border text-fz-accent transition-colors hover:bg-fz-accent-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:bg-fz-accent-soft"
+						aria-label={`Bỏ lưu ${product.title}`}
+					>
+						<Heart aria-hidden className="size-4 fill-current" />
+					</button>
+				</div>
 			</div>
-			<button
-				type="button"
-				onClick={() => onUnsaveRequested(item)}
-				className="absolute top-2 right-0 flex size-11 items-center justify-center rounded-full text-fz-accent transition-colors hover:bg-fz-accent-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:bg-fz-accent-soft"
-				aria-label={`Bỏ lưu ${product.title}`}
-			>
-				<Heart aria-hidden className="size-4 fill-current" />
-			</button>
 		</article>
 	);
 }

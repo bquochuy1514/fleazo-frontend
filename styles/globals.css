@@ -228,11 +228,28 @@
 	animation: fz-pulse 0.4s ease-out;
 }
 
+/* A status transition in the seller ledger changes real marketplace state.
+   This brief moss wash acknowledges that change in place; it is deliberately
+   not an entrance animation for every row. */
+@keyframes fz-ledger-update {
+	0% {
+		background-color: color-mix(in oklch, var(--color-moss) 16%, transparent);
+	}
+	100% {
+		background-color: transparent;
+	}
+}
+
+.fz-ledger-update {
+	animation: fz-ledger-update 0.7s ease-out;
+}
+
 /* Must come after the rules above — same specificity, so order decides. */
 @media (prefers-reduced-motion: reduce) {
 	.fz-rise,
 	.fz-drift,
-	.fz-pulse {
+	.fz-pulse,
+	.fz-ledger-update {
 		animation: none;
 	}
 }
