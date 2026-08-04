@@ -1,7 +1,7 @@
-import Image from 'next/image';
 import Link from 'next/link';
-import { ImageIcon, MapPin, Tag } from 'lucide-react';
+import { MapPin, Tag } from 'lucide-react';
 import { SaveButton } from '@/components/listings/save-button';
+import { ListingThumbnail } from '@/components/listings/listing-thumbnail';
 import { formatPrice } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import {
@@ -62,33 +62,10 @@ export function ListingCard({
 	matchBadge,
 }: ListingCardProps) {
 	const isFresh = condition === 'NEW' || condition === 'LIKE_NEW';
-	// next/image can't optimize local blob: URLs (pre-upload preview) — fall back to plain <img>.
-	const isBlobPreview = imageUrl?.startsWith('blob:');
 
 	const media = (
 		<div className="relative aspect-square overflow-hidden bg-muted">
-			{imageUrl ? (
-				isBlobPreview ? (
-					// eslint-disable-next-line @next/next/no-img-element
-					<img
-						src={imageUrl}
-						alt={title}
-						className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
-					/>
-				) : (
-					<Image
-						src={imageUrl}
-						alt={title}
-						fill
-						sizes="(min-width: 1024px) 25vw, 50vw"
-						className="object-cover transition-transform duration-300 group-hover:scale-105"
-					/>
-				)
-			) : (
-				<div className="flex size-full items-center justify-center text-muted-foreground">
-					<ImageIcon className="size-8" />
-				</div>
-			)}
+			<ListingThumbnail key={imageUrl} src={imageUrl} alt={title} />
 
 			<div className="absolute top-2 left-2 flex flex-col items-start gap-1">
 				{matchBadge && (

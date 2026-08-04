@@ -152,10 +152,10 @@ shadcn's own semantic `--primary` maps to ink (not moss) for this reason — see
 
 - **Home (`/`)**: a lighter composition — hero + a few curated sections. Not the full
   browse layout below.
-- **`/danh-muc` is the category directory.** It is a public, data-led market map:
-  categories with currently active listings appear first, while categories with no active
-  listing remain discoverable in a separate shelf. Homepage only teases four categories;
-  `/tim-kiem` remains the listing-results route after a category or keyword is chosen.
+- **`/danh-muc` is the category directory.** It is a public, durable market directory:
+  every root category has equal navigational status, independent of its current listing
+  count. Homepage only teases four categories; `/tim-kiem` remains the listing-results
+  route after a category or keyword is chosen.
 - **Tìm kiếm** (planned route): the full reference composition — hero + sidebar category
   filter (2-level tree, matches `Category.parentId` hierarchy) + product grid +
   pagination.

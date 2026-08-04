@@ -1,12 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import {
 	CheckCircle2,
 	ExternalLink,
-	ImageIcon,
 	ImageOff,
 	Loader2,
 	MoreVertical,
@@ -15,6 +13,7 @@ import {
 	TriangleAlert,
 	type LucideIcon,
 } from 'lucide-react';
+import { ListingThumbnail } from '@/components/listings/listing-thumbnail';
 import { Button } from '@/components/ui/button';
 import {
 	DropdownMenu,
@@ -143,19 +142,7 @@ export function ListingRow({
 				)}
 			>
 				<div className="relative size-20 shrink-0 overflow-hidden rounded-xl bg-muted sm:size-24 sm:rounded-xl">
-					{imageUrl ? (
-						<Image
-							src={imageUrl}
-							alt=""
-							fill
-							sizes="(min-width: 640px) 112px, 80px"
-							className="object-cover"
-						/>
-					) : (
-						<span className="flex size-full items-center justify-center text-muted-foreground">
-							<ImageIcon aria-hidden className="size-6 sm:size-8" />
-						</span>
-					)}
+					<ListingThumbnail key={imageUrl} src={imageUrl} alt="" />
 				</div>
 
 				<div className="min-w-0 flex-1">
