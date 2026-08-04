@@ -1,6 +1,12 @@
 'use client';
 
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import {
+	useCallback,
+	useEffect,
+	useRef,
+	useState,
+	useSyncExternalStore,
+} from 'react';
 import { createPortal } from 'react-dom';
 import { Search, X } from 'lucide-react';
 import {
@@ -25,6 +31,9 @@ const PLACEHOLDER = 'Tìm sách, laptop, xe đạp…';
 // Trigger button is ~145px wide (~11 chars); full placeholder goes in the sheet.
 const TRIGGER_HINT = 'Tìm đồ cũ…';
 
+const shortProvinceName = (name: string) =>
+	name.replace(/^(Thành phố|Tỉnh)\s+/i, '');
+
 export function HeaderSearch({
 	provinces,
 	bare = false,
@@ -35,15 +44,26 @@ export function HeaderSearch({
 	bare?: boolean;
 	className?: string;
 }) {
+	const { user } = useAuth();
+	const viewerId = user?.id ?? null;
+	const getSnapshot = useCallback(
+		() => getProvinceSnapshot(viewerId),
+		[viewerId],
+	);
 	const saved = useSyncExternalStore(
 		subscribeToProvince,
-		getProvinceSnapshot,
+		getSnapshot,
 		getProvinceServerSnapshot,
 	);
-	// Signed-out/server snapshot both read `user` as null, which
-	// resolveProvinceCode treats as "no province" (falls back to Toàn quốc).
-	const { user } = useAuth();
+	// The per-account snapshot starts empty after auth hydrates, so it falls
+	// back to the profile location instead of an earlier browser-wide choice.
 	const provinceCode = resolveProvinceCode(saved, user?.provinceCode);
+	const selectedProvince = provinces.find(
+		(province) => province.code === provinceCode,
+	);
+	const mobileTriggerHint = selectedProvince
+		? `Tìm ở ${shortProvinceName(selectedProvince.name)}…`
+		: TRIGGER_HINT;
 
 	const [sheetOpen, setSheetOpen] = useState(false);
 	const sheetInputRef = useRef<HTMLInputElement>(null);
@@ -92,7 +112,7 @@ export function HeaderSearch({
 				<LocationPicker
 					provinces={provinces}
 					value={provinceCode}
-					onChange={setSavedProvince}
+					onChange={(code) => setSavedProvince(code, viewerId)}
 					onDark={bare}
 				/>
 				<span
@@ -162,7 +182,7 @@ export function HeaderSearch({
 						bare ? 'text-white/75' : 'text-muted-foreground',
 					)}
 				>
-					{TRIGGER_HINT}
+					{mobileTriggerHint}
 				</span>
 			</button>
 
@@ -216,7 +236,7 @@ export function HeaderSearch({
 								variant="row"
 								provinces={provinces}
 								value={provinceCode}
-								onChange={setSavedProvince}
+								onChange={(code) => setSavedProvince(code, viewerId)}
 							/>
 						</div>
 						<p className="mt-3 text-sm text-muted-foreground">

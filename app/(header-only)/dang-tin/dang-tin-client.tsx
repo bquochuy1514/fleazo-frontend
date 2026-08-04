@@ -39,6 +39,7 @@ import {
 	createProduct,
 	getEditProductCache,
 	updateProduct,
+	type ProductImageOrderItem,
 	type ProductField,
 } from '@/lib/products';
 import { getMissingSellerFields } from '@/lib/seller-profile';
@@ -115,6 +116,8 @@ function DangTinForm({
 	const [price, setPrice] = useState('');
 	const [condition, setCondition] = useState<ProductCondition | ''>('');
 	const [images, setImages] = useState<ImageItem[]>([]);
+	const [imagesOrder, setImagesOrder] = useState<ProductImageOrderItem[]>([]);
+	const [coverPreviewUrl, setCoverPreviewUrl] = useState<string | undefined>();
 	const [categoryId, setCategoryId] = useState<number | null>(null);
 	const [categoryLabel, setCategoryLabel] = useState('');
 	const [location, setLocation] = useState<LocationValue>(EMPTY_LOCATION);
@@ -139,7 +142,9 @@ function DangTinForm({
 				.sort((a, b) => a.order - b.order)
 		: [];
 	const previewImageUrl =
-		remainingExistingImages[0]?.url ?? images[0]?.previewUrl;
+		coverPreviewUrl ??
+		remainingExistingImages[0]?.url ??
+		images[0]?.previewUrl;
 
 	// Load the edited product once from the sessionStorage handoff, on mount.
 	useEffect(() => {
@@ -281,7 +286,13 @@ function DangTinForm({
 			};
 			const files = images.map((item) => item.file);
 
-			await updateProduct(editProduct.id, payload, files, deleteImageIds);
+			await updateProduct(
+				editProduct.id,
+				payload,
+				files,
+				deleteImageIds,
+				imagesOrder,
+			);
 			toast.success('Đã lưu thay đổi.');
 			router.push('/quan-ly-tin');
 		} catch (err) {
@@ -341,6 +352,10 @@ function DangTinForm({
 							/>
 							<ImageUploader
 								onChange={setImages}
+								onOrderChange={(order, coverUrl) => {
+									setImagesOrder(order);
+									setCoverPreviewUrl(coverUrl);
+								}}
 								initialImages={
 									editProduct
 										? [...editProduct.images]

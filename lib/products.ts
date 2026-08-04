@@ -36,6 +36,10 @@ export type ProductFormPayload = {
 	categoryId?: number;
 };
 
+export type ProductImageOrderItem =
+	| { type: 'existing'; id: number }
+	| { type: 'new'; fileIndex: number };
+
 function buildProductFormData(payload: ProductFormPayload, images: File[]) {
 	const formData = new FormData();
 	Object.entries(payload).forEach(([key, value]) => {
@@ -69,16 +73,20 @@ export async function createDraft(
 }
 
 // Plain text/image edits only (PATCH /products/:id) — never changes status.
-// imagesOrder is omitted on purpose; backend defaults to its own order.
+// A complete imagesOrder lets the seller promote any image to the cover slot.
 export async function updateProduct(
 	id: number,
 	payload: ProductFormPayload,
 	newImages: File[],
 	deleteImageIds: number[] = [],
+	imagesOrder: ProductImageOrderItem[] = [],
 ): Promise<Product> {
 	const formData = buildProductFormData(payload, newImages);
 	if (deleteImageIds.length > 0) {
 		formData.append('deleteImageIds', JSON.stringify(deleteImageIds));
+	}
+	if (imagesOrder.length > 0) {
+		formData.append('imagesOrder', JSON.stringify(imagesOrder));
 	}
 	const { data } = await api.patch<Product>(`/products/${id}`, formData);
 	return data;
