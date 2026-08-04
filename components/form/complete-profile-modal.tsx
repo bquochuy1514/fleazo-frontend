@@ -159,19 +159,30 @@ export function CompleteProfileModal({
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="max-h-[80svh] overflow-y-auto sm:max-w-xl">
-				<DialogHeader>
-					<DialogTitle className="font-heading text-xl sm:text-2xl">
+			<DialogContent className="flex max-h-[calc(100svh-1.5rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
+				<DialogHeader className="shrink-0 border-b border-border px-5 pt-6 pb-5 pr-12 sm:px-7 sm:pt-7 sm:pb-6">
+					<p className="text-[0.68rem] font-semibold tracking-[0.18em] text-fz-muted">
+						HOÀN TẤT HỒ SƠ
+					</p>
+					<DialogTitle className="font-heading text-xl tracking-tight sm:text-2xl">
 						Hoàn thiện hồ sơ
 					</DialogTitle>
-					<DialogDescription>
-						Bổ sung thông tin còn thiếu trước khi đăng
+					<DialogDescription className="max-w-lg leading-6">
+						Bổ sung thông tin cần thiết để bạn có thể đăng tin và kết nối với người mua quanh trường.
 					</DialogDescription>
 				</DialogHeader>
 
-				<form onSubmit={onSubmit} className="space-y-3 sm:space-y-4">
+				<form onSubmit={onSubmit} className="flex min-h-0 flex-1 flex-col">
+					<div className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-5 py-5 sm:space-y-6 sm:px-7 sm:py-6">
 					{(needs('phone') || showUniversity) && (
-						<div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 sm:gap-4">
+						<div>
+							<div className="mb-4 flex items-baseline justify-between gap-4">
+								<h3 className="text-xs font-semibold tracking-[0.14em] text-fz-muted">
+									LIÊN HỆ & TRƯỜNG
+								</h3>
+								<p className="text-xs text-muted-foreground">Mục có * là bắt buộc</p>
+							</div>
+							<div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 sm:gap-4">
 							{needs('phone') && (
 								<div
 									className={cn(
@@ -224,7 +235,7 @@ export function CompleteProfileModal({
 													disabled={
 														universitiesLoading
 													}
-													className="flex h-11 w-full items-center justify-between gap-2 rounded-full border border-input bg-transparent px-4 text-left text-sm transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+											className="flex h-11 w-full items-center justify-between gap-2 rounded-md border border-input bg-transparent px-4 text-left text-sm transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
 												>
 													<span
 														className={cn(
@@ -278,6 +289,7 @@ export function CompleteProfileModal({
 									</div>
 								</div>
 							)}
+							</div>
 						</div>
 					)}
 
@@ -287,6 +299,9 @@ export function CompleteProfileModal({
 
 					{needs('address') && (
 						<div className="space-y-3">
+							<h3 className="text-xs font-semibold tracking-[0.14em] text-fz-muted">
+								KHU VỰC GIAO DỊCH
+							</h3>
 							<div>
 								<FieldLabel icon={MapPin}>Khu vực</FieldLabel>
 								<div className="mt-2">
@@ -323,7 +338,11 @@ export function CompleteProfileModal({
 					)}
 
 					{needs('password') && (
-						<div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 sm:gap-4">
+						<div>
+							<h3 className="mb-4 text-xs font-semibold tracking-[0.14em] text-fz-muted">
+								BẢO MẬT TÀI KHOẢN
+							</h3>
+							<div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 sm:gap-4">
 							<div>
 								<FieldLabel
 									icon={Lock}
@@ -362,16 +381,17 @@ export function CompleteProfileModal({
 									message={errors.errors?.confirmPassword}
 								/>
 							</div>
+							</div>
 						</div>
 					)}
+					</div>
 
-					{/* Sticky footer keeps submit reachable on short viewports. */}
-					<div className="sticky -bottom-4 -mx-4 -mb-4 border-t border-border bg-popover px-4 pt-4 pb-4">
+					<div className="shrink-0 border-t border-border bg-muted/35 px-5 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-7">
 						<FieldError message={errors.message} />
 						<Button
 							type="submit"
 							variant="default"
-							className="h-10 w-full text-sm sm:w-auto"
+							className="min-h-11 w-full text-sm"
 							disabled={submitting}
 						>
 							{submitting ? 'Đang lưu...' : 'Lưu và tiếp tục'}

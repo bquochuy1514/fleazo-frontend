@@ -1,6 +1,6 @@
 'use client';
 
-import { Loader2 } from 'lucide-react';
+import { AlertTriangle, CircleAlert, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
 	Dialog,
@@ -43,27 +43,45 @@ export function ConfirmDialog({
 	children?: React.ReactNode;
 	onConfirm: () => void | Promise<void>;
 }) {
+	const DialogIcon = variant === 'destructive' ? AlertTriangle : CircleAlert;
+
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="sm:max-w-md">
-				<DialogHeader>
-					<DialogTitle className="font-heading font-semibold tracking-tight">
+			<DialogContent className="gap-0 overflow-hidden p-0 sm:max-w-md">
+				<div className="flex gap-3 px-5 pt-6 pb-5 sm:px-6">
+					<div
+						aria-hidden
+						className={
+							variant === 'destructive'
+								? 'flex size-9 shrink-0 items-center justify-center rounded-full bg-destructive/10 text-destructive'
+								: 'flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground'
+						}
+					>
+						<DialogIcon className="size-4" />
+					</div>
+					<DialogHeader className="min-w-0 flex-1 gap-2 pr-6">
+						<DialogTitle className="font-heading text-lg leading-tight font-semibold tracking-tight">
 						{title}
 					</DialogTitle>
 					<DialogDescription className="leading-6">
 						{description}
 					</DialogDescription>
-				</DialogHeader>
+					</DialogHeader>
+				</div>
 
-				{children}
+				{children && (
+					<div className="border-t border-border px-5 py-4 sm:px-6">
+						{children}
+					</div>
+				)}
 
-				<DialogFooter>
+				<DialogFooter className="-mx-0 -mb-0 rounded-none border-border bg-muted/35 px-5 py-3 sm:px-6">
 					<DialogClose asChild>
 						<Button
 							variant="outline"
 							size="lg"
 							disabled={isLoading}
-							className="h-11 sm:h-9"
+							className="min-h-11 flex-1 sm:flex-none"
 						>
 							{cancelLabel}
 						</Button>
@@ -73,7 +91,7 @@ export function ConfirmDialog({
 						size="lg"
 						disabled={isLoading}
 						onClick={onConfirm}
-						className="h-11 sm:h-9"
+						className="min-h-11 flex-1 sm:flex-none"
 					>
 						{isLoading && (
 							<Loader2
