@@ -25,3 +25,16 @@ export function timeAgo(dateString: string): string {
 export function formatCount(count: number): string {
 	return new Intl.NumberFormat('vi-VN').format(count);
 }
+
+// "10:32" — timestamp on a chat message bubble.
+export function formatMessageTime(dateString: string): string {
+	return dayjs(dateString).format('HH:mm');
+}
+
+// Gmail-style: today -> "10:32", this week -> "T3", older -> "05/08".
+export function formatConversationTimestamp(dateString: string): string {
+	const d = dayjs(dateString);
+	if (d.isSame(dayjs(), 'day')) return d.format('HH:mm');
+	if (dayjs().diff(d, 'day') < 6) return d.format('ddd');
+	return d.format('DD/MM');
+}

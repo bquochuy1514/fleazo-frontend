@@ -9,7 +9,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { buttonVariants } from '@/components/ui/button';
 import { SectionHeader } from '@/components/form/section-header';
 import { useAuth } from '@/hooks/use-auth';
-import { createConversation, sendMessage } from '@/lib/chat';
+import { useSocket } from '@/hooks/use-socket';
+import { useChat } from '@/hooks/use-chat';
+import { createConversation } from '@/lib/chat';
 import { cn } from '@/lib/utils';
 
 const SUGGESTIONS = [
@@ -22,16 +24,23 @@ const CARD =
 	'rounded-2xl border border-border bg-card p-6 shadow-sm shadow-fz-ink/5';
 
 // Separate card from SellerCard's "Nhắn tin" — lower-commitment secondary action.
+// Same findOrCreate + sendMessage flow as tin-nhan's pending-conversation
+// branch, just fired from the listing page directly so a buyer can send a
+// first message without the "Nhắn tin cho người bán" redirect to tin-nhan.
 export function QuickMessage({
 	sellerId,
 	sellerName,
+	sellerAvatar,
 	productId,
 }: {
 	sellerId: number;
 	sellerName: string;
+	sellerAvatar: string;
 	productId: number;
 }) {
 	const { user } = useAuth();
+	const socket = useSocket();
+	const { setConversations } = useChat();
 	const router = useRouter();
 	const [message, setMessage] = useState('');
 	const [sending, setSending] = useState(false);
@@ -47,11 +56,54 @@ export function QuickMessage({
 			);
 			return;
 		}
+		if (!socket) return;
 
 		setSending(true);
 		try {
 			const conversation = await createConversation(sellerId);
-			await sendMessage(conversation.id, { content, productId });
+			socket.emit('sendMessage', {
+				conversationId: conversation.id,
+				content,
+				productId,
+			});
+
+			const now = new Date().toISOString();
+			setConversations((prev) => {
+				const lastMessage = {
+					id: -1,
+					conversationId: conversation.id,
+					senderId: user.id,
+					productId,
+					replyToId: null,
+					replyTo: null,
+					content,
+					isRead: false,
+					isRecalled: false,
+					createdAt: now,
+				};
+				const existing = prev.find((c) => c.id === conversation.id);
+				const next = existing
+					? prev.map((c) =>
+							c.id === conversation.id
+								? { ...c, lastMessage, latestProductId: productId, updatedAt: now }
+								: c,
+						)
+					: [
+							{
+								id: conversation.id,
+								otherUser: { id: sellerId, fullName: sellerName, avatar: sellerAvatar },
+								lastMessage,
+								latestProductId: productId,
+								unreadCount: 0,
+								updatedAt: now,
+							},
+							...prev,
+						];
+				return [...next].sort(
+					(a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
+				);
+			});
+
 			setSent(true);
 		} catch {
 			toast.error('Không gửi được tin nhắn, vui lòng thử lại.');

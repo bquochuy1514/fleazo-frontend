@@ -1,27 +1,32 @@
 import { api } from '@/lib/api';
+import type { Conversation, PaginatedMessages } from '@/types/chat.types';
 
-type Conversation = {
-	id: number;
-	initiatorId: number;
-	recipientId: number;
-	createdAt: string;
-	updatedAt: string;
-};
+// No sendMessage() REST helper here — sending a message always goes through
+// the socket's `sendMessage` emit instead, otherwise the other person never
+// gets a realtime update. REST is read-only here, plus starting a conversation.
 
-// Find-or-create: backend returns the existing conversation if this pair
-// already has one, so safe to call before every first message.
+export async function listConversations(): Promise<Conversation[]> {
+	const { data } = await api.get<Conversation[]>('/chat/conversations');
+	return data;
+}
+
+// findOrCreate — returns the existing conversation if this pair already has one.
 export async function createConversation(
 	recipientId: number,
-): Promise<Conversation> {
-	const { data } = await api.post<Conversation>('/chat/conversations', {
+): Promise<{ id: number }> {
+	const { data } = await api.post<{ id: number }>('/chat/conversations', {
 		recipientId,
 	});
 	return data;
 }
 
-export async function sendMessage(
+export async function getMessages(
 	conversationId: number,
-	payload: { content: string; productId?: number },
-): Promise<void> {
-	await api.post(`/chat/conversations/${conversationId}/messages`, payload);
+	params?: { page?: number; limit?: number },
+): Promise<PaginatedMessages> {
+	const { data } = await api.get<PaginatedMessages>(
+		`/chat/conversations/${conversationId}/messages`,
+		{ params },
+	);
+	return data;
 }

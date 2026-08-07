@@ -3,7 +3,7 @@ import { ProtectedGuard } from '@/components/auth/protected-guard';
 import { getProvinces } from '@/lib/locations';
 
 // Header only — no Footer/BottomNav. For focused logged-in task flows
-// (dang-tin, tin-nhan) where marketplace nav still helps wayfinding but the
+// (such as dang-tin) where marketplace nav still helps wayfinding but the
 // rest of the chrome would pull focus mid-task.
 //
 // pt clears the fixed Header, which occupies no flow space; unlike (main),

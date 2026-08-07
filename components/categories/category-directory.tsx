@@ -8,37 +8,27 @@ import type { Category } from '@/types/category.types';
 export function CategoryDirectory({ categories }: { categories: Category[] }) {
 	return (
 		<section className="mx-auto min-h-[calc(100dvh+3rem)] max-w-6xl px-4 pt-24 pb-28 sm:px-6 sm:pt-28 sm:pb-20">
-			<header className="border-b border-border pb-8 sm:pb-10 lg:grid lg:grid-cols-[minmax(0,1fr)_13rem] lg:items-end lg:gap-12">
+			<header className="max-w-2xl border-b border-border pb-6 sm:pb-8">
 				<div className="max-w-2xl">
 					<p className="font-heading text-xs font-semibold tracking-[0.18em] text-fz-muted uppercase">
 						Chọn theo loại đồ
 					</p>
-					<h1 className="mt-3 max-w-xl font-heading text-4xl leading-[0.92] font-bold tracking-[-0.055em] text-fz-ink sm:text-5xl lg:text-6xl">
-						Bạn đang tìm gì?
-					</h1>
-					<p className="mt-4 max-w-lg text-base leading-7 text-muted-foreground">
+					<div className="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+						<h1 className="font-heading text-3xl leading-none font-bold tracking-tight text-fz-ink sm:text-4xl">
+							Danh mục
+						</h1>
+						<p className="text-sm text-muted-foreground tabular-nums">
+							{formatCount(categories.length)} danh mục
+						</p>
+					</div>
+					<p className="mt-3 max-w-xl text-base leading-7 text-muted-foreground">
 						Đi một vòng qua các góc quen thuộc của đời sống sinh viên, rồi vào chợ từ nơi phù hợp nhất.
 					</p>
 				</div>
-				<p className="mt-6 border-l-2 border-fz-ink pl-4 text-sm leading-6 text-muted-foreground lg:mt-0">
-					<span className="block font-heading text-2xl font-semibold tracking-tight text-fz-ink tabular-nums">
-						{formatCount(categories.length)} danh mục
-					</span>
-					Mỗi góc dẫn đến những tin phù hợp.
-				</p>
 			</header>
 
 			{categories.length > 0 ? (
-				<section aria-labelledby="category-aisle" className="mt-8 sm:mt-10">
-					<div className="flex items-baseline justify-between gap-4 border-b border-border pb-4 sm:pb-5">
-						<h2 id="category-aisle" className="font-heading text-2xl font-semibold tracking-tight text-fz-ink sm:text-3xl">
-							Tất cả góc chợ
-						</h2>
-						<p className="shrink-0 text-xs font-medium tracking-[0.12em] text-fz-muted uppercase tabular-nums">
-							{formatCount(categories.length)} lối vào
-						</p>
-					</div>
-
+				<section aria-label="Tất cả danh mục" className="mt-6 sm:mt-8">
 					<ul className="divide-y divide-border border-b border-border lg:grid lg:grid-cols-2 lg:divide-y-0 lg:gap-x-10 lg:border-b-0">
 						{categories.map((category, index) => (
 							<li key={category.id} className="lg:border-b lg:border-border">

@@ -160,16 +160,10 @@ shadcn's own semantic `--primary` maps to ink (not moss) for this reason — see
   filter (2-level tree, matches `Category.parentId` hierarchy) + product grid +
   pagination.
 - **Signed-out visitors are pushed to log in, deliberately, for anything identity-shaped**
-  — `/quan-ly-tin`, `/tin-nhan`, `/dang-tin`, `/ca-nhan`. None of the four render anything
-  meaningful without a session (a listings dashboard, a chat inbox, a post-a-listing form
-  and a profile all need to know who's asking), so there's no guest-mode version worth
-  building for them. `BottomNav` and the header's `Tin nhắn` icon link to these routes
-  unconditionally — there is no auth state in the UI to branch on yet (see Current
-  Status), so the redirect is the job of the planned `ProtectedGuard`/`proxy.ts`, not
-  something hand-rolled per link. Two things make this a gate and not a wall: send the
-  visitor back to what they tapped after login (`?next=`), not to the homepage; and the
-  login screen should say why it's asking ("Đăng nhập để nhắn tin với người bán"), not
-  present a bare form. Neither is built yet — the routes exist, the bounce doesn't.
+  — `/quan-ly-tin`, `/tin-nhan`, `/dang-tin`, `/ca-nhan`, `/tin-da-luu`. These pages
+  need to know who's asking, so there is no useful guest-mode version. Navigation can
+  link to them before every destination page is implemented; `ProtectedGuard`/`proxy.ts`
+  owns the redirect and preserves the requested destination through `?next=`.
 - **Product card**: no per-product star rating (Fleazo reviews are seller-level only —
   see backend AGENTS.md → Reviews section, every listing sells once). Show a condition
   badge + location instead. Two actions: outline "Lưu tin" (save/favorite) + solid-ink
@@ -177,9 +171,15 @@ shadcn's own semantic `--primary` maps to ink (not moss) for this reason — see
   cart/checkout (see backend AGENTS.md → Money Flow, trades happen off-platform).
 - **Header**: cart icon from the reference → messages icon (mirrors `fleazo-frontend`'s
   `Header`/`UnreadBadge` pattern for the eventual unread count, not built yet — not a
-  cart, no cart concept exists). Sits from `md` in its own `gap-4` cluster, separated
-  from the Đăng nhập/Đăng tin pair (`gap-2` internally) rather than one evenly-spaced row
-  of three — it's a standalone utility, not a third member of the auth/CTA group.
+  cart, no cart concept exists). It is a standalone utility, not part of the auth/CTA
+  button group.
+- **A conversation's product-context card shows the CURRENT topic pinned in the
+  `/tin-nhan` pane header (`latestProductId`); inline sticky cards inside the
+  scrolling thread mark only earlier, *different* topics, never re-announce the
+  current one** — a single-product conversation shows its product card exactly
+  once. Conversations are per-pair, not per-product (see backend AGENTS.md →
+  Chat) — the same pair can revisit this screen from a different listing later,
+  so a thread spanning 2+ products is expected, not a bug.
 - **"Explore our recommendations" section** → renamed/reworked as **"Tin mới đăng"**
   (newest listings, chronological) — Fleazo has no recommendation engine, personalized or
   otherwise (see backend AGENTS.md → Listing Quality & AI Chatbot, dropped deliberately).
@@ -267,9 +267,11 @@ app/                            # App Router — no src/ directory. Route groups
 │                               #   the full intended shape and the rules governing it.
 │                               # Root layout: fonts, lang="vi", app-wide providers.
 │                               #   Renders NO chrome — each group owns its own.
-├── (auth)/layout.tsx           # Empty shells so far — the pages inside each of these
-├── (bare)/layout.tsx           #   four groups are not built yet.
-├── (header-only)/layout.tsx
+├── (auth)/layout.tsx           # Authentication screens with no marketplace chrome.
+├── (bare)/layout.tsx           # ProtectedGuard, no chrome, no forced centering/padding —
+│   └── tin-nhan/                #   a full-bleed page owns its own height/app-bar. Only
+│                                 #   occupant so far: tin-nhan/ (own ChatAppBar, no Header).
+├── (header-only)/layout.tsx    # Protected task flows that retain the floating Header.
 └── (main)/
     ├── layout.tsx              # Header + main + Footer + BottomNav. Fetches provinces
     │                           #   once for the header. ⚠️ still holds a temporary
@@ -288,8 +290,8 @@ components/
 │                        #   thumb's reach.
 ├── logo.tsx             # Two masked crops of public/logo.png — see Layout decisions
 ├── layout/
-│   ├── header.tsx       # Fixed floating pill — logo, always-on search, Tin nhắn +
-│   │                    #   Đăng nhập + Đăng tin (md+), mobile account Sheet. Goes
+│   ├── header.tsx       # Fixed floating pill — logo, always-on search, saved listings,
+│   │                    #   messages, Đăng nhập + Đăng tin (md+), mobile account Sheet. Goes
 │   │                    #   transparent over a hero via HERO_ROUTES + an
 │   │                    #   IntersectionObserver.
 │   ├── header-search.tsx#   Inline pill from md; a full-screen sheet below it
@@ -403,11 +405,11 @@ app/
 ├── (header-only)/                # (planned) Sibling of (main) — Header only, no
 │   │                             #   Footer/BottomNav. Focused logged-in task flows
 │   │                             #   where marketplace nav still aids wayfinding.
-│   ├── dang-tin/                 #   Post/edit a listing
-│   └── tin-nhan/                 #   Chat — needs its own locked-scroll message pane
+│   └── dang-tin/                 #   Post/edit a listing
 │
-└── (bare)/                       # (planned) No chrome at all. Short, focused,
-                                  #   logged-in-only flows.
+└── (bare)/                       # No marketplace chrome at all — not even Header.
+    └── tin-nhan/                 #   Messaging inbox — reads as its own small app
+                                  #   (own ChatAppBar), not a marketplace task flow.
 ```
 
 Rules (same as `fleazo-frontend`, they earned these the hard way):
@@ -428,6 +430,11 @@ Rules (same as `fleazo-frontend`, they earned these the hard way):
   whichever group it's in.
 - Route groups `(...)` never appear in the URL — they exist purely to give each area its
   own `layout.tsx`.
+- **`(bare)` pages needing full-bleed height own their own `h-dvh` + in-page app-bar** —
+  the layout deliberately doesn't force centering/padding (unlike a page that wants a
+  centered card, which just wraps itself), so a full-bleed screen never fights its
+  parent's shell. `tin-nhan/` is the first case: it wanted no marketplace chrome at
+  all, not even the floating `Header` (see Layout decisions → messaging).
 
 The four group layouts and `BottomNav` exist; the pages inside them do not, and neither
 do `proxy.ts` or `ProtectedGuard`. Chrome already lives in `(main)/layout.tsx` rather
@@ -476,8 +483,9 @@ readable client-side, grouped under a named `# ===` section, added to both files
   measured for AA contrast at 375/1280/1920
 - 🚧 Home is **hero only** — the category grid and "Tin mới đăng" sections are agreed
   (see Layout decisions) but not built. `ListingCard` is therefore unused so far.
-- 📋 Not started — every page inside the four route groups, `proxy.ts` guards,
-  `ProtectedGuard`, and auth state in the UI. Don't begin unasked.
+- 🚧 `/tin-nhan`: UI pass done (two-pane conversation list + message pane, mock
+  data only) — no API/socket wiring yet, deliberately deferred.
+- 📋 Not started — public seller profiles and unread notification UI.
 - ⚠️ Known debt — a temporary `h-[1000px]` spacer in `(main)/layout.tsx`; the hero's
   scroll cue and category chips link to routes that don't exist yet; no `openGraph`
   metadata (deliberately deferred).

@@ -172,6 +172,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
 					<QuickMessage
 						sellerId={product.seller.id}
 						sellerName={product.seller.fullName}
+						sellerAvatar={product.seller.avatar}
 						productId={product.id}
 					/>
 

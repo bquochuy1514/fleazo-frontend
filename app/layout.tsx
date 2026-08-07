@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from 'next';
 import { Space_Grotesk, Hanken_Grotesk } from 'next/font/google';
 import '@/styles/globals.css';
 import { AuthProvider } from '@/providers/auth-provider';
+import { SocketProvider } from '@/providers/socket-provider';
+import { ChatProvider } from '@/providers/chat-provider';
 import { Toaster } from '@/components/ui/sonner';
 
 const spaceGrotesk = Space_Grotesk({
@@ -43,7 +45,11 @@ export default function RootLayout({
 			className={`${spaceGrotesk.variable} ${hankenGrotesk.variable} h-full antialiased`}
 		>
 			<body className="flex min-h-full flex-col">
-				<AuthProvider>{children}</AuthProvider>
+				<AuthProvider>
+					<SocketProvider>
+						<ChatProvider>{children}</ChatProvider>
+					</SocketProvider>
+				</AuthProvider>
 				<Toaster position="bottom-center" />
 			</body>
 		</html>

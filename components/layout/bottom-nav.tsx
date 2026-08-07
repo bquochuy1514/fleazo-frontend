@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { ClipboardList, Home, MessageCircle, User, Plus } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
+import { useChat } from '@/hooks/use-chat';
 import { cn } from '@/lib/utils';
 
 const NAV_ITEMS = [
@@ -17,7 +18,7 @@ const NAV_ITEMS = [
 // Mobile-only tab bar; desktop keeps the header's "Đăng tin" CTA instead.
 // Active state uses ink weight, not the moss accent (reserved for prices/save
 // toggle). "Cá nhân" swaps its icon for the user's avatar when signed in.
-// "Tin nhắn" has no unread badge yet — no message count fetched anywhere.
+// "Tin nhắn" shows the same unread-conversation count as the header's icon.
 // Sign-in-only routes still render for guests (discoverability); a signed-out
 // tap relies on ProtectedGuard/proxy.ts to redirect to /dang-nhap.
 // No "Danh mục" tab — category discovery lives on the homepage and in
@@ -25,6 +26,7 @@ const NAV_ITEMS = [
 export function BottomNav() {
 	const pathname = usePathname();
 	const { user } = useAuth();
+	const { unreadConversationCount } = useChat();
 
 	return (
 		<nav
@@ -63,6 +65,7 @@ export function BottomNav() {
 						avatar={
 							item.href === '/ca-nhan' ? user?.avatar : undefined
 						}
+						badge={item.href === '/tin-nhan' ? unreadConversationCount : undefined}
 					/>
 				))}
 			</div>
@@ -74,10 +77,12 @@ function NavLink({
 	item,
 	active,
 	avatar,
+	badge,
 }: {
 	item: (typeof NAV_ITEMS)[number];
 	active: boolean;
 	avatar?: string;
+	badge?: number;
 }) {
 	const Icon = item.icon;
 	return (
@@ -92,7 +97,7 @@ function NavLink({
 			)}
 		>
 			{/* Fixed-height slot keeps labels on the same baseline. */}
-			<span className="flex h-7 items-center justify-center">
+			<span className="relative flex h-7 items-center justify-center">
 				{avatar ? (
 					<Image
 						src={avatar}
@@ -106,6 +111,14 @@ function NavLink({
 					/>
 				) : (
 					<Icon className="size-5" />
+				)}
+				{!!badge && badge > 0 && (
+					<span
+						aria-hidden
+						className="absolute -top-0.5 -right-1.5 flex size-4 items-center justify-center rounded-full bg-fz-ink text-[10px] font-semibold text-white ring-2 ring-card"
+					>
+						{badge > 9 ? '9+' : badge}
+					</span>
 				)}
 			</span>
 			{item.label}
