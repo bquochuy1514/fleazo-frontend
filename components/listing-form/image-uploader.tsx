@@ -1,12 +1,14 @@
 'use client';
 
 import {
+	useEffect,
 	useRef,
 	useState,
 	type PointerEvent as ReactPointerEvent,
 } from 'react';
 import { createPortal } from 'react-dom';
 import { GripVertical, ImagePlus, X } from 'lucide-react';
+import { toast } from 'sonner';
 import type { ProductImageOrderItem } from '@/lib/products';
 import { cn } from '@/lib/utils';
 
@@ -28,9 +30,13 @@ type ImageUploaderProps = {
 		order: ProductImageOrderItem[],
 		coverPreviewUrl: string | undefined,
 	) => void;
-	// Comes from the seller's membership plan (plan.maxImagesPerListing) —
-	// defaults to Free's current limit so the uploader stays usable during
-	// the brief window before the caller's membership fetch resolves.
+	// Comes from the seller's membership plan (plan.maxImagesPerListing).
+	// Defaults to Infinity ("not known yet"), NOT a guessed finite number —
+	// a guessed default that's too low would trim/reject a seller's own
+	// existing images in edit mode before the real membership fetch resolves
+	// (e.g. a Premium seller's 6-image listing getting cut to 3 for a
+	// heartbeat because the caller hasn't learned they're Premium yet).
+	// Only restricts once the caller passes the real value.
 	maxImages?: number;
 };
 
@@ -45,7 +51,7 @@ export function ImageUploader({
 	initialImages,
 	onExistingImagesChange,
 	onOrderChange,
-	maxImages = 5,
+	maxImages = Infinity,
 }: ImageUploaderProps) {
 	const [entries, setEntries] = useState<ImageEntry[]>(() =>
 		(initialImages ?? []).map(toEntry),
@@ -98,6 +104,21 @@ export function ImageUploader({
 		);
 	};
 
+	// maxImages can drop after mount (the caller starts with a conservative
+	// default, then corrects once the real membership plan loads). If that
+	// leaves more images attached than the plan actually allows, trim from
+	// the end and say why — silently dropping images with no explanation
+	// would look like data loss.
+	useEffect(() => {
+		if (entriesRef.current.length <= maxImages) return;
+		const dropped = entriesRef.current.length - maxImages;
+		commit(entriesRef.current.slice(0, maxImages));
+		toast.error(
+			`Gói của bạn chỉ cho phép tối đa ${maxImages} ảnh mỗi tin — đã bỏ bớt ${dropped} ảnh cuối.`,
+		);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [maxImages]);
+
 	const move = (fromKey: string, toKey: string) => {
 		if (fromKey === toKey) return;
 		const current = entriesRef.current;
@@ -127,15 +148,30 @@ export function ImageUploader({
 
 	const handleAdd = (fileList: FileList | null) => {
 		if (!fileList) return;
-		const newEntries = Array.from(fileList).map((file): ImageEntry => {
+		// No explicit ImageEntry return type here — that would widen this to
+		// the existing|new union and lose the `.image.previewUrl` access below.
+		const newEntries = Array.from(fileList).map((file) => {
 			const previewUrl = URL.createObjectURL(file);
 			return {
 				key: `new-${previewUrl}`,
-				type: 'new',
+				type: 'new' as const,
 				image: { file, previewUrl },
 			};
 		});
-		commit([...entriesRef.current, ...newEntries].slice(0, maxImages));
+
+		const combined = [...entriesRef.current, ...newEntries];
+		const overflow = combined.length - maxImages;
+		if (overflow > 0) {
+			// Revoke the object URLs for the files that won't make the cut —
+			// otherwise they leak until the page unloads.
+			newEntries
+				.slice(newEntries.length - overflow)
+				.forEach((entry) => URL.revokeObjectURL(entry.image.previewUrl));
+			toast.error(
+				`Bạn chỉ có thể thêm tối đa ${maxImages} ảnh — đã bỏ qua ${overflow} ảnh cuối cùng bạn vừa chọn.`,
+			);
+		}
+		commit(combined.slice(0, maxImages));
 	};
 
 	const handleRemove = (key: string) => {
@@ -327,7 +363,8 @@ export function ImageUploader({
 
 			<p className="mt-2 text-xs text-muted-foreground">
 				Giữ và kéo ảnh để đổi thứ tự. Ảnh đầu tiên là ảnh bìa hiển thị ở
-				danh sách tin đăng. Tối đa {maxImages} ảnh.
+				danh sách tin đăng.
+				{Number.isFinite(maxImages) && ` Tối đa ${maxImages} ảnh.`}
 			</p>
 		</div>
 	);

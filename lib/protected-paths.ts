@@ -8,6 +8,7 @@ export const PROTECTED_PATHS = [
 	'/quan-ly-tin',
 	'/tin-da-luu',
 	'/goi-thanh-vien',
+	'/admin',
 ] as const;
 
 export function isProtectedPath(pathname: string): boolean {

@@ -4,7 +4,6 @@ import { useState } from 'react';
 import Link from 'next/link';
 import {
 	CheckCircle2,
-	Clock,
 	ExternalLink,
 	ImageOff,
 	Loader2,
@@ -30,7 +29,7 @@ import { firstImageUrl } from '@/lib/products';
 import {
 	daysUntilExpiry,
 	formatCount,
-	formatExpiry,
+	formatDateTime,
 	formatPrice,
 	timeAgo,
 } from '@/lib/format';
@@ -116,6 +115,27 @@ const OVERFLOW_ITEM_DANGER = cn(
 	'hover:bg-destructive/10 data-[highlighted]:bg-destructive/10 focus:bg-destructive/10',
 );
 
+// One "Label: value" line — explicit labels instead of a "·"-joined string
+// that silently swapped which fact it showed depending on status.
+function Fact({
+	label,
+	value,
+	valueClassName,
+}: {
+	label: string;
+	value: React.ReactNode;
+	valueClassName?: string;
+}) {
+	return (
+		<p className="flex items-baseline gap-1 text-xs leading-5 text-muted-foreground">
+			<span className="shrink-0 text-fz-ink/70">{label}:</span>
+			<span className={cn('min-w-0 truncate tabular-nums', valueClassName)}>
+				{value}
+			</span>
+		</p>
+	);
+}
+
 export function ListingRow({
 	product,
 	onAction,
@@ -134,6 +154,10 @@ export function ListingRow({
 	const deadEndNote = DEAD_END_NOTES[product.status];
 	const isDraftWithoutImages =
 		product.status === 'DRAFT' && product.images.length === 0;
+	const isExpiringSoon =
+		product.status === 'ACTIVE' &&
+		!!product.expiresAt &&
+		daysUntilExpiry(product.expiresAt) <= EXPIRY_WARNING_DAYS;
 
 	// Reaching into a dropdown for a single item is needless friction, so
 	// overflow items get promoted to buttons when the row only has two actions.
@@ -190,44 +214,24 @@ export function ListingRow({
 						{formatPrice(product.price)}
 					</p>
 
-					<div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
-						<span>{product.category.name}</span>
-						<span aria-hidden>·</span>
-						<span>{timeAgo(product.createdAt)}</span>
-						{SHOWS_SAVE_COUNT.includes(product.status) &&
-							product.saveCount > 0 && (
-								<>
-									<span aria-hidden>·</span>
-									<span className="tabular-nums">
-										{formatCount(product.saveCount)} lượt lưu
-									</span>
-								</>
-							)}
-						{product.status === 'ACTIVE' &&
-							product.expiresAt &&
-							(() => {
-								const isExpiringSoon =
-									daysUntilExpiry(product.expiresAt!) <=
-									EXPIRY_WARNING_DAYS;
-								return (
-									<>
-										<span aria-hidden>·</span>
-										<span
-											className={cn(
-												'inline-flex items-center gap-1',
-												isExpiringSoon &&
-													'font-medium text-fz-danger',
-											)}
-										>
-											<Clock
-												aria-hidden
-												className="size-3 shrink-0"
-											/>
-											{formatExpiry(product.expiresAt!)}
-										</span>
-									</>
-								);
-							})()}
+					<div className="mt-2 space-y-0.5">
+						<Fact label="Danh mục" value={product.category.name} />
+						<Fact label="Đăng lúc" value={timeAgo(product.createdAt)} />
+						{product.status === 'ACTIVE' && product.expiresAt && (
+							<Fact
+								label="Hết hạn"
+								value={formatDateTime(product.expiresAt)}
+								valueClassName={
+									isExpiringSoon ? 'font-semibold text-fz-danger' : undefined
+								}
+							/>
+						)}
+						{SHOWS_SAVE_COUNT.includes(product.status) && (
+							<Fact
+								label="Số lượt lưu"
+								value={formatCount(product.saveCount)}
+							/>
+						)}
 					</div>
 
 					{product.revision && (
@@ -279,11 +283,6 @@ export function ListingRow({
 				<div className="hidden min-w-0 text-right sm:block">
 					<p className="font-heading text-lg leading-none font-bold tabular-nums text-fz-accent">
 						{formatPrice(product.price)}
-					</p>
-					<p className="mt-2 text-xs text-muted-foreground">
-						{product.saveCount > 0
-							? `${formatCount(product.saveCount)} lượt lưu`
-							: `Đăng ${timeAgo(product.createdAt)}`}
 					</p>
 				</div>
 

@@ -5,6 +5,7 @@ import { AuthProvider } from '@/providers/auth-provider';
 import { SocketProvider } from '@/providers/socket-provider';
 import { ChatProvider } from '@/providers/chat-provider';
 import { Toaster } from '@/components/ui/sonner';
+import { ChatbotWidget } from '@/components/chatbot/chatbot-widget';
 
 const spaceGrotesk = Space_Grotesk({
 	variable: '--font-heading',
@@ -49,6 +50,7 @@ export default function RootLayout({
 					<SocketProvider>
 						<ChatProvider>{children}</ChatProvider>
 					</SocketProvider>
+					<ChatbotWidget />
 				</AuthProvider>
 				<Toaster position="bottom-center" />
 			</body>

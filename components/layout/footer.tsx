@@ -6,13 +6,12 @@ import type { Category } from '@/types/category.types';
 
 const FOOTER_CATEGORY_LIMIT = 5;
 
-const ABOUT_LINKS = [
-	{ href: '/gioi-thieu', label: 'Giới thiệu' },
-	{ href: '/dieu-khoan', label: 'Điều khoản dịch vụ' },
-	{ href: '/chinh-sach-bao-mat', label: 'Chính sách bảo mật' },
-];
-
+// One combined column — a portfolio project has no ToS/privacy boilerplate
+// to warrant a separate "Về Fleazo" column, and a single-link column next
+// to a 3-link one would read unbalanced.
 const SUPPORT_LINKS = [
+	{ href: '/gioi-thieu', label: 'Giới thiệu' },
+	{ href: '/huong-dan-dang-tin', label: 'Hướng dẫn đăng tin' },
 	{ href: '/lien-he', label: 'Liên hệ' },
 	{ href: '/faq', label: 'Câu hỏi thường gặp' },
 ];
@@ -75,7 +74,7 @@ export function Footer({ categories = [] }: { categories?: Category[] }) {
 			</div>
 
 			<div className="mx-auto max-w-6xl px-4 py-10">
-				<div className="grid grid-cols-1 gap-8 sm:grid-cols-5">
+				<div className="grid grid-cols-1 gap-8 sm:grid-cols-4">
 					<div className="sm:col-span-2">
 						{/* Full lockup at larger size — footer has room the header doesn't.
 						    Not a link: this is a brand mark, not a second "go home"
@@ -106,24 +105,6 @@ export function Footer({ categories = [] }: { categories?: Category[] }) {
 							</ul>
 						</div>
 					)}
-
-					<div>
-						<h3 className="text-sm font-medium text-fz-ink">
-							Về Fleazo
-						</h3>
-						<ul className="mt-3 space-y-2 text-sm text-muted-foreground">
-							{ABOUT_LINKS.map((link) => (
-								<li key={link.href}>
-									<Link
-										href={link.href}
-										className="hover:text-fz-ink"
-									>
-										{link.label}
-									</Link>
-								</li>
-							))}
-						</ul>
-					</div>
 
 					<div>
 						<h3 className="text-sm font-medium text-fz-ink">

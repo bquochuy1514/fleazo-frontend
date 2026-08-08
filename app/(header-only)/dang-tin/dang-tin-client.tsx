@@ -129,9 +129,11 @@ function DangTinForm({
 	const [isSavingDraft, setIsSavingDraft] = useState(false);
 	const [isSavingEdit, setIsSavingEdit] = useState(false);
 	const [errors, setErrors] = useState<ApiErrorResponse<ProductField>>({});
-	// Defaults to Free's current limit until the membership fetch below
-	// resolves — see ImageUploader's maxImages prop comment.
-	const [maxImages, setMaxImages] = useState(5);
+	// Infinity ("not known yet") until the membership fetch below resolves —
+	// see ImageUploader's maxImages prop comment for why a guessed finite
+	// default is unsafe here (it can wrongly trim a seller's own existing
+	// images in edit mode).
+	const [maxImages, setMaxImages] = useState(Infinity);
 
 	const locationLabel =
 		location.wardName && location.provinceName

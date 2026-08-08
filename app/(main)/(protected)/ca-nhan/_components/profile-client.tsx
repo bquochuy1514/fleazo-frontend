@@ -7,6 +7,7 @@ import {
 	ArrowUpRight,
 	Camera,
 	ChevronDown,
+	Crown,
 	GraduationCap,
 	Heart,
 	KeyRound,
@@ -276,6 +277,9 @@ export function ProfileClient({
 						</Shortcut>
 						<Shortcut href="/tin-da-luu" icon={Heart}>
 							Tin đã lưu
+						</Shortcut>
+						<Shortcut href="/goi-thanh-vien" icon={Crown}>
+							Gói thành viên
 						</Shortcut>
 					</nav>
 				</aside>

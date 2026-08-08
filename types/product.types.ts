@@ -118,3 +118,36 @@ export type MyProduct = Product & {
 	// Re-review Flow); null for every other status.
 	expiresAt: string | null;
 };
+
+// Enough to identify who's asking for approval on an admin queue row —
+// never phone/address, this isn't a full profile (see ADMIN_SELLER_SELECT
+// in backend products.service.ts).
+export type QueueSeller = {
+	id: number;
+	fullName: string;
+	avatar: string;
+	email: string;
+};
+
+// GET /products/admin/pending — a PENDING product plus who submitted it.
+export type PendingProduct = Product & { seller: QueueSeller };
+
+// GET /products/admin/revisions — a staged edit on an ACTIVE listing.
+// `product` carries the LIVE content (what's currently public); everything
+// else on this object is the PROPOSED change waiting on approval.
+export type PendingRevision = {
+	id: number;
+	title: string;
+	description: string;
+	price: string;
+	condition: ProductCondition;
+	categoryId: number;
+	provinceCode: number;
+	provinceName: string;
+	wardCode: number;
+	wardName: string;
+	addressDetail: string | null;
+	images: ProductImage[];
+	updatedAt: string;
+	product: Product & { seller: QueueSeller };
+};

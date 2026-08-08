@@ -244,12 +244,37 @@
 	animation: fz-ledger-update 0.7s ease-out;
 }
 
+/* Periodic attention-grabber on the chatbot launcher button — fires every
+   few seconds (see chatbot-widget.tsx's interval), not continuously, so it
+   draws the eye without becoming visual noise. Stops for good once the
+   widget has been opened once. */
+@keyframes fz-chatbot-bounce {
+	0%,
+	100% {
+		transform: translateY(0);
+	}
+	25% {
+		transform: translateY(-10px);
+	}
+	50% {
+		transform: translateY(0);
+	}
+	75% {
+		transform: translateY(-5px);
+	}
+}
+
+.fz-chatbot-bounce {
+	animation: fz-chatbot-bounce 0.8s ease-in-out;
+}
+
 /* Must come after the rules above — same specificity, so order decides. */
 @media (prefers-reduced-motion: reduce) {
 	.fz-rise,
 	.fz-drift,
 	.fz-pulse,
-	.fz-ledger-update {
+	.fz-ledger-update,
+	.fz-chatbot-bounce {
 		animation: none;
 	}
 }

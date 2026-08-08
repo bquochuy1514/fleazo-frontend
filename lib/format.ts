@@ -44,13 +44,11 @@ export function formatJoinDate(dateString: string): string {
 	return dayjs(dateString).format('[Tháng] M, YYYY');
 }
 
-// "12 ngày nữa" / "Hết hạn hôm nay" — Product.expiresAt on an ACTIVE listing
-// in quan-ly-tin. dayjs' relativeTime plugin (already extended above) handles
-// future dates too, the vi locale phrases them as "X nữa".
-export function formatExpiry(dateString: string): string {
-	const d = dayjs(dateString);
-	if (d.isSame(dayjs(), 'day')) return 'Hết hạn hôm nay';
-	return d.fromNow();
+// "20:00, 15/09/2026" — exact Product.expiresAt in quan-ly-tin. Spelled out
+// in full rather than a relative "12 ngày nữa": a seller deciding whether to
+// renew wants the actual moment, not a vague window that keeps shifting.
+export function formatDateTime(dateString: string): string {
+	return dayjs(dateString).format('HH:mm, DD/MM/YYYY');
 }
 
 // Whole days until Product.expiresAt — used to flag a listing as expiring
