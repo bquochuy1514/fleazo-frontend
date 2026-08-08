@@ -114,4 +114,7 @@ export type ProductRevisionRef = { id: number; updatedAt: string };
 export type MyProduct = Product & {
 	rejectedReason: string | null;
 	revision: ProductRevisionRef | null;
+	// Set once the listing is approved into ACTIVE (see backend AGENTS.md →
+	// Re-review Flow); null for every other status.
+	expiresAt: string | null;
 };

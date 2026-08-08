@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { EmptyState } from '@/components/ui/empty-state';
+import { ScrollReveal } from '@/components/ui/scroll-reveal';
 import {
 	getSavedProducts,
 	unsaveProduct,
@@ -36,11 +37,11 @@ function getShelfGroup(savedAt: string): ShelfGroup {
 
 function SavedListingsSkeleton() {
 	return (
-		<div className="grid gap-x-8 lg:grid-cols-2">
+		<div className="grid gap-4 lg:grid-cols-2">
 			{Array.from({ length: 8 }, (_, index) => (
 				<div
 					key={index}
-					className="flex gap-3 border-b border-border py-3.5 sm:gap-4 sm:py-4"
+					className="flex gap-3 rounded-2xl border border-border bg-card p-3 shadow-sm shadow-fz-ink/5 sm:gap-4 sm:p-4"
 				>
 					<div className="h-25 w-[7.5rem] shrink-0 animate-pulse rounded-xl bg-muted sm:h-28 sm:w-36" />
 					<div className="flex-1 space-y-3 pt-1">
@@ -157,15 +158,17 @@ export function SavedListingsClient() {
 
 	return (
 		<section className="mx-auto min-h-[calc(100dvh+3rem)] max-w-6xl px-4 pt-24 pb-28 sm:px-6 sm:pt-28 sm:pb-20">
-			<header className="max-w-xl">
+			<header className="max-w-2xl">
 				<p className="font-heading text-xs font-semibold tracking-[0.18em] text-fz-muted uppercase">
 					Kệ để dành
 				</p>
-				<h1 className="mt-2 font-heading text-3xl leading-none font-bold tracking-tight text-fz-ink sm:text-4xl">
+				<h1 className="mt-3 font-heading text-3xl leading-none font-bold tracking-tight text-fz-ink sm:text-4xl">
 					Tin đã lưu
 				</h1>
-				<p className="mt-3 text-base leading-7 text-muted-foreground">
-					Bạn đang để dành {total} tin còn đang hiển thị.
+				<p className="mt-3 max-w-xl text-base leading-7 text-muted-foreground">
+					{!isLoading && !error
+						? `Bạn đang để dành ${total} tin còn đang hiển thị.`
+						: 'Những món bạn muốn quay lại xem sau.'}
 				</p>
 			</header>
 
@@ -219,31 +222,32 @@ export function SavedListingsClient() {
 								<section
 									key={group}
 									aria-labelledby={`saved-group-${group}`}
-									className={
-										hasEarlierGroup
-											? 'border-t border-border pt-4 sm:pt-5'
-											: 'pt-0'
-									}
+									className={hasEarlierGroup ? 'pt-1' : 'pt-0'}
 								>
 									<div className="flex items-baseline justify-between gap-4">
 										<h2
 											id={`saved-group-${group}`}
-											className="font-heading text-sm font-semibold tracking-tight text-fz-ink"
+											className="flex items-center gap-2.5 font-heading text-sm font-semibold tracking-tight text-fz-ink"
 										>
+											<span aria-hidden className="h-1.5 w-6 shrink-0 rounded-full bg-fz-ink" />
 											{GROUP_LABELS[group]}
 										</h2>
 										<p className="shrink-0 text-xs tabular-nums text-muted-foreground">
 											{formatCount(groupItems.length)} tin
 										</p>
 									</div>
-									<div className="mt-2 grid gap-x-8 lg:mt-3 lg:grid-cols-2">
-										{groupItems.map((savedItem) => {
+									<div className="mt-3 grid gap-4 lg:mt-4 lg:grid-cols-2">
+										{groupItems.map((savedItem, itemIndex) => {
 											return (
-												<SavedListingItem
+												<ScrollReveal
 													key={savedItem.product.id}
-													item={savedItem}
-													onUnsaveRequested={setPendingUnsave}
-												/>
+													delay={Math.min(itemIndex, 8) * 40}
+												>
+													<SavedListingItem
+														item={savedItem}
+														onUnsaveRequested={setPendingUnsave}
+													/>
+												</ScrollReveal>
 											);
 										})}
 									</div>

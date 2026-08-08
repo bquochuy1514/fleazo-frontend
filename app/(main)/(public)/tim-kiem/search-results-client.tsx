@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Package, RefreshCw } from 'lucide-react';
 import { SearchFilterRail } from '@/components/search/search-filter-rail';
@@ -23,6 +23,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { useAuth } from '@/hooks/use-auth';
 import { parseApiError } from '@/lib/api';
 import { getProducts, type PaginatedProducts, type ProductQuery } from '@/lib/products';
+import { cn } from '@/lib/utils';
 import type { Category } from '@/types/category.types';
 import type { ProvinceWithWards } from '@/lib/locations';
 
@@ -62,6 +63,11 @@ export function SearchResultsClient({
 	const [error, setError] = useState(initialError);
 	const [isRetrying, setIsRetrying] = useState(false);
 	const [filterSheetOpen, setFilterSheetOpen] = useState(false);
+	// Filter/page changes push a new URL, which reruns the server component
+	// above — router.push alone gives no feedback while that fetch is in
+	// flight, so the stale grid just sits frozen. Wrapping it in a transition
+	// lets us show the skeleton for that window instead.
+	const [isNavigating, startNavigate] = useTransition();
 
 	// Category/home links can preserve their previous scroll position because
 	// they stay inside the same marketplace layout. Results are a fresh browse
@@ -71,7 +77,9 @@ export function SearchResultsClient({
 	}, []);
 
 	const navigate = (next: SearchFilters, scroll = false) => {
-		router.push(searchHref(next), { scroll });
+		startNavigate(() => {
+			router.push(searchHref(next), { scroll });
+		});
 	};
 
 	const refreshForViewer = async () => {
@@ -136,7 +144,12 @@ export function SearchResultsClient({
 				contextLabel={contextLabel}
 			/>
 			{result && (
-				<div className="mt-3">
+				<div
+					className={cn(
+						'mt-3 transition-opacity duration-200',
+						isNavigating && 'opacity-50',
+					)}
+				>
 					<SearchToolbar
 						total={result.total}
 						filters={filters}
@@ -162,7 +175,9 @@ export function SearchResultsClient({
 						/>
 
 						<div className="min-w-0">
-							{result.data.length > 0 ? (
+							{isNavigating ? (
+								<SearchResultsSkeleton />
+							) : result.data.length > 0 ? (
 								<>
 									<SearchResultsGrid
 										products={result.data}

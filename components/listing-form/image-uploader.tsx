@@ -28,6 +28,10 @@ type ImageUploaderProps = {
 		order: ProductImageOrderItem[],
 		coverPreviewUrl: string | undefined,
 	) => void;
+	// Comes from the seller's membership plan (plan.maxImagesPerListing) —
+	// defaults to Free's current limit so the uploader stays usable during
+	// the brief window before the caller's membership fetch resolves.
+	maxImages?: number;
 };
 
 const toEntry = (image: ExistingImage): ImageEntry => ({
@@ -41,6 +45,7 @@ export function ImageUploader({
 	initialImages,
 	onExistingImagesChange,
 	onOrderChange,
+	maxImages = 5,
 }: ImageUploaderProps) {
 	const [entries, setEntries] = useState<ImageEntry[]>(() =>
 		(initialImages ?? []).map(toEntry),
@@ -130,7 +135,7 @@ export function ImageUploader({
 				image: { file, previewUrl },
 			};
 		});
-		commit([...entriesRef.current, ...newEntries].slice(0, 5));
+		commit([...entriesRef.current, ...newEntries].slice(0, maxImages));
 	};
 
 	const handleRemove = (key: string) => {
@@ -277,7 +282,7 @@ export function ImageUploader({
 					);
 				})}
 
-				{entries.length < 5 && (
+				{entries.length < maxImages && (
 					<label
 						className={cn(
 							'flex aspect-square cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-border bg-muted/40 text-muted-foreground transition-colors hover:border-ring hover:bg-muted hover:text-fz-ink',
@@ -322,7 +327,7 @@ export function ImageUploader({
 
 			<p className="mt-2 text-xs text-muted-foreground">
 				Giữ và kéo ảnh để đổi thứ tự. Ảnh đầu tiên là ảnh bìa hiển thị ở
-				danh sách tin đăng. Tối đa 5 ảnh.
+				danh sách tin đăng. Tối đa {maxImages} ảnh.
 			</p>
 		</div>
 	);

@@ -5,11 +5,23 @@ import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
+	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { formatMessageTime } from '@/lib/format';
 import type { Message } from '@/types/chat.types';
+
+const MENU_ITEM =
+	'group cursor-pointer gap-2.5 rounded-lg px-2 py-1.5 transition-colors duration-200 hover:bg-muted focus:bg-muted';
+
+const MENU_ICON =
+	'flex size-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground transition-colors duration-200 group-hover:bg-background group-hover:text-fz-ink group-focus:bg-background group-focus:text-fz-ink';
+
+const MENU_ITEM_DANGER = cn(
+	MENU_ITEM,
+	'hover:bg-fz-danger/10 focus:bg-fz-danger/10',
+);
 
 export function MessageBubble({
 	message,
@@ -42,29 +54,46 @@ export function MessageBubble({
 	const menu = showMenu && (
 		<DropdownMenu modal={false}>
 			<DropdownMenuTrigger
-				className="rounded-full p-1 text-muted-foreground opacity-100 transition hover:bg-muted sm:opacity-0 sm:group-hover:opacity-100"
+				className="relative flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted-foreground opacity-100 transition-all duration-200 after:absolute after:-inset-2 hover:bg-muted hover:text-fz-ink focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none data-[state=open]:bg-muted data-[state=open]:text-fz-ink sm:opacity-0 sm:group-hover:opacity-100 sm:data-[state=open]:opacity-100"
 				aria-label="Tuỳ chọn tin nhắn"
 			>
-				<MoreVertical className="size-4" />
+				<MoreVertical aria-hidden className="size-4" />
 			</DropdownMenuTrigger>
-			<DropdownMenuContent align={isMine ? 'end' : 'start'} className="w-44">
-				<DropdownMenuItem onClick={() => onReply(message)}>
-					<Reply className="size-4" />
+			<DropdownMenuContent
+				align={isMine ? 'end' : 'start'}
+				sideOffset={8}
+				className="w-48 p-1.5 shadow-lg"
+			>
+				<DropdownMenuItem
+					onClick={() => onReply(message)}
+					className={MENU_ITEM}
+				>
+					<span className={MENU_ICON}>
+						<Reply aria-hidden className="size-4" />
+					</span>
 					Trả lời
 				</DropdownMenuItem>
-				<DropdownMenuItem onClick={handleCopy}>
-					<Copy className="size-4" />
+				<DropdownMenuItem onClick={handleCopy} className={MENU_ITEM}>
+					<span className={MENU_ICON}>
+						<Copy aria-hidden className="size-4" />
+					</span>
 					Sao chép
 				</DropdownMenuItem>
 				{/* Own messages only — recall retracts a sent message, sender-only action */}
 				{isMine && (
-					<DropdownMenuItem
-						variant="destructive"
-						onClick={() => onRecall(message.id)}
-					>
-						<Undo2 className="size-4" />
-						Thu hồi tin nhắn
-					</DropdownMenuItem>
+					<>
+						<DropdownMenuSeparator className="my-1.5" />
+						<DropdownMenuItem
+							variant="destructive"
+							onClick={() => onRecall(message.id)}
+							className={MENU_ITEM_DANGER}
+						>
+							<span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-fz-danger/10 text-fz-danger">
+								<Undo2 aria-hidden className="size-4" />
+							</span>
+							Thu hồi tin nhắn
+						</DropdownMenuItem>
+					</>
 				)}
 			</DropdownMenuContent>
 		</DropdownMenu>

@@ -212,8 +212,8 @@ export function ProfileClient({
 				</p>
 			</header>
 
-			<div className="mt-10 grid grid-cols-[minmax(0,1fr)] gap-10 border-t border-border pt-8 lg:grid-cols-[17rem_minmax(0,1fr)] lg:gap-16 lg:pt-10">
-				<aside className="min-w-0 lg:sticky lg:top-28 lg:self-start">
+			<div className="mt-8 grid grid-cols-[minmax(0,1fr)] gap-6 sm:mt-10 lg:grid-cols-[17rem_minmax(0,1fr)] lg:gap-8">
+				<aside className="min-w-0 rounded-2xl border border-border bg-card p-5 shadow-sm shadow-fz-ink/5 sm:p-6 lg:sticky lg:top-28 lg:h-fit lg:self-start">
 					<div className="flex items-center gap-4 lg:block">
 						<div className="relative shrink-0">
 							<div className="relative size-24 overflow-hidden rounded-[1.75rem] border border-border bg-muted sm:size-28">
@@ -280,9 +280,9 @@ export function ProfileClient({
 					</nav>
 				</aside>
 
-				<div className="min-w-0">
+				<div className="min-w-0 rounded-2xl border border-border bg-card px-5 shadow-sm shadow-fz-ink/5 sm:px-6">
 					<form onSubmit={handleSubmit} className="min-w-0 divide-y divide-border">
-						<section className="py-7 first:pt-0 sm:py-8">
+						<section className="py-7 sm:py-8">
 							<SectionHeading
 								index="01"
 								title="Thông tin liên hệ"
@@ -542,9 +542,9 @@ function ProfileSkeleton() {
 		<div className="mx-auto w-full max-w-6xl px-4 pt-24 pb-24 sm:px-6 sm:pt-28">
 			<div className="h-3 w-28 animate-pulse rounded bg-muted" />
 			<div className="mt-4 h-10 w-64 animate-pulse rounded bg-muted" />
-			<div className="mt-10 grid grid-cols-[minmax(0,1fr)] gap-10 border-t border-border pt-8 lg:grid-cols-[17rem_minmax(0,1fr)]">
-				<div className="h-56 animate-pulse rounded-xl bg-muted" />
-				<div className="h-96 animate-pulse rounded-xl bg-muted" />
+			<div className="mt-8 grid grid-cols-[minmax(0,1fr)] gap-6 sm:mt-10 lg:grid-cols-[17rem_minmax(0,1fr)] lg:gap-8">
+				<div className="h-56 animate-pulse rounded-2xl bg-muted" />
+				<div className="h-96 animate-pulse rounded-2xl bg-muted" />
 			</div>
 		</div>
 	);

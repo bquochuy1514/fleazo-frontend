@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import {
 	CheckCircle2,
+	Clock,
 	ExternalLink,
 	ImageOff,
 	Loader2,
@@ -26,9 +27,20 @@ import {
 	RevisionPendingBadge,
 } from './listing-status-badge';
 import { firstImageUrl } from '@/lib/products';
-import { formatCount, formatPrice, timeAgo } from '@/lib/format';
+import {
+	daysUntilExpiry,
+	formatCount,
+	formatExpiry,
+	formatPrice,
+	timeAgo,
+} from '@/lib/format';
 import { cn } from '@/lib/utils';
 import type { MyProduct, ProductStatus } from '@/types/product.types';
+
+// An ACTIVE listing this close to Product.expiresAt gets flagged in rust —
+// gives the seller a window to renew (re-submit) before the nightly cron
+// silently flips it to EXPIRED.
+const EXPIRY_WARNING_DAYS = 3;
 
 export type RowActionKey = 'publish' | 'edit' | 'markSold' | 'cancel';
 
@@ -136,7 +148,7 @@ export function ListingRow({
 	return (
 		<li
 			className={cn(
-				'rounded-2xl border border-border bg-card p-3 transition-colors duration-200 hover:border-fz-ink/25 sm:rounded-none sm:border-x-0 sm:border-t-0 sm:bg-transparent sm:px-0 sm:py-5 sm:hover:bg-muted/35',
+				'fz-card fz-card-hover rounded-2xl border border-border bg-card p-3 transition-colors duration-200 hover:border-fz-ink/20 sm:rounded-3xl sm:p-4',
 				isRecentlyUpdated && 'fz-ledger-update',
 			)}
 		>
@@ -148,7 +160,7 @@ export function ListingRow({
 						: 'sm:grid-cols-[6rem_minmax(0,1fr)_10rem]',
 				)}
 			>
-				<div className="relative size-20 shrink-0 overflow-hidden rounded-xl bg-muted sm:size-24 sm:rounded-xl">
+				<div className="relative size-20 shrink-0 overflow-hidden rounded-xl bg-muted ring-1 ring-border sm:size-24 sm:rounded-xl">
 					<ListingThumbnail key={imageUrl} src={imageUrl} alt="" />
 				</div>
 
@@ -191,6 +203,31 @@ export function ListingRow({
 									</span>
 								</>
 							)}
+						{product.status === 'ACTIVE' &&
+							product.expiresAt &&
+							(() => {
+								const isExpiringSoon =
+									daysUntilExpiry(product.expiresAt!) <=
+									EXPIRY_WARNING_DAYS;
+								return (
+									<>
+										<span aria-hidden>·</span>
+										<span
+											className={cn(
+												'inline-flex items-center gap-1',
+												isExpiringSoon &&
+													'font-medium text-fz-danger',
+											)}
+										>
+											<Clock
+												aria-hidden
+												className="size-3 shrink-0"
+											/>
+											{formatExpiry(product.expiresAt!)}
+										</span>
+									</>
+								);
+							})()}
 					</div>
 
 					{product.revision && (

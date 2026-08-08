@@ -254,6 +254,38 @@
 	}
 }
 
+/* Ink-tinted elevation — a plain gray shadow reads cold against the warm
+   paper background, so every card shadow here is tinted with --color-ink
+   (#211f1c) instead of neutral black. */
+.fz-card {
+	box-shadow:
+		0 1px 2px 0 rgb(33 31 28 / 0.05),
+		0 1px 1px -1px rgb(33 31 28 / 0.04);
+}
+
+.fz-card-hover {
+	transition:
+		box-shadow 0.2s ease-out,
+		transform 0.2s ease-out;
+}
+
+.fz-card-hover:hover {
+	box-shadow:
+		0 4px 12px -2px rgb(33 31 28 / 0.1),
+		0 2px 4px -2px rgb(33 31 28 / 0.06);
+	transform: translateY(-1px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.fz-card-hover {
+		transition: none;
+	}
+
+	.fz-card-hover:hover {
+		transform: none;
+	}
+}
+
 /* Every Radix Dialog/Sheet open (modal by default) injects its own
    `body[data-scroll-locked] { margin-right: <scrollbar-width>px !important;
    ... }` at runtime to keep content from shifting when it hides the native
@@ -295,6 +327,15 @@ html body[data-scroll-locked] {
 	}
 	html {
 		@apply font-sans;
+		/* iOS Safari's own text-autosizing heuristic — separate bug from the
+		   input-zoom one above — silently inflates small fixed-px text (e.g.
+		   a badge's text-[10px]) based on column-width heuristics, no matter
+		   what the CSS says. Chrome DevTools' device emulation doesn't run
+		   this WebKit-only algorithm at all, so it looks correct there and
+		   only breaks on a real iPhone. Disabling it site-wide is the
+		   standard fix (Bootstrap/most frameworks ship this by default). */
+		-webkit-text-size-adjust: 100%;
+		text-size-adjust: 100%;
 		/* Reserves the scrollbar's own width permanently, instead of only
 		   while content is actually tall enough to scroll. Without this, the
 		   moment ANY overlay (a Radix Dialog/Sheet, even briefly, or a page

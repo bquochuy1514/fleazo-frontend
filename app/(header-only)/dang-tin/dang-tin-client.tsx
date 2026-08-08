@@ -43,6 +43,7 @@ import {
 	type ProductField,
 } from '@/lib/products';
 import { getMissingSellerFields } from '@/lib/seller-profile';
+import { getMyMembership } from '@/lib/membership';
 import { cn } from '@/lib/utils';
 import type { ApiErrorResponse } from '@/types/api.types';
 import {
@@ -128,6 +129,9 @@ function DangTinForm({
 	const [isSavingDraft, setIsSavingDraft] = useState(false);
 	const [isSavingEdit, setIsSavingEdit] = useState(false);
 	const [errors, setErrors] = useState<ApiErrorResponse<ProductField>>({});
+	// Defaults to Free's current limit until the membership fetch below
+	// resolves — see ImageUploader's maxImages prop comment.
+	const [maxImages, setMaxImages] = useState(5);
 
 	const locationLabel =
 		location.wardName && location.provinceName
@@ -185,6 +189,14 @@ function DangTinForm({
 		queueMicrotask(() => setAddressDetail(addressDetailValue));
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [user]);
+
+	// Drives the ImageUploader's cap — silently keeps the Free default above
+	// on failure rather than blocking the whole form over one extra call.
+	useEffect(() => {
+		getMyMembership()
+			.then((membership) => setMaxImages(membership.plan.maxImagesPerListing))
+			.catch(() => {});
+	}, []);
 
 	const handleSuggest = async () => {
 		if (images.length === 0) return;
@@ -250,6 +262,17 @@ function DangTinForm({
 				);
 			} else if (parsed.errorCode === 'INCOMPLETE_SELLER_PROFILE') {
 				setIsProfileModalOpen(true);
+			} else if (parsed.errorCode === 'LISTING_LIMIT_REACHED') {
+				toast.error(
+					parsed.message ??
+						'Bạn đã đạt giới hạn tin đang hoạt động của gói hiện tại.',
+					{
+						action: {
+							label: 'Nâng cấp gói',
+							onClick: () => router.push('/goi-thanh-vien'),
+						},
+					},
+				);
 			} else if (parsed.message) {
 				toast.error(parsed.message);
 			}
@@ -351,6 +374,7 @@ function DangTinForm({
 								required
 							/>
 							<ImageUploader
+								maxImages={maxImages}
 								onChange={setImages}
 								onOrderChange={(order, coverUrl) => {
 									setImagesOrder(order);

@@ -7,6 +7,7 @@ export const PROTECTED_PATHS = [
 	'/tin-nhan',
 	'/quan-ly-tin',
 	'/tin-da-luu',
+	'/goi-thanh-vien',
 ] as const;
 
 export function isProtectedPath(pathname: string): boolean {

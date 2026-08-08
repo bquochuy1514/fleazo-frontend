@@ -44,7 +44,7 @@ const FETCH_LIMIT = 100;
 // itself extends 3rem beyond the viewport so the footer appears on the first
 // intentional scroll, rather than competing with an empty state on load.
 const EMPTY_STATE_CLASS =
-	'mt-6 min-h-[calc(100dvh-21rem)] justify-center rounded-none border-x-0 border-solid bg-transparent sm:mt-8 sm:rounded-none';
+	'fz-card mt-6 min-h-[calc(100dvh-21rem)] justify-center bg-card sm:mt-8';
 
 const REVISION_WARNING_KEY = 'fz:hide-revision-warning';
 
@@ -238,16 +238,27 @@ export function QuanLyTinClient() {
 				toast.success(message);
 				setConfirm(null);
 			} catch (err) {
-				toast.error(
-					parseApiError(err).message ??
-						'Đã có lỗi xảy ra, vui lòng thử lại.',
-				);
+				const parsed = parseApiError(err);
+				if (parsed.errorCode === 'LISTING_LIMIT_REACHED') {
+					toast.error(
+						parsed.message ??
+							'Bạn đã đạt giới hạn tin đang hoạt động của gói hiện tại.',
+						{
+							action: {
+								label: 'Nâng cấp gói',
+								onClick: () => router.push('/goi-thanh-vien'),
+							},
+						},
+					);
+				} else {
+					toast.error(parsed.message ?? 'Đã có lỗi xảy ra, vui lòng thử lại.');
+				}
 				void fetchProducts();
 			} finally {
 				setPendingId(null);
 			}
 		},
-		[activeTab, fetchProducts],
+		[activeTab, fetchProducts, router],
 	);
 
 	const confirmProps = confirmCopy(confirm);
@@ -303,7 +314,7 @@ export function QuanLyTinClient() {
 				</p>
 			</div>
 
-			<div className="mt-8 flex flex-col gap-4 border-b border-border pb-4 sm:mt-10 sm:flex-row sm:items-center sm:justify-between">
+			<div className="fz-card mt-8 flex flex-col gap-4 rounded-2xl border border-border bg-card p-4 sm:mt-10 sm:flex-row sm:items-center sm:justify-between sm:rounded-3xl sm:p-5">
 				<div className="relative w-full sm:max-w-xs">
 					<Search
 						aria-hidden
@@ -408,7 +419,7 @@ export function QuanLyTinClient() {
 				)
 			) : (
 				<>
-					<ul className="mt-4 flex flex-col gap-3 sm:gap-0">
+					<ul className="mt-4 flex flex-col gap-3 sm:gap-4">
 						{visibleProducts.map((product) => (
 							<ListingRow
 								key={product.id}

@@ -60,7 +60,9 @@ export function PasswordDialog({
 
 			const token = getStoredAccessToken();
 			if (token) await login(token);
-			toast.success(hasPassword ? 'Đã đổi mật khẩu.' : 'Đã thêm mật khẩu.');
+			toast.success(
+				hasPassword ? 'Đã đổi mật khẩu.' : 'Đã thêm mật khẩu.',
+			);
 			onOpenChange(false);
 		} catch (error) {
 			setErrors(parseApiError<PasswordFields>(error));
@@ -97,7 +99,9 @@ export function PasswordDialog({
 								wrapperClassName="mt-1.5"
 								className="h-11"
 							/>
-							<FieldError message={errors.errors?.currentPassword} />
+							<FieldError
+								message={errors.errors?.currentPassword}
+							/>
 						</div>
 					)}
 
@@ -154,10 +158,15 @@ export function PasswordDialog({
 							variant="outline"
 							onClick={() => onOpenChange(false)}
 							disabled={isSaving}
+							className="h-11"
 						>
 							Hủy
 						</Button>
-						<Button type="submit" disabled={isSaving}>
+						<Button
+							type="submit"
+							disabled={isSaving}
+							className="h-11"
+						>
 							{isSaving ? 'Đang lưu...' : 'Lưu mật khẩu'}
 						</Button>
 					</DialogFooter>

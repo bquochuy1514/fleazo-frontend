@@ -25,6 +25,7 @@ import { useSocket } from '@/hooks/use-socket';
 import { useChat } from '@/hooks/use-chat';
 import { createConversation, getMessages } from '@/lib/chat';
 import { getProduct, firstImageUrl } from '@/lib/products';
+import { getPublicUserProfile } from '@/lib/users';
 import { ChatAppBar } from './_components/chat-app-bar';
 import { ConversationItem } from './_components/conversation-item';
 import { ConversationTabs, type ConversationTabKey } from './_components/conversation-tabs';
@@ -139,12 +140,22 @@ export function TinNhanPageClient() {
 		return result;
 	}, [messages]);
 
-	// Current topic, pinned in the pane header regardless of scroll position —
-	// the inline sticky cards inside the message list only mark topic changes
-	// AWAY from this one; once a message's product matches latestProductId,
-	// the header already covers it, so it's skipped inline.
+	// Current topic — used for the role badge text only (see below), NOT
+	// rendered as its own card. The single source of "which product is this
+	// about" on screen is the inline sticky cards in the message list: each
+	// one sticks to the top of the scroll area via CSS `position: sticky`
+	// once you scroll past it, so whichever topic is current at the current
+	// scroll position naturally reads as "pinned" without a second, separate
+	// card duplicating the same info right next to it.
 	const currentProduct =
 		selected?.latestProductId != null ? productCache[selected.latestProductId] : null;
+	// The one exception: a long thread where the current topic's own message
+	// is older than what's loaded (>30 messages back) has no sticky card to
+	// show yet. Only then does a fallback card render, and only until the
+	// real message loads — never alongside it.
+	const showFallbackProductContext =
+		selected?.latestProductId != null &&
+		!messages.some((m) => m.productId === selected.latestProductId);
 	// Mirrors how the backend actually resolves a role: Message.productId
 	// cross-referenced against Product.sellerId (see backend AGENTS.md → Chat).
 	const otherUserRoleLabel = currentProduct
@@ -216,37 +227,45 @@ export function TinNhanPageClient() {
 	}, [socket]);
 
 	// ?productId=<id> — entry point from a product detail page's "Nhắn tin".
-	// Reuses an existing conversation with that seller if there is one;
-	// otherwise this does NOT create it yet — only handleSend's pending
-	// branch does that, on the first real message.
+	// ?sellerId=<id> — entry point from a seller's public profile "Nhắn tin",
+	// not tied to any listing (no pendingProductId set). Both reuse an
+	// existing conversation with that person if there is one; otherwise this
+	// does NOT create it yet — only handleSend's pending branch does that,
+	// on the first real message.
 	useEffect(() => {
+		if (isLoadingConversations) return;
 		const productIdParam = searchParams.get('productId');
-		if (!productIdParam || isLoadingConversations) return;
+		const sellerIdParam = searchParams.get('sellerId');
+		if (!productIdParam && !sellerIdParam) return;
 
-		const productId = Number(productIdParam);
 		router.replace('/tin-nhan');
 
-		getProduct(productId)
-			.then((product) => {
-				queueMicrotask(() => setPendingProductId(productId));
+		const startWith = (recipient: ChatUser, productId: number | null) => {
+			const existing = conversations.find((c) => c.otherUser.id === recipient.id);
+			if (existing) {
+				queueMicrotask(() => setSelectedId(existing.id));
+				return;
+			}
+			queueMicrotask(() => {
+				if (productId) setPendingProductId(productId);
+				setPendingRecipient(recipient);
+				setMessages([]);
+				setPage(1);
+				setTotalPages(1);
+			});
+		};
 
-				const existing = conversations.find((c) => c.otherUser.id === product.seller.id);
-				if (existing) {
-					queueMicrotask(() => setSelectedId(existing.id));
-					return;
-				}
+		if (productIdParam) {
+			const productId = Number(productIdParam);
+			getProduct(productId)
+				.then((product) => startWith(product.seller, productId))
+				.catch(() => {});
+			return;
+		}
 
-				queueMicrotask(() => {
-					setPendingRecipient({
-						id: product.seller.id,
-						fullName: product.seller.fullName,
-						avatar: product.seller.avatar,
-					});
-					setMessages([]);
-					setPage(1);
-					setTotalPages(1);
-				});
-			})
+		const sellerId = Number(sellerIdParam);
+		getPublicUserProfile(sellerId)
+			.then((seller) => startWith(seller, null))
 			.catch(() => {});
 		// Only re-run once the conversations list first finishes loading.
 		// eslint-disable-next-line react-hooks/exhaustive-deps
@@ -646,7 +665,11 @@ export function TinNhanPageClient() {
 									>
 										<ArrowLeft className="size-5" />
 									</button>
-									<div className="relative shrink-0">
+									<Link
+										href={`/nguoi-dung/${activeOtherUser.id}`}
+										className="relative shrink-0 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+										aria-label={`Xem hồ sơ của ${activeOtherUser.fullName}`}
+									>
 										<Image
 											src={activeOtherUser.avatar}
 											alt={activeOtherUser.fullName}
@@ -657,9 +680,12 @@ export function TinNhanPageClient() {
 										{!isPending && otherUserOnline && (
 											<span className="absolute right-0 bottom-0 size-2.5 rounded-full border-2 border-card bg-fz-ink" />
 										)}
-									</div>
-									<div className="min-w-0 flex-1">
-										<p className="truncate text-sm font-medium text-fz-ink">
+									</Link>
+									<Link
+										href={`/nguoi-dung/${activeOtherUser.id}`}
+										className="min-w-0 flex-1 outline-none focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-ring"
+									>
+										<p className="truncate text-sm font-medium text-fz-ink hover:text-fz-muted">
 											{activeOtherUser.fullName}
 										</p>
 										{/* No online-status line while pending — only known once joined */}
@@ -668,25 +694,13 @@ export function TinNhanPageClient() {
 												{otherUserOnline ? 'Đang hoạt động' : 'Ngoại tuyến'}
 											</p>
 										)}
-									</div>
+									</Link>
 									{otherUserRoleLabel && (
 										<span className="shrink-0 rounded-full border border-border px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
 											{otherUserRoleLabel}
 										</span>
 									)}
 								</div>
-
-								{/* Current topic, pinned regardless of scroll position. */}
-								{!isPending && currentProduct && (
-									<div className="px-3 pb-3">
-										<ProductContextCard
-											productId={currentProduct.id}
-											title={currentProduct.title}
-											price={currentProduct.price}
-											imageUrl={firstImageUrl(currentProduct)}
-										/>
-									</div>
-								)}
 							</div>
 
 							<div
@@ -718,6 +732,22 @@ export function TinNhanPageClient() {
 									</div>
 								) : (
 									<>
+										{/* Only when the current topic's own message is older than
+										    what's loaded — the real inline card (below) takes over
+										    the instant that page loads, so this never coexists with it. */}
+										{showFallbackProductContext &&
+											selected?.latestProductId &&
+											currentProduct && (
+												<div className="sticky top-0 z-10 pb-1">
+													<ProductContextCard
+														productId={currentProduct.id}
+														title={currentProduct.title}
+														price={currentProduct.price}
+														imageUrl={firstImageUrl(currentProduct)}
+													/>
+												</div>
+											)}
+
 										{page < totalPages && (
 											<div className="flex justify-center pb-1">
 												<button
@@ -738,13 +768,9 @@ export function TinNhanPageClient() {
 
 										{messagesWithProductContext.map(({ message: m, showProductCard }) => {
 											const product = m.productId != null ? productCache[m.productId] : undefined;
-											// The header strip above already covers the current topic —
-											// only mark a change AWAY from it, never re-announce it inline.
-											const isEarlierTopic =
-												product && product.id !== selected?.latestProductId;
 											return (
 												<Fragment key={m.id}>
-													{showProductCard && isEarlierTopic && product && (
+													{showProductCard && product && (
 														<div className="sticky top-0 z-10 pb-1">
 															<ProductContextCard
 																productId={product.id}

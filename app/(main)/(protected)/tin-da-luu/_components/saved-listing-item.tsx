@@ -10,9 +10,11 @@ import {
 	type SavedProduct,
 } from '@/types/product.types';
 
-// This is intentionally a saved-record row, not the public marketplace card.
-// The collection context makes price, context and the remove action more useful
-// than an oversized product image or the feed's condition badges.
+// A saved-record card, not the public marketplace grid card — the collection
+// context makes price, context and the remove action more useful than an
+// oversized product image or the feed's match badges. Still a real card
+// surface (bg-card, border, shadow), not a bare list row — a page of nothing
+// but hairline-separated text reads as unstyled, not "restrained".
 export function SavedListingItem({
 	item,
 	onUnsaveRequested,
@@ -25,7 +27,7 @@ export function SavedListingItem({
 	const place = locationLabel(product);
 
 	return (
-		<article className="group relative flex min-w-0 gap-3 py-3.5 sm:gap-4 sm:py-4">
+		<article className="group relative flex min-w-0 gap-3 rounded-2xl border border-border bg-card p-3 shadow-sm shadow-fz-ink/5 transition-all duration-200 hover:-translate-y-0.5 hover:border-fz-ink/15 hover:shadow-md sm:gap-4 sm:p-4">
 			<Link
 				href={`/san-pham/${product.id}`}
 				className="relative min-h-28 w-[7.5rem] shrink-0 self-stretch overflow-hidden rounded-xl bg-muted outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:w-36"
@@ -40,28 +42,25 @@ export function SavedListingItem({
 			<div className="min-w-0 flex-1">
 				<Link
 					href={`/san-pham/${product.id}`}
-					className="line-clamp-2 min-h-10 font-heading text-base leading-5 font-semibold tracking-tight text-fz-ink outline-none transition-colors hover:text-fz-muted focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-ring"
+					className="line-clamp-1 font-heading text-base leading-5 font-semibold tracking-tight text-fz-ink outline-none transition-colors hover:text-fz-muted focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-ring"
 				>
 					{product.title}
 				</Link>
 
-				<p className="mt-2 font-heading text-base leading-none font-bold tracking-tight text-fz-accent tabular-nums">
+				<p className="mt-2 inline-flex items-center rounded-full bg-fz-accent-soft px-2.5 py-1 font-heading text-sm leading-none font-bold tracking-tight text-fz-accent tabular-nums">
 					{formatPrice(product.price)}
 				</p>
 
-				<div className="mt-2 flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
+				<div className="mt-2.5 space-y-1 text-xs text-muted-foreground">
 					<div className="flex min-w-0 items-center gap-1.5">
 						<Tag aria-hidden className="size-3 shrink-0" />
 						<span className="truncate">{product.category.name}</span>
 					</div>
 					{place && (
-						<>
-							<span aria-hidden className="text-border">·</span>
-							<div className="flex min-w-0 items-center gap-1.5">
+						<div className="flex min-w-0 items-center gap-1.5">
 							<MapPin aria-hidden className="size-3 shrink-0" />
 							<span className="truncate">{place}</span>
 						</div>
-						</>
 					)}
 				</div>
 
@@ -79,7 +78,7 @@ export function SavedListingItem({
 					<button
 						type="button"
 						onClick={() => onUnsaveRequested(item)}
-						className="flex size-11 items-center justify-center rounded-full border border-border text-fz-accent transition-colors hover:bg-fz-accent-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:bg-fz-accent-soft"
+						className="flex size-11 items-center justify-center rounded-full bg-fz-accent-soft text-fz-accent transition-colors hover:bg-fz-accent hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
 						aria-label={`Bỏ lưu ${product.title}`}
 					>
 						<Heart aria-hidden className="size-4 fill-current" />

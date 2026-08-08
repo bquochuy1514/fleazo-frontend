@@ -174,12 +174,17 @@ shadcn's own semantic `--primary` maps to ink (not moss) for this reason — see
   cart, no cart concept exists). It is a standalone utility, not part of the auth/CTA
   button group.
 - **A conversation's product-context card shows the CURRENT topic pinned in the
-  `/tin-nhan` pane header (`latestProductId`); inline sticky cards inside the
-  scrolling thread mark only earlier, *different* topics, never re-announce the
-  current one** — a single-product conversation shows its product card exactly
-  once. Conversations are per-pair, not per-product (see backend AGENTS.md →
-  Chat) — the same pair can revisit this screen from a different listing later,
-  so a thread spanning 2+ products is expected, not a bug.
+  `/tin-nhan` pane header (`latestProductId`) — a persistent reference, always
+  visible regardless of scroll position. Inline sticky cards inside the
+  scrolling thread are separate: they mark every point the discussed product
+  actually changed, INCLUDING the transition into the current one** — that
+  transition point is exactly where a marker matters most, so it's never
+  suppressed just for matching the header. Conversations are per-pair, not
+  per-product (see backend AGENTS.md → Chat) — the same pair can revisit this
+  screen from a different listing later, so a thread spanning 2+ products is
+  expected, not a bug. (An earlier version of this rule suppressed the inline
+  card whenever it matched the header, which silently hid the transition
+  point itself — fixed once real sockets surfaced it.)
 - **"Explore our recommendations" section** → renamed/reworked as **"Tin mới đăng"**
   (newest listings, chronological) — Fleazo has no recommendation engine, personalized or
   otherwise (see backend AGENTS.md → Listing Quality & AI Chatbot, dropped deliberately).

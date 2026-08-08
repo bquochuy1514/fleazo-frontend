@@ -114,6 +114,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 		const onNewMessageNotification = (payload: {
 			conversationId: number;
 			latestMessage: string;
+			productId: number | null;
 			unreadCount: number;
 		}) => {
 			// Same "unknown conversation" case as onNewMessage above — happens on
@@ -138,7 +139,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 							id: c.lastMessage?.id ?? -1,
 							conversationId: payload.conversationId,
 							senderId: c.otherUser.id,
-							productId: c.lastMessage?.productId ?? null,
+							productId: payload.productId ?? null,
 							replyToId: null,
 							replyTo: null,
 							content: payload.latestMessage,
@@ -146,6 +147,10 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 							isRecalled: false,
 							createdAt: now,
 						},
+						// A plain-text follow-up (productId: null) doesn't clear the
+						// current topic pin — only a new product-tagged message moves
+						// it, same rule onNewMessage above already follows.
+						latestProductId: payload.productId ?? c.latestProductId,
 						unreadCount:
 							payload.conversationId === activeConversationId
 								? 0
