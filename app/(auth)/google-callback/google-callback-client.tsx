@@ -48,6 +48,10 @@ function GoogleCallbackHandler() {
 			if (message) toast.success(message);
 			// replace: don't keep the token-bearing URL in history
 			router.replace(next ?? '/');
+			// See dang-nhap-client.tsx's onSubmit — drops Next's router cache
+			// so a protected link prefetched while signed out doesn't replay
+			// its stale not-signed-in redirect after this login.
+			router.refresh();
 		});
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);

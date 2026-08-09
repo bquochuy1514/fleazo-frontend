@@ -40,7 +40,7 @@ export function Header({ provinces }: { provinces: Province[] }) {
 
 		let frame: number | null = null;
 		let previousValue: boolean | null = null;
-		let listenersAttached = false;
+		let resizeObserver: ResizeObserver | null = null;
 
 		const scheduleUpdate = () => {
 			if (frame === null) {
@@ -52,19 +52,22 @@ export function Header({ provinces }: { provinces: Province[] }) {
 		// header can mount and this effect can run before the page's async
 		// hero section has streamed into the DOM (fast on local dev against
 		// localhost, but real latency to a remote API makes it common in
-		// production). Re-querying, driven by the observer below, means a
-		// late-arriving hero still gets picked up instead of the header
-		// permanently defaulting to its non-transparent treatment.
+		// production). mutationObserver below catches the hero arriving late;
+		// resizeObserver catches its layout settling late (e.g. a font/CSS
+		// chunk landing a beat after first paint) — a plain "did it mount"
+		// check can measure a 0-height box on the very first call and, once
+		// disconnected, never get a chance to correct itself.
 		const updateHeaderSurface = () => {
 			frame = null;
 			const heroes = Array.from(document.querySelectorAll<HTMLElement>('[data-hero]'));
 			if (heroes.length === 0) return;
 
-			if (!listenersAttached) {
-				listenersAttached = true;
+			if (!resizeObserver) {
+				resizeObserver = new ResizeObserver(scheduleUpdate);
+				heroes.forEach((hero) => resizeObserver!.observe(hero));
 				window.addEventListener('scroll', scheduleUpdate, { passive: true });
 				window.addEventListener('resize', scheduleUpdate);
-				observer.disconnect();
+				mutationObserver.disconnect();
 			}
 
 			// A hero must cover the line immediately below the header. Merely being
@@ -82,13 +85,14 @@ export function Header({ provinces }: { provinces: Province[] }) {
 			}
 		};
 
-		const observer = new MutationObserver(updateHeaderSurface);
-		observer.observe(document.body, { childList: true, subtree: true });
+		const mutationObserver = new MutationObserver(updateHeaderSurface);
+		mutationObserver.observe(document.body, { childList: true, subtree: true });
 
 		updateHeaderSurface();
 
 		return () => {
-			observer.disconnect();
+			mutationObserver.disconnect();
+			resizeObserver?.disconnect();
 			window.removeEventListener('scroll', scheduleUpdate);
 			window.removeEventListener('resize', scheduleUpdate);
 			if (frame !== null) window.cancelAnimationFrame(frame);
