@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -33,7 +33,6 @@ export function LoginPageClient() {
 
 function LoginForm() {
 	const auth = useAuth();
-	const router = useRouter();
 	const searchParams = useSearchParams();
 	// Set by ProtectedGuard when redirecting a signed-out visitor here.
 	const next = searchParams.get('next');
@@ -77,15 +76,16 @@ function LoginForm() {
 			await auth.login(data.access_token);
 
 			toast.success(data.message);
-			// Links to protected routes rendered while signed out can get
-			// prefetched with proxy.ts's not-signed-in redirect baked into
-			// Next's router cache — refresh() drops that cache so clicking one
-			// right after login re-evaluates the middleware with the fresh
-			// session cookie instead of replaying the stale redirect. Must run
-			// before push(): calling it after raced the in-flight navigation
-			// and could leave the router settled on the wrong destination.
-			router.refresh();
-			router.push(next ?? '/');
+			// Full navigation, not router.push(): `next` (e.g. /dang-tin) can
+			// carry a stale prefetch from before login — proxy.ts's
+			// not-signed-in redirect, cached by Next's router the moment that
+			// link first rendered while signed out. router.refresh() only
+			// clears the current route's cache, not that unrelated entry, so
+			// the very first post-login redirect of a session could still
+			// replay the old redirect. A real navigation re-runs the
+			// middleware from scratch against the fresh session cookie,
+			// sidestepping the client router cache entirely.
+			window.location.href = next ?? '/';
 		} catch (err) {
 			const parsed = parseApiError<LoginFields>(err);
 			setErrors(parsed);
