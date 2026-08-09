@@ -23,7 +23,19 @@ export function Header({ provinces }: { provinces: Province[] }) {
 	const { user, isLoading } = useAuth();
 	const { unreadConversationCount } = useChat();
 	const pathname = usePathname();
-	const overHero = HERO_ROUTES.includes(pathname);
+	// Gated on `mounted`, not just `usePathname()` directly: the homepage is
+	// statically generated (`revalidate = 60`), and usePathname()'s
+	// server-render pass doesn't reliably agree with its client value for a
+	// cached shell — a raw mismatch here left some header children patched
+	// to the correct (bare) styling on hydration and others stuck on the
+	// server's wrong value, since React silently keeps whatever a given node
+	// hydrated to in production instead of erroring loud. Rendering `false`
+	// on both the server and the client's first pass keeps that pass
+	// mismatch-free, then this flips true a tick later, once mounted, from a
+	// plain client re-render — which patches every node uniformly.
+	const [mounted, setMounted] = useState(false);
+	useEffect(() => setMounted(true), []);
+	const overHero = mounted && HERO_ROUTES.includes(pathname);
 	const [heroPassed, setHeroPassed] = useState(false);
 	// Remount-to-restart trick: bumping the key forces the Heart icon's
 	// `fz-pulse` animation to play again even if two saves land back to back.

@@ -77,13 +77,15 @@ function LoginForm() {
 			await auth.login(data.access_token);
 
 			toast.success(data.message);
-			router.push(next ?? '/');
 			// Links to protected routes rendered while signed out can get
 			// prefetched with proxy.ts's not-signed-in redirect baked into
 			// Next's router cache — refresh() drops that cache so clicking one
 			// right after login re-evaluates the middleware with the fresh
-			// session cookie instead of replaying the stale redirect.
+			// session cookie instead of replaying the stale redirect. Must run
+			// before push(): calling it after raced the in-flight navigation
+			// and could leave the router settled on the wrong destination.
 			router.refresh();
+			router.push(next ?? '/');
 		} catch (err) {
 			const parsed = parseApiError<LoginFields>(err);
 			setErrors(parsed);
