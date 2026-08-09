@@ -117,6 +117,12 @@ function isChatbotHiddenOn(pathname: string): boolean {
 	);
 }
 
+// sessionStorage, not localStorage — the intro bubble should skip a dismissed
+// visitor for the rest of THIS session (including a page reload) but come
+// back on a fresh one, unlike e.g. quan-ly-tin's "don't warn again" flag
+// which is meant to stick forever.
+const INTRO_BUBBLE_DISMISSED_KEY = 'fz:chatbot-intro-dismissed';
+
 // Three dots easing up/down in sequence — the assistant-is-typing cue.
 function TypingDots() {
 	return (
@@ -173,12 +179,17 @@ export function ChatbotWidget() {
 
 	// Delayed so it doesn't compete with the page's own load-in animations.
 	// Stays up indefinitely after that — only the user's own close tap (or
-	// opening the chat) dismisses it, no auto-hide timer.
+	// opening the chat) dismisses it, no auto-hide timer within the session.
 	useEffect(() => {
-		if (isHidden) return;
+		if (isHidden || sessionStorage.getItem(INTRO_BUBBLE_DISMISSED_KEY)) return;
 		const showTimer = setTimeout(() => setShowIntroBubble(true), 1500);
 		return () => clearTimeout(showTimer);
 	}, [isHidden]);
+
+	const dismissIntroBubble = () => {
+		setShowIntroBubble(false);
+		sessionStorage.setItem(INTRO_BUBBLE_DISMISSED_KEY, '1');
+	};
 
 	useEffect(() => {
 		if (!isOpen) return;
@@ -200,7 +211,7 @@ export function ChatbotWidget() {
 	const toggleOpen = () => {
 		setIsOpen((v) => !v);
 		setHasOpenedOnce(true);
-		setShowIntroBubble(false);
+		dismissIntroBubble();
 	};
 
 	const handleSend = async (overrideText?: string) => {
@@ -448,7 +459,7 @@ export function ChatbotWidget() {
 						<button
 							type="button"
 							aria-label="Đóng gợi ý"
-							onClick={() => setShowIntroBubble(false)}
+							onClick={dismissIntroBubble}
 							className="absolute top-1 right-1 rounded-full p-1.5 text-muted-foreground hover:bg-muted hover:text-fz-ink"
 						>
 							<X aria-hidden className="size-3" />

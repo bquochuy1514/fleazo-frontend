@@ -46,6 +46,8 @@ const FETCH_LIMIT = 100;
 const EMPTY_STATE_CLASS =
 	'fz-card mt-6 min-h-[calc(100dvh-21rem)] justify-center bg-card sm:mt-8';
 
+// sessionStorage, not localStorage — "don't warn again" only holds for this
+// session, not forever.
 const REVISION_WARNING_KEY = 'fz:hide-revision-warning';
 
 const STATUS_EMPTY_HINTS: Partial<Record<ProductStatus, string>> = {
@@ -188,7 +190,7 @@ export function QuanLyTinClient() {
 			if (action === 'edit') {
 				if (
 					product.status === 'ACTIVE' &&
-					localStorage.getItem(REVISION_WARNING_KEY) !== '1'
+					sessionStorage.getItem(REVISION_WARNING_KEY) !== '1'
 				) {
 					setConfirm({ kind: 'editActive', product });
 					return;
@@ -280,7 +282,7 @@ export function QuanLyTinClient() {
 
 		if (kind === 'editActive') {
 			if (hideRevisionWarning)
-				localStorage.setItem(REVISION_WARNING_KEY, '1');
+				sessionStorage.setItem(REVISION_WARNING_KEY, '1');
 			setConfirm(null);
 			goToEdit(product);
 			return;
