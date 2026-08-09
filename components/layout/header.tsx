@@ -23,16 +23,11 @@ export function Header({ provinces }: { provinces: Province[] }) {
 	const { user, isLoading } = useAuth();
 	const { unreadConversationCount } = useChat();
 	const pathname = usePathname();
-	// Gated on `mounted`, not just `usePathname()` directly: the homepage is
-	// statically generated (`revalidate = 60`), and usePathname()'s
-	// server-render pass doesn't reliably agree with its client value for a
-	// cached shell — a raw mismatch here left some header children patched
-	// to the correct (bare) styling on hydration and others stuck on the
-	// server's wrong value, since React silently keeps whatever a given node
-	// hydrated to in production instead of erroring loud. Rendering `false`
-	// on both the server and the client's first pass keeps that pass
-	// mismatch-free, then this flips true a tick later, once mounted, from a
-	// plain client re-render — which patches every node uniformly.
+	// Gated on `mounted`, not usePathname() directly — the homepage is
+	// statically generated, and its SSR pathname value didn't reliably match
+	// the client's, causing a silent hydration mismatch. Rendering `false`
+	// on both server and first client pass avoids that; this flips true a
+	// tick later via a plain client re-render.
 	const [mounted, setMounted] = useState(false);
 	useEffect(() => setMounted(true), []);
 	const overHero = mounted && HERO_ROUTES.includes(pathname);
@@ -60,15 +55,9 @@ export function Header({ provinces }: { provinces: Province[] }) {
 			}
 		};
 
-		// Queries fresh each call (not captured once) — with streaming SSR the
-		// header can mount and this effect can run before the page's async
-		// hero section has streamed into the DOM (fast on local dev against
-		// localhost, but real latency to a remote API makes it common in
-		// production). mutationObserver below catches the hero arriving late;
-		// resizeObserver catches its layout settling late (e.g. a font/CSS
-		// chunk landing a beat after first paint) — a plain "did it mount"
-		// check can measure a 0-height box on the very first call and, once
-		// disconnected, never get a chance to correct itself.
+		// Queried fresh each call, not captured once — the hero can still be
+		// streaming into the DOM (mutationObserver) or mid-layout (resizeObserver)
+		// on the first call, and a stale 0-height read would stick forever.
 		const updateHeaderSurface = () => {
 			frame = null;
 			const heroes = Array.from(document.querySelectorAll<HTMLElement>('[data-hero]'));

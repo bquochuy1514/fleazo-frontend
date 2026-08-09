@@ -76,15 +76,10 @@ function LoginForm() {
 			await auth.login(data.access_token);
 
 			toast.success(data.message);
-			// Full navigation, not router.push(): `next` (e.g. /dang-tin) can
-			// carry a stale prefetch from before login — proxy.ts's
-			// not-signed-in redirect, cached by Next's router the moment that
-			// link first rendered while signed out. router.refresh() only
-			// clears the current route's cache, not that unrelated entry, so
-			// the very first post-login redirect of a session could still
-			// replay the old redirect. A real navigation re-runs the
-			// middleware from scratch against the fresh session cookie,
-			// sidestepping the client router cache entirely.
+			// Full navigation, not router.push(): `next` can carry a stale
+			// pre-login prefetch (proxy.ts's not-signed-in redirect) that
+			// router.refresh() doesn't reach — this re-runs the middleware
+			// against the fresh session cookie instead.
 			window.location.href = next ?? '/';
 		} catch (err) {
 			const parsed = parseApiError<LoginFields>(err);
