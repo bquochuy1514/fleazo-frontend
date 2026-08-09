@@ -5,7 +5,6 @@ import Image from 'next/image';
 import {
 	User as UserIcon,
 	Crown,
-	Settings,
 	ClipboardList,
 	Heart,
 	Star,
@@ -89,13 +88,6 @@ export function AccountMenu() {
 					</div>
 				</DropdownMenuLabel>
 
-				<DropdownMenuItem asChild className={ITEM}>
-					<Link href="/ca-nhan">
-						<UserIcon className="size-4 text-muted-foreground" />
-						Trang cá nhân
-					</Link>
-				</DropdownMenuItem>
-
 				{/* Sections separated by space, not hairlines — only the identity
 				    card and the rule before "Đăng xuất" carry real meaning. */}
 				<DropdownMenuGroup className="mt-1">
@@ -103,15 +95,15 @@ export function AccountMenu() {
 						Tài khoản
 					</DropdownMenuLabel>
 					<DropdownMenuItem asChild className={ITEM}>
-						<Link href="/goi-thanh-vien">
-							<Crown className="size-4 text-muted-foreground" />
-							Gói thành viên
+						<Link href="/ca-nhan">
+							<UserIcon className="size-4 text-muted-foreground" />
+							Trang cá nhân
 						</Link>
 					</DropdownMenuItem>
 					<DropdownMenuItem asChild className={ITEM}>
-						<Link href="/cai-dat">
-							<Settings className="size-4 text-muted-foreground" />
-							Đổi mật khẩu / Cài đặt
+						<Link href="/goi-thanh-vien">
+							<Crown className="size-4 text-muted-foreground" />
+							Gói thành viên
 						</Link>
 					</DropdownMenuItem>
 				</DropdownMenuGroup>

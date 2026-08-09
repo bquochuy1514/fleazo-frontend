@@ -79,7 +79,10 @@ function initials(name: string) {
 }
 
 function locationLabel(provinceName: string | null, wardName: string | null) {
-	return [wardName, provinceName].filter(Boolean).join(', ') || 'Chưa cập nhật khu vực';
+	return (
+		[wardName, provinceName].filter(Boolean).join(', ') ||
+		'Chưa cập nhật khu vực'
+	);
 }
 
 export function ProfileClient({
@@ -119,10 +122,11 @@ export function ProfileClient({
 		if (universities.length || isUniversitiesLoading) return;
 
 		setIsUniversitiesLoading(true);
-		api
-			.get<University[]>('/universities')
+		api.get<University[]>('/universities')
 			.then(({ data }) => setUniversities(data))
-			.catch(() => toast.error('Chưa tải được danh sách trường. Thử lại sau nhé.'))
+			.catch(() =>
+				toast.error('Chưa tải được danh sách trường. Thử lại sau nhé.'),
+			)
 			.finally(() => setIsUniversitiesLoading(false));
 	};
 
@@ -156,6 +160,7 @@ export function ProfileClient({
 			await refreshUser();
 			toast.success('Đã cập nhật ảnh đại diện.');
 		} catch (error) {
+			console.log('Error = ', error);
 			toast.error(
 				parseApiError(error).message ??
 					'Không thể tải ảnh đại diện. Vui lòng thử lại.',
@@ -209,7 +214,8 @@ export function ProfileClient({
 					Thông tin của bạn
 				</h1>
 				<p className="mt-3 max-w-xl text-base leading-7 text-muted-foreground">
-					Cập nhật những thông tin giúp bạn kết nối và trao tay thuận tiện hơn.
+					Cập nhật những thông tin giúp bạn kết nối và trao tay thuận
+					tiện hơn.
 				</p>
 			</header>
 
@@ -258,7 +264,9 @@ export function ProfileClient({
 							<p className="truncate font-heading text-xl font-bold tracking-tight text-fz-ink">
 								{user.fullName}
 							</p>
-							<p className="mt-1 truncate text-sm text-muted-foreground">{user.email}</p>
+							<p className="mt-1 truncate text-sm text-muted-foreground">
+								{user.email}
+							</p>
 						</div>
 					</div>
 
@@ -271,7 +279,10 @@ export function ProfileClient({
 						</IdentityLine>
 					</dl>
 
-					<nav className="mt-5 border-t border-border" aria-label="Lối tắt cá nhân">
+					<nav
+						className="mt-5 border-t border-border"
+						aria-label="Lối tắt cá nhân"
+					>
 						<Shortcut href="/quan-ly-tin" icon={PackageOpen}>
 							Quản lý tin của bạn
 						</Shortcut>
@@ -285,7 +296,10 @@ export function ProfileClient({
 				</aside>
 
 				<div className="min-w-0 rounded-2xl border border-border bg-card px-5 shadow-sm shadow-fz-ink/5 sm:px-6">
-					<form onSubmit={handleSubmit} className="min-w-0 divide-y divide-border">
+					<form
+						onSubmit={handleSubmit}
+						className="min-w-0 divide-y divide-border"
+					>
 						<section className="py-7 sm:py-8">
 							<SectionHeading
 								index="01"
@@ -294,7 +308,11 @@ export function ProfileClient({
 							/>
 							<div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-5">
 								<div>
-									<FieldLabel icon={UserRound} htmlFor="fullName" required>
+									<FieldLabel
+										icon={UserRound}
+										htmlFor="fullName"
+										required
+									>
 										Họ và tên
 									</FieldLabel>
 									<Input
@@ -305,7 +323,9 @@ export function ProfileClient({
 										autoComplete="name"
 										className="mt-1.5 h-11"
 									/>
-									<FieldError message={errors.errors?.fullName} />
+									<FieldError
+										message={errors.errors?.fullName}
+									/>
 								</div>
 								<div>
 									<FieldLabel icon={Phone} htmlFor="phone">
@@ -320,7 +340,9 @@ export function ProfileClient({
 										placeholder="0912345678"
 										className="mt-1.5 h-11"
 									/>
-									<FieldError message={errors.errors?.phone} />
+									<FieldError
+										message={errors.errors?.phone}
+									/>
 								</div>
 							</div>
 							<div className="mt-4">
@@ -345,7 +367,9 @@ export function ProfileClient({
 							/>
 							<div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-5">
 								<div className="lg:col-span-2">
-									<FieldLabel icon={GraduationCap}>Trường đại học</FieldLabel>
+									<FieldLabel icon={GraduationCap}>
+										Trường đại học
+									</FieldLabel>
 									<div className="mt-1.5">
 										<Picker
 											open={universityOpen}
@@ -382,28 +406,46 @@ export function ProfileClient({
 											}}
 										>
 											{isUniversitiesLoading ? (
-												<PickerEmpty>Đang tải danh sách trường...</PickerEmpty>
-											) : universityMatches.length === 0 ? (
-												<PickerEmpty>Không tìm thấy trường nào.</PickerEmpty>
+												<PickerEmpty>
+													Đang tải danh sách trường...
+												</PickerEmpty>
+											) : universityMatches.length ===
+											  0 ? (
+												<PickerEmpty>
+													Không tìm thấy trường nào.
+												</PickerEmpty>
 											) : (
-												universityMatches.map((item) => (
-													<PickerOption
-														key={item.id}
-														label={item.name}
-														selected={item.id === selectedUniversity?.id}
-														onSelect={() => {
-															setUniversity(item);
-															setUniversityOpen(false);
-														}}
-													/>
-												))
+												universityMatches.map(
+													(item) => (
+														<PickerOption
+															key={item.id}
+															label={item.name}
+															selected={
+																item.id ===
+																selectedUniversity?.id
+															}
+															onSelect={() => {
+																setUniversity(
+																	item,
+																);
+																setUniversityOpen(
+																	false,
+																);
+															}}
+														/>
+													),
+												)
 											)}
 										</Picker>
 									</div>
-									<FieldError message={errors.errors?.universityId} />
+									<FieldError
+										message={errors.errors?.universityId}
+									/>
 								</div>
 								<div className="lg:col-span-2">
-									<FieldLabel icon={MapPin}>Khu vực</FieldLabel>
+									<FieldLabel icon={MapPin}>
+										Khu vực
+									</FieldLabel>
 									<div className="mt-1.5">
 										<LocationPicker
 											provinces={provinces}
@@ -415,10 +457,17 @@ export function ProfileClient({
 											onChange={setLocation}
 										/>
 									</div>
-									<FieldError message={errors.errors?.provinceCode ?? errors.errors?.wardCode} />
+									<FieldError
+										message={
+											errors.errors?.provinceCode ??
+											errors.errors?.wardCode
+										}
+									/>
 								</div>
 								<div className="lg:col-span-2">
-									<FieldLabel htmlFor="addressDetail">Địa chỉ chi tiết</FieldLabel>
+									<FieldLabel htmlFor="addressDetail">
+										Địa chỉ chi tiết
+									</FieldLabel>
 									<Input
 										id="addressDetail"
 										name="addressDetail"
@@ -426,7 +475,9 @@ export function ProfileClient({
 										placeholder="Số nhà, tên đường... (không bắt buộc)"
 										className="mt-1.5 h-11"
 									/>
-									<FieldError message={errors.errors?.addressDetail} />
+									<FieldError
+										message={errors.errors?.addressDetail}
+									/>
 								</div>
 							</div>
 						</section>
@@ -454,14 +505,21 @@ export function ProfileClient({
 									onClick={() => setPasswordOpen(true)}
 								>
 									<KeyRound data-icon="inline-start" />
-									{user.hasPassword ? 'Đổi mật khẩu' : 'Thêm mật khẩu'}
+									{user.hasPassword
+										? 'Đổi mật khẩu'
+										: 'Thêm mật khẩu'}
 								</Button>
 							</div>
 						</section>
 
 						<div className="flex flex-col gap-3 py-6 lg:flex-row lg:items-center lg:justify-between lg:py-7">
 							<FieldError message={errors.message} />
-							<Button type="submit" size="lg" className="h-11 px-5" disabled={isSaving}>
+							<Button
+								type="submit"
+								size="lg"
+								className="h-11 px-5"
+								disabled={isSaving}
+							>
 								{isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}
 							</Button>
 						</div>
@@ -495,7 +553,9 @@ function SectionHeading({
 			<h2 className="mt-2 font-heading text-xl font-bold tracking-tight text-fz-ink">
 				{title}
 			</h2>
-			<p className="mt-1.5 text-sm leading-6 text-muted-foreground">{description}</p>
+			<p className="mt-1.5 text-sm leading-6 text-muted-foreground">
+				{description}
+			</p>
 		</div>
 	);
 }
@@ -511,7 +571,10 @@ function IdentityLine({
 }) {
 	return (
 		<div className="flex gap-3">
-			<Icon className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
+			<Icon
+				className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+				aria-hidden
+			/>
 			<div className="min-w-0">
 				<dt className="text-xs font-medium text-fz-muted">{label}</dt>
 				<dd className="mt-0.5 leading-5 text-fz-ink">{children}</dd>
@@ -536,7 +599,10 @@ function Shortcut({
 		>
 			<Icon className="size-4 text-muted-foreground" aria-hidden />
 			<span className="flex-1">{children}</span>
-			<ArrowUpRight className="size-4 shrink-0 transition-colors duration-200 motion-reduce:transition-none" aria-hidden />
+			<ArrowUpRight
+				className="size-4 shrink-0 transition-colors duration-200 motion-reduce:transition-none"
+				aria-hidden
+			/>
 		</Link>
 	);
 }

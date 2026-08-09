@@ -2,7 +2,7 @@
 	"version": "0.0.1",
 	"configurations": [
 		{
-			"name": "fleazo-frontend-v2",
+			"name": "fleazo-frontend",
 			"runtimeExecutable": "npm",
 			"runtimeArgs": ["run", "dev"],
 			"port": 3000

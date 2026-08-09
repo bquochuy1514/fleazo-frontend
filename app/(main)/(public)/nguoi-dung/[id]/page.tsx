@@ -8,7 +8,7 @@ import { getPublicUserProfile } from '@/lib/users';
 import { getProducts } from '@/lib/products';
 import { getSellerReviews } from '@/lib/reviews';
 import { formatJoinDate, formatCount } from '@/lib/format';
-import { StarRatingDisplay } from './_components/star-rating';
+import { StarRatingDisplay } from '@/components/reviews/star-rating';
 import { MessageSellerButton } from './_components/message-seller-button';
 import { SellerListingsGrid } from './_components/seller-listings-grid';
 import { ReviewsSection } from './_components/reviews-section';

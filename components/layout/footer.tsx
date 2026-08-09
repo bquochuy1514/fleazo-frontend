@@ -1,6 +1,13 @@
 import Link from 'next/link';
+import { Mail } from 'lucide-react';
 import { Logo } from '@/components/logo';
+import { FounderAvatar } from '@/components/founder-avatar';
 import { buttonVariants } from '@/components/ui/button';
+import {
+	FacebookIcon,
+	GithubIcon,
+	LinkedinIcon,
+} from '@/components/icons/brand-icons';
 import { cn } from '@/lib/utils';
 import type { Category } from '@/types/category.types';
 
@@ -13,12 +20,27 @@ const SUPPORT_LINKS = [
 	{ href: '/gioi-thieu', label: 'Giới thiệu' },
 	{ href: '/huong-dan-dang-tin', label: 'Hướng dẫn đăng tin' },
 	{ href: '/lien-he', label: 'Liên hệ' },
-	{ href: '/faq', label: 'Câu hỏi thường gặp' },
+	{ href: '/cau-hoi-thuong-gap', label: 'Câu hỏi thường gặp' },
 ];
 
-const SOCIAL_LINKS = [
-	{ href: 'https://facebook.com', label: 'Facebook' },
-	{ href: 'https://instagram.com', label: 'Instagram' },
+const DEV_EMAIL = 'bquochuy260405@gmail.com';
+
+// Recruiter-facing credit, not a generic "social" row — GitHub/LinkedIn are
+// what a hiring manager actually clicks from here; Facebook stays (asked
+// for by name) but Instagram was dropped since it adds nothing for this
+// audience.
+const DEV_LINKS = [
+	{ href: 'https://github.com/bquochuy1514', label: 'GitHub', Icon: GithubIcon },
+	{
+		href: 'https://www.linkedin.com/in/huy-bui-quoc-a47a33389/',
+		label: 'LinkedIn',
+		Icon: LinkedinIcon,
+	},
+	{
+		href: 'https://www.facebook.com/bquochuy1514',
+		label: 'Facebook',
+		Icon: FacebookIcon,
+	},
 ];
 
 // CTA band + link columns — no newsletter/email capture (no backend feature
@@ -125,27 +147,48 @@ export function Footer({ categories = [] }: { categories?: Category[] }) {
 					</div>
 				</div>
 
-				<div className="mt-10 flex flex-col items-start justify-between gap-4 border-t border-border pt-6 sm:flex-row sm:items-center">
-					<p className="text-xs text-muted-foreground">
-						© {new Date().getFullYear()} Fleazo.
-					</p>
-					{/* lucide-react no longer ships brand icons — pill-style text
-					    links instead, echoing the Header's pill language rather
-					    than reading as bare inline text. */}
-					<div className="flex items-center gap-2 text-xs">
-						{SOCIAL_LINKS.map((social) => (
+				{/* Recruiter-facing credit — deliberately its own card, not folded
+				    into the copyright line like a generic social row, since this
+				    is the thing a hiring manager is actually here to find. */}
+				<div className="mt-10 flex flex-col gap-4 rounded-2xl border border-border bg-muted/40 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+					<div className="flex items-center gap-3.5">
+						<FounderAvatar className="size-11" />
+						<div>
+							<p className="text-sm font-semibold text-fz-ink">
+								Bùi Quốc Huy
+							</p>
+							<p className="mt-0.5 text-xs leading-5 text-muted-foreground">
+								Sinh viên Trường Đại học Công nghệ Thông tin, Đại
+								học Quốc gia Thành phố Hồ Chí Minh
+							</p>
 							<a
-								key={social.href}
-								href={social.href}
+								href={`mailto:${DEV_EMAIL}`}
+								className="mt-1 inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-fz-ink"
+							>
+								<Mail aria-hidden className="size-3.5" />
+								{DEV_EMAIL}
+							</a>
+						</div>
+					</div>
+					<div className="flex items-center gap-2">
+						{DEV_LINKS.map(({ href, label, Icon }) => (
+							<a
+								key={href}
+								href={href}
 								target="_blank"
 								rel="noopener noreferrer"
-								className="rounded-full border border-border px-3 py-1.5 text-muted-foreground transition-colors hover:border-fz-ink hover:text-fz-ink"
+								aria-label={label}
+								className="flex size-9 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-fz-ink hover:text-fz-ink"
 							>
-								{social.label}
+								<Icon className="size-4" />
 							</a>
 						))}
 					</div>
 				</div>
+
+				<p className="mt-6 text-xs text-muted-foreground">
+					© {new Date().getFullYear()} Fleazo.
+				</p>
 			</div>
 		</footer>
 	);

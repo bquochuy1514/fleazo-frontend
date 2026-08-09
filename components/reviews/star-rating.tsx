@@ -1,10 +1,13 @@
 import { Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-// Ink, not moss — moss stays reserved for price tags and the save-button
-// active state (see AGENTS.md → Design System); a filled star is a
-// different kind of "selected" state, same family as tab/status dots
-// elsewhere in the app, which all use ink too.
+// Ink, not moss — moss is reserved for price tags and the save-button's
+// active state; a filled star is a different kind of "selected" state, same
+// family as tab/status dots elsewhere in the app, which all use ink too.
+//
+// Each star fills by its own percentage (e.g. star 4 of a 3.5 rating fills
+// 50%) rather than rounding to the nearest whole star, via a clipped overlay
+// star on top of an outline star.
 export function StarRatingDisplay({
 	rating,
 	size = 'size-4',
@@ -14,13 +17,20 @@ export function StarRatingDisplay({
 }) {
 	return (
 		<div className="flex items-center gap-0.5" aria-label={`${rating} trên 5 sao`}>
-			{[1, 2, 3, 4, 5].map((n) => (
-				<Star
-					key={n}
-					aria-hidden
-					className={cn(size, n <= Math.round(rating) ? 'fill-fz-ink text-fz-ink' : 'text-border')}
-				/>
-			))}
+			{[1, 2, 3, 4, 5].map((n) => {
+				const fillPercent = Math.round(Math.min(1, Math.max(0, rating - (n - 1))) * 100);
+				return (
+					<span key={n} className={cn('relative inline-block shrink-0', size)}>
+						<Star aria-hidden className={cn(size, 'text-border')} />
+						<span
+							className="absolute inset-0 overflow-hidden"
+							style={{ width: `${fillPercent}%` }}
+						>
+							<Star aria-hidden className={cn(size, 'fill-fz-ink text-fz-ink')} />
+						</span>
+					</span>
+				);
+			})}
 		</div>
 	);
 }

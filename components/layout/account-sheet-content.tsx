@@ -7,7 +7,6 @@ import {
 	Crown,
 	Heart,
 	LogOut,
-	Settings,
 	ShieldCheck,
 	Star,
 	UserRound,
@@ -74,27 +73,20 @@ export function AccountSheetContent() {
 				</div>
 			</div>
 
+			{/* Sections separated by space, not hairlines — mirrors account-menu.tsx. */}
+			<div className="mt-1 px-2 pt-1 pb-0.5 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
+				Tài khoản
+			</div>
 			<SheetClose asChild>
-				<Link href="/ca-nhan" className={cn('mt-1', SHEET_ITEM)}>
+				<Link href="/ca-nhan" className={SHEET_ITEM}>
 					<UserRound className="size-5 text-muted-foreground" />
 					Trang cá nhân
 				</Link>
 			</SheetClose>
-
-			{/* Sections separated by space, not hairlines — mirrors account-menu.tsx. */}
-			<div className="mt-2 px-2 pt-1 pb-0.5 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
-				Tài khoản
-			</div>
 			<SheetClose asChild>
 				<Link href="/goi-thanh-vien" className={SHEET_ITEM}>
 					<Crown className="size-5 text-muted-foreground" />
 					Gói thành viên
-				</Link>
-			</SheetClose>
-			<SheetClose asChild>
-				<Link href="/cai-dat" className={SHEET_ITEM}>
-					<Settings className="size-5 text-muted-foreground" />
-					Đổi mật khẩu / Cài đặt
 				</Link>
 			</SheetClose>
 

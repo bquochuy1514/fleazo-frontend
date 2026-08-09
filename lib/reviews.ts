@@ -1,5 +1,9 @@
 import { api } from '@/lib/api';
-import type { PaginatedReviews, Review } from '@/types/review.types';
+import type {
+	PaginatedGivenReviews,
+	PaginatedReviews,
+	Review,
+} from '@/types/review.types';
 
 // Upsert — reviewing the same seller again overwrites the existing review
 // instead of creating a second one (backend enforces one row per
@@ -20,6 +24,16 @@ export async function getSellerReviews(
 	params?: { page?: number; limit?: number },
 ): Promise<PaginatedReviews> {
 	const { data } = await api.get<PaginatedReviews>(`/reviews/seller/${sellerId}`, {
+		params,
+	});
+	return data;
+}
+
+// Reviews I've written about other sellers.
+export async function getMyGivenReviews(
+	params?: { page?: number; limit?: number },
+): Promise<PaginatedGivenReviews> {
+	const { data } = await api.get<PaginatedGivenReviews>('/reviews/me/given', {
 		params,
 	});
 	return data;

@@ -7,6 +7,7 @@ export const PROTECTED_PATHS = [
 	'/tin-nhan',
 	'/quan-ly-tin',
 	'/tin-da-luu',
+	'/danh-gia-cua-toi',
 	'/goi-thanh-vien',
 	'/admin',
 ] as const;

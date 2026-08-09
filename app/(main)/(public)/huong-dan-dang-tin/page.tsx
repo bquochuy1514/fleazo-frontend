@@ -5,11 +5,13 @@ import {
 	CheckCircle2,
 	Crown,
 	ImagePlus,
+	NotebookPen,
 	Send,
 	Sparkles,
 	UserRound,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { PageHeader } from '@/components/layout/page-header';
 
 export const metadata: Metadata = {
 	title: 'Hướng dẫn đăng tin — Fleazo',
@@ -50,18 +52,12 @@ const STEPS = [
 export default function HuongDanDangTinPage() {
 	return (
 		<div className="mx-auto max-w-3xl px-4 pt-24 pb-20 sm:px-6 sm:pt-28 sm:pb-24">
-			<div className="fz-rise">
-				<p className="text-xs font-semibold tracking-[0.16em] text-fz-muted uppercase">
-					HƯỚNG DẪN
-				</p>
-				<h1 className="mt-2 font-heading text-3xl leading-none font-bold tracking-tight text-fz-ink sm:text-4xl">
-					Cách đăng tin trên Fleazo
-				</h1>
-				<p className="mt-3 max-w-xl text-base leading-7 text-muted-foreground">
-					Đồ bạn không dùng nữa, biết đâu là thứ ai đó đang tìm — 4 bước
-					để món đồ đó tới tay người cần.
-				</p>
-			</div>
+			<PageHeader
+				icon={NotebookPen}
+				kicker="Hướng dẫn"
+				title="Cách đăng tin trên Fleazo"
+				description="Đồ bạn không dùng nữa, biết đâu là thứ ai đó đang tìm — 4 bước để món đồ đó tới tay người cần."
+			/>
 
 			{/* Precondition, not step 1 — styled as a distinct callout so it
 			    doesn't read as an equal-weight item in the numbered flow below. */}

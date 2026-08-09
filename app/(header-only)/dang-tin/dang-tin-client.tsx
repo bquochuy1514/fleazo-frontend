@@ -54,6 +54,10 @@ import {
 
 const CONDITIONS = Object.keys(PRODUCT_CONDITION_LABELS) as ProductCondition[];
 
+// Cost/latency guard on the AI call — independent of the plan's upload cap
+// (maxImages state below), which governs how many photos a seller can attach.
+const MAX_IMAGES_FOR_AI_SUGGEST = 3;
+
 const EMPTY_LOCATION: LocationValue = {
 	provinceCode: null,
 	provinceName: '',
@@ -205,7 +209,7 @@ function DangTinForm({
 		setIsSuggesting(true);
 		try {
 			const suggestion = await suggestListing(
-				images.map((item) => item.file),
+				images.slice(0, MAX_IMAGES_FOR_AI_SUGGEST).map((item) => item.file),
 			);
 			setTitle(suggestion.title);
 			setDescription(suggestion.description);
@@ -424,7 +428,12 @@ function DangTinForm({
 										</p>
 										<p className="mt-0.5 text-xs text-muted-foreground">
 											AI gợi ý luôn Tiêu đề, Mô tả và Danh
-											mục dựa trên ảnh bạn vừa tải lên.
+											mục dựa trên{' '}
+											{Math.min(
+												images.length,
+												MAX_IMAGES_FOR_AI_SUGGEST,
+											) || MAX_IMAGES_FOR_AI_SUGGEST}{' '}
+											ảnh đầu tiên bạn tải lên.
 											{images.length === 0 &&
 												' Tải ảnh lên trước để dùng tính năng này.'}
 										</p>

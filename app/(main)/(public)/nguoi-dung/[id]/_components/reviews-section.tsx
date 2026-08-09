@@ -13,7 +13,7 @@ import { createOrUpdateReview } from '@/lib/reviews';
 import { parseApiError } from '@/lib/api';
 import { timeAgo } from '@/lib/format';
 import { cn } from '@/lib/utils';
-import { StarRatingDisplay, StarRatingInput } from './star-rating';
+import { StarRatingDisplay, StarRatingInput } from '@/components/reviews/star-rating';
 import type { PaginatedReviews, Review } from '@/types/review.types';
 
 export function ReviewsSection({
