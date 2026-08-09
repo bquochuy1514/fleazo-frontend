@@ -268,13 +268,33 @@
 	animation: fz-chatbot-bounce 0.8s ease-in-out;
 }
 
+/* Chatbot's "assistant is replying" indicator — three dots, staggered via
+   each span's own animation-delay (see chatbot-widget.tsx). */
+@keyframes fz-typing {
+	0%,
+	60%,
+	100% {
+		transform: translateY(0);
+		opacity: 0.4;
+	}
+	30% {
+		transform: translateY(-4px);
+		opacity: 1;
+	}
+}
+
+.fz-typing {
+	animation: fz-typing 1.2s ease-in-out infinite;
+}
+
 /* Must come after the rules above — same specificity, so order decides. */
 @media (prefers-reduced-motion: reduce) {
 	.fz-rise,
 	.fz-drift,
 	.fz-pulse,
 	.fz-ledger-update,
-	.fz-chatbot-bounce {
+	.fz-chatbot-bounce,
+	.fz-typing {
 		animation: none;
 	}
 }

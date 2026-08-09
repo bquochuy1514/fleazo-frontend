@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { BookOpen, CreditCard, Loader2, Search, Send, X } from 'lucide-react';
+import { BookOpen, CreditCard, Search, Send, X } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import type { Components } from 'react-markdown';
 import { toast } from 'sonner';
@@ -114,6 +114,21 @@ const HIDDEN_ROUTE_PREFIXES = [
 function isChatbotHiddenOn(pathname: string): boolean {
 	return HIDDEN_ROUTE_PREFIXES.some(
 		(prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+	);
+}
+
+// Three dots easing up/down in sequence — the assistant-is-typing cue.
+function TypingDots() {
+	return (
+		<div className="flex items-center gap-1 py-1" aria-hidden>
+			{[0, 1, 2].map((i) => (
+				<span
+					key={i}
+					className="fz-typing size-1.5 rounded-full bg-fz-muted"
+					style={{ animationDelay: `${i * 150}ms` }}
+				/>
+			))}
+		</div>
 	);
 }
 
@@ -379,9 +394,8 @@ export function ChatbotWidget() {
 											src="/chatbot/mascot-compact.png"
 											className="size-6"
 										/>
-										<div className="flex items-center gap-1.5 rounded-2xl bg-muted px-3.5 py-2 text-sm text-muted-foreground">
-											<Loader2 aria-hidden className="size-3.5 animate-spin" />
-											Đang trả lời...
+										<div className="rounded-2xl bg-muted px-3.5">
+											<TypingDots />
 										</div>
 									</div>
 								)}
