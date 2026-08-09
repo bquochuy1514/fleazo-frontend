@@ -37,19 +37,35 @@ export function Header({ provinces }: { provinces: Province[] }) {
 
 	useEffect(() => {
 		if (!overHero) return;
-		const heroes = Array.from(document.querySelectorAll<HTMLElement>('[data-hero]'));
-		if (heroes.length === 0) {
-			// Route claims a hero but page didn't mark one — fall back to solid
-			// pill rather than white text on the paper background.
-			// eslint-disable-next-line react-hooks/set-state-in-effect
-			setHeroPassed(true);
-			return;
-		}
+
 		let frame: number | null = null;
 		let previousValue: boolean | null = null;
+		let listenersAttached = false;
 
+		const scheduleUpdate = () => {
+			if (frame === null) {
+				frame = window.requestAnimationFrame(updateHeaderSurface);
+			}
+		};
+
+		// Queries fresh each call (not captured once) — with streaming SSR the
+		// header can mount and this effect can run before the page's async
+		// hero section has streamed into the DOM (fast on local dev against
+		// localhost, but real latency to a remote API makes it common in
+		// production). Re-querying, driven by the observer below, means a
+		// late-arriving hero still gets picked up instead of the header
+		// permanently defaulting to its non-transparent treatment.
 		const updateHeaderSurface = () => {
 			frame = null;
+			const heroes = Array.from(document.querySelectorAll<HTMLElement>('[data-hero]'));
+			if (heroes.length === 0) return;
+
+			if (!listenersAttached) {
+				listenersAttached = true;
+				window.addEventListener('scroll', scheduleUpdate, { passive: true });
+				window.addEventListener('resize', scheduleUpdate);
+				observer.disconnect();
+			}
 
 			// A hero must cover the line immediately below the header. Merely being
 			// visible elsewhere in the viewport (for example the next banner) must
@@ -66,17 +82,13 @@ export function Header({ provinces }: { provinces: Province[] }) {
 			}
 		};
 
-		const scheduleUpdate = () => {
-			if (frame === null) {
-				frame = window.requestAnimationFrame(updateHeaderSurface);
-			}
-		};
+		const observer = new MutationObserver(updateHeaderSurface);
+		observer.observe(document.body, { childList: true, subtree: true });
 
 		updateHeaderSurface();
-		window.addEventListener('scroll', scheduleUpdate, { passive: true });
-		window.addEventListener('resize', scheduleUpdate);
 
 		return () => {
+			observer.disconnect();
 			window.removeEventListener('scroll', scheduleUpdate);
 			window.removeEventListener('resize', scheduleUpdate);
 			if (frame !== null) window.cancelAnimationFrame(frame);
