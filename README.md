@@ -2,6 +2,8 @@
 
 Web app for **Fleazo** — a secondhand marketplace for Vietnamese university students to buy and sell within their own campus community. A from-scratch UI redesign; all business logic mirrors the backend 1:1.
 
+**Live demo:** [fleazo-frontend.vercel.app](https://fleazo-frontend.vercel.app/)
+
 > Backend: [`fleazo-backend`](https://github.com/bquochuy1514/fleazo-backend) · AI Service: [`fleazo-ai`](https://github.com/bquochuy1514/fleazo-ai)
 
 ## Tech Stack
